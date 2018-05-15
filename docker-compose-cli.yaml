@@ -39,7 +39,7 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == pi3b-master
+          - node.hostname == hyperledger-swarm-master
     command: orderer
     
   peer0_org1:
