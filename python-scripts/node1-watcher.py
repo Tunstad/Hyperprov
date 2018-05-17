@@ -36,7 +36,7 @@ try:
             try:
                 line = line.decode()
                 if not 'Message GossipMessage: tag:EMPTY alive_msg' in line:
-                    print("Peer0Org2: "+line)
+                    print("Peer1Org1: "+line)
                     blink()
                     # Flip Amber light on when chain code is installed
                     if 'chaincode canonical name: mycc:1.0' in line:
