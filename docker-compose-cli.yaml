@@ -39,7 +39,7 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == hyperledger-swarm-master
+          - node.hostname == raspberrypi
     command: orderer
     
   peer0_org1:
@@ -81,7 +81,7 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == hyperledger-swarm-master
+          - node.hostname == raspberrypi
     command: bash -c "peer node start > /home/logs/peer0org1log.txt 2>&1"
 
   peer1_org1:
@@ -124,7 +124,7 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == hyperledger-swarm-node1
+          - node.hostname == agc-c2
     command: bash -c "peer node start > /home/logs/peer1org1log.txt 2>&1"
 
   peer0_org2:
@@ -167,7 +167,7 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == hyperledger-swarm-node2
+          - node.hostname == linuxkit-025000000001
     command: bash -c "peer node start > /home/logs/peer0org2log.txt 2>&1"
 
   peer1_org2:
@@ -210,7 +210,7 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == hyperledger-swarm-node3
+          - node.hostname == agc-c2
     command: bash -c "peer node start > /home/logs/peer1org2log.txt 2>&1"
 
   cli:
@@ -250,7 +250,7 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == hyperledger-swarm-master
+          - node.hostname == raspberrypi
     networks:
       hyperledger-fabric:
         aliases:
