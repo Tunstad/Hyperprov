@@ -31,9 +31,9 @@ services:
         aliases:
           - orderer.example.com
     volumes:
-      - /home/jmotacek/hyperledger-pi-composer/channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
-      - /home/jmotacek/hyperledger-pi-composer/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp:/var/hyperledger/orderer/msp
-      - /home/jmotacek/hyperledger-pi-composer/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/:/var/hyperledger/orderer/tls
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp:/var/hyperledger/orderer/msp
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/:/var/hyperledger/orderer/tls
     ports:
       - 7050:7050
     deploy:
@@ -72,9 +72,9 @@ services:
           - peer0.org1.example.com
     volumes:
       - /var/run/:/host/var/run/
-      - /home/jmotacek/hyperledger-pi-composer/logs:/home/logs
-      - /home/jmotacek/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp:/etc/hyperledger/fabric/msp
-      - /home/jmotacek/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls:/etc/hyperledger/fabric/tls
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/logs:/home/logs
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp:/etc/hyperledger/fabric/msp
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls:/etc/hyperledger/fabric/tls
     ports:
       - 7051:7051
       - 7053:7053
@@ -115,9 +115,9 @@ services:
           - peer1.org1.example.com
     volumes:
       - /var/run/:/host/var/run/
-      - /home/jmotacek/hyperledger-pi-composer/logs:/home/logs
-      - /home/jmotacek/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/msp:/etc/hyperledger/fabric/msp
-      - /home/jmotacek/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/tls:/etc/hyperledger/fabric/tls
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/logs:/home/logs
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/msp:/etc/hyperledger/fabric/msp
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/tls:/etc/hyperledger/fabric/tls
     ports:
       - 8051:7051
       - 8053:7053
@@ -158,9 +158,9 @@ services:
           - peer0.org2.example.com
     volumes:
       - /var/run/:/host/var/run/
-      - /home/jmotacek/hyperledger-pi-composer/logs:/home/logs
-      - /home/jmotacek/hyperledger-pi-composer/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/msp:/etc/hyperledger/fabric/msp
-      - /home/jmotacek/hyperledger-pi-composer/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls:/etc/hyperledger/fabric/tls
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/logs:/home/logs
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/msp:/etc/hyperledger/fabric/msp
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls:/etc/hyperledger/fabric/tls
     ports:
       - 9051:7051
       - 9053:7053
@@ -201,9 +201,9 @@ services:
           - peer1.org2.example.com
     volumes:
       - /var/run/:/host/var/run/
-      - /home/jmotacek/hyperledger-pi-composer/logs:/home/logs
-      - /home/jmotacek/hyperledger-pi-composer/crypto-config/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/msp:/etc/hyperledger/fabric/msp
-      - /home/jmotacek/hyperledger-pi-composer/crypto-config/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/tls:/etc/hyperledger/fabric/tls
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/logs:/home/logs
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/msp:/etc/hyperledger/fabric/msp
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/tls:/etc/hyperledger/fabric/tls
     ports:
       - 10051:7051
       - 10053:7053
@@ -237,10 +237,10 @@ services:
     command: /bin/bash -c 'sleep 30; ./scripts/script.sh; while true; do sleep 20170504; done'
     volumes:
       - /var/run/:/host/var/run/
-      - /home/jmotacek/hyperledger-pi-composer/chaincode:/opt/gopath/src/github.com/hyperledger/fabric/examples/chaincode/go
-      - /home/jmotacek/hyperledger-pi-composer/crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
-      - /home/jmotacek/hyperledger-pi-composer/scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
-      - /home/jmotacek/hyperledger-pi-composer/channel-artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/chaincode:/opt/gopath/src/github.com/hyperledger/fabric/examples/chaincode/go
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/channel-artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
     depends_on:
       - orderer
       - peer0_org1
