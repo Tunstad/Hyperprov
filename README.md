@@ -7,11 +7,11 @@ Please see the above article for his details on this repos use.
 
 # My personal notes after working with this
 ## Quick start
-With at prerequisites installed and docker images in place run:
+With all prerequisites installed and docker images in place run:
 `docker node ls` to see that all nodes in swarm is up and running.
 `docker network create -d overlay --attachable hyperledger-fabric ` to create overlay network if not already present.
 
-Check that hostnames and volume paths to git directory is correct in `docker-compose-cli.yaml`, currently set to `/home/pi/hlf_multihost/hyperledger-pi-composer/`.  
+Check that hostnames and volume paths to git directory is correct in `docker-compose-cli.yaml`. Volume paths to git directory is currently set to `/home/pi/hlf_multihost/hyperledger-pi-composer/`.  
 
 To run do `docker stack deploy --compose-file docker-compose-cli.yaml HLFv1_RPiDS && docker ps` on master to start up the nodes. 
 
@@ -33,4 +33,4 @@ Set some required global variables required since we have TLS enabled: `CORE_PEE
 
 Now to get the value of a, run: `peer chaincode query -C $CHANNEL_NAME -n mycc -c '{"Args":["query","a"]}'`.
 To transfer 20 credits from a to b, run: `peer chaincode invoke -o orderer.example.com:7050  --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA -C $CHANNEL_NAME -n mycc -c '{"Args":["invoke","a","b","20"]}'`
-You can now run `peer chaincode query -C $CHANNEL_NAME -n mycc -c '{"Args":["query","a"]}'` again to see that it changed.
+You can now run `peer chaincode query -C $CHANNEL_NAME -n mycc -c '{"Args":["query","a"]}'` again to see that it changed. Keep in mind that this could take some seconds depending on the batch settings configuration of orderer set in `configtx.yaml` and the time it uses to complete a block. 
