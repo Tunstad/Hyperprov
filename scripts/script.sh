@@ -135,8 +135,8 @@ installChaincode () {
 	peer chaincode install -n myccds -v 1.0 -p github.com/hyperledger/fabric/examples/chaincode/go/chaincode_datashare >&log.txt
 	res=$?
 	cat log.txt
-        verifyResult $res "Chaincode installation on remote peer PEER$PEER has Failed"
-	echo "===================== Chaincode is installed on remote peer PEER$PEER ===================== "
+        verifyResult $res "Chaincode2 installation on remote peer PEER$PEER has Failed"
+	echo "===================== Chaincode2 is installed on remote peer PEER$PEER ===================== "
 	echo
 }
 
@@ -154,6 +154,18 @@ instantiateChaincode () {
 	cat log.txt
 	verifyResult $res "Chaincode instantiation on PEER$PEER on channel '$CHANNEL_NAME' failed"
 	echo "===================== Chaincode Instantiation on PEER$PEER on channel '$CHANNEL_NAME' is successful ===================== "
+	echo
+
+
+	if [ -z "$CORE_PEER_TLS_ENABLED" -o "$CORE_PEER_TLS_ENABLED" = "false" ]; then
+		peer chaincode instantiate -o orderer.example.com:7050 -C $CHANNEL_NAME -n myccds -v 1.0 -c '{"Args":["init","a","100"]}' -P "OR	('Org1MSP.member','Org2MSP.member')" >&log.txt
+	else
+		peer chaincode instantiate -o orderer.example.com:7050 --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA -C $CHANNEL_NAME -n myccds -v 1.0 -c '{"Args":["init","a","100"]}' -P "OR	('Org1MSP.member','Org2MSP.member')" >&log.txt
+	fi
+	res=$?
+	cat log.txt
+	verifyResult $res "Chaincode2 instantiation on PEER$PEER on channel '$CHANNEL_NAME' failed"
+	echo "===================== Chaincode2 Instantiation on PEER$PEER on channel '$CHANNEL_NAME' is successful ===================== "
 	echo
 }
 

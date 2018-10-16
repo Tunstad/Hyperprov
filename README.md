@@ -29,7 +29,7 @@ In the CLI run the following commands to prepare for querying:
 `export CHANNEL_NAME=mychannel` to export channel name
 `peer chaincode install -n mycc -v 1.0 -p github.com/hyperledger/fabric/examples/chaincode/go/chaincode_example02 >&log.txt` to instantiate chaincode.
 
-Set some required global variables required since we have TLS enabled: `CORE_PEER_TLS_ENABLED="true"` and `ORDERER_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem`
+Set some required global variables required since we have TLS enabled: `CORE_PEER_TLS_ENABLED="true"`, `CHANNEL_NAME="mychannel"` and `ORDERER_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem`
 
 Now to get the value of a, run: `peer chaincode query -C $CHANNEL_NAME -n mycc -c '{"Args":["query","a"]}'`.
 To transfer 20 credits from a to b, run: `peer chaincode invoke -o orderer.example.com:7050  --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA -C $CHANNEL_NAME -n mycc -c '{"Args":["invoke","a","b","20"]}'`
