@@ -95,9 +95,9 @@ func getmultiple(stub shim.ChaincodeStubInterface, args []string) (string, error
 	result := ""
 	for value.HasNext() {
 		kvpair, err := value.Next()
-		result = append(result, string(kvpair.Value))
+		result = result + string(kvpair.Value)
 	}
-	return string(result), nil
+	return result, nil
 }
 
 func main() {
