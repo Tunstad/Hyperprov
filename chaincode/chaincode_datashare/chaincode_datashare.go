@@ -92,9 +92,9 @@ func getmultiple(stub shim.ChaincodeStubInterface, args []string) (string, error
 	if value == nil {
 		return "", fmt.Errorf("Asset not found: %s", args[0])
 	}
-	result = ""
+	result := ""
 	for value.HasNext() {
-		kvpair, err = value.Next()
+		kvpair, err := value.Next()
 		result = append(result, string(kvpair.Value))
 	}
 	return string(result), nil
