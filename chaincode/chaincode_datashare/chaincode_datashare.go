@@ -38,7 +38,7 @@ func (t *SimpleAsset) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		result, err = set(stub, args)
 	} else if fn == "get" {
 		result, err = get(stub, args)
-	} else if fn = "getmultiple" {
+	} else if fn == "getmultiple" {
 		result, err = getmultiple(stub, args)
 	}
 	if err != nil {
@@ -78,6 +78,7 @@ func get(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	}
 	return string(value), nil
 }
+
 // Get returns the value of the specified asset key
 func getmultiple(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	if len(args) != 1 {
@@ -91,9 +92,14 @@ func getmultiple(stub shim.ChaincodeStubInterface, args []string) (string, error
 	if value == nil {
 		return "", fmt.Errorf("Asset not found: %s", args[0])
 	}
-	return string(value), nil
+	result = ""
+	for value.HasNext(){
+		kvpair, err = value.Next()
+		result = append(result, string(kvpair.Value))
+	}
+	}
+	return string(result), nil
 }
-
 
 func main() {
 	err := shim.Start(new(SimpleAsset))
