@@ -22,7 +22,7 @@ If you encounter any problems run `docker stack ps HLFv1_RPiDS --no-trunc` on ma
 Shutting down can be done with `docker stack rm HLFv1_RPiDS`.
 
 ## Querying from CLI after instantiation
-
+### Default value transferring chaincode
 Go to master node and write `docker ps` to show active containers. Find the CLI that uses the fabric-tools image and copy the Container ID. Then start the CLI by running `docker exec -it 6e4c43c974e7 bash` where `6e4c43c974e7` is the Container ID.  
 
 In the CLI run the following commands to prepare for querying:
@@ -34,3 +34,10 @@ Set some required global variables required since we have TLS enabled: `CORE_PEE
 Now to get the value of a, run: `peer chaincode query -C $CHANNEL_NAME -n mycc -c '{"Args":["query","a"]}'`.
 To transfer 20 credits from a to b, run: `peer chaincode invoke -o orderer.example.com:7050  --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA -C $CHANNEL_NAME -n mycc -c '{"Args":["invoke","a","b","20"]}'`
 You can now run `peer chaincode query -C $CHANNEL_NAME -n mycc -c '{"Args":["query","a"]}'` again to see that it changed. Keep in mind that this could take some seconds depending on the batch settings configuration of orderer set in `configtx.yaml` and the time it uses to complete a block. 
+
+### Querying the datashare chaincode
+To use the modified chaincode for data sharing you similarly need to run `docker ps` to find the CLI, and launch it with `docker exec -it 6e4c43c974e7 bash` where `6e4c43c974e7` is the Container ID. Then define variables `CHANNEL_NAME=mychannel`, `ORDERER_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem` and `CORE_PEER_TLS_ENABLED="true"`.
+To install the chaincode if not already performed by `docker-compose-cli.yaml` referencing `script_ds.sh`, you need to run `peer chaincode install -n myccds -v 1.0 -p github.com/hyperledger/fabric/examples/chaincode/go/chaincode_datashare >&log.txt`.  
+To instantiate chaincode run something along the lines of `peer chaincode instantiate -o orderer.example.com:7050 --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA -C $CHANNEL_NAME -n myccds -v 1.0 -c '{"Args":["c","asdf"]}' -P "OR('Org1MSP.member','Org2MSP.member')" >&log.txt`.  
+To then query that the value c was stored as asdf run `peer chaincode query -C $CHANNEL_NAME -n myccds -c '{"Args":["get","c"]}' >&log.txt`.  
+And to further change the value of c run `peer chaincode invoke -o orderer.example.com:7050 --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA -C $CHANNEL_NAME -n myccds -c '{"Args":["set","c","wasda"]}'`.   
