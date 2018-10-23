@@ -124,7 +124,7 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == hlf_node_master
+          - node.hostname == hlf_node_1
     command: bash -c "peer node start > /home/logs/peer1org1log.txt 2>&1"
 
   peer0_org2:
@@ -167,7 +167,7 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == hlf_node_1
+          - node.hostname == hlf_node_2
     command: bash -c "peer node start > /home/logs/peer0org2log.txt 2>&1"
 
   peer1_org2:
@@ -210,7 +210,7 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == hlf_node_1
+          - node.hostname == hlf_node_3
     command: bash -c "peer node start > /home/logs/peer1org2log.txt 2>&1"
 
   cli:
