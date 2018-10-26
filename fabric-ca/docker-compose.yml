@@ -1,0 +1,20 @@
+#
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+### Needs to be run on a x64 server, not an arm device.
+fabric-ca-server:
+   image: hyperledger/fabric-ca:amd64-1.3.0
+   container_name: fabric-ca-server
+   ports:
+     - "7054:7054"
+   environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca.example.com
+      - FABRIC_CA_SERVER_CA_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org1.example.com-cert.pem
+      - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/fabric-ca-server-config/8ad31d6096b447fd5c33b194f9f1ee4a998f5f4da84aa3f8b4959074ab90875b_sk
+   volumes:
+     - ../crypto-config/peerOrganizations/org1.example.com/ca/:/etc/hyperledger/fabric-ca-server-config
+   command: sh -c 'fabric-ca-server start -b admin:adminpw'
+   container_name: ca.example.com
