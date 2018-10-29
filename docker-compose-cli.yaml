@@ -39,7 +39,7 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == hlf_node_master
+          - node.hostname == hlf_node_3
     command: orderer
     
   peer0_org1:
@@ -81,7 +81,7 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == hlf_node_master
+          - node.hostname == hlf_node_3
     command: bash -c "peer node start > /home/logs/peer0org1log.txt 2>&1"
 
   peer1_org1:
@@ -210,7 +210,7 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == hlf_node_3
+          - node.hostname == hlf_node_master
     command: bash -c "peer node start > /home/logs/peer1org2log.txt 2>&1"
 
   cli:
@@ -250,7 +250,7 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == hlf_node_master
+          - node.hostname == hlf_node_3
     networks:
       hyperledger-fabric:
         aliases:
