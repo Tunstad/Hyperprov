@@ -272,3 +272,6 @@ services:
         aliases:
           - cli.ptunstad.no
 
+networks:
+  hyperledger-fabric:
+    external: true
