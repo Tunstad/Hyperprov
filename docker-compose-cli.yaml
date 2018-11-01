@@ -112,6 +112,7 @@ services:
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     hostname: peer1.org1.ptunstad.no
     networks:
+      host:
       hyperledger-fabric:
         aliases:
           - peer1.org1.ptunstad.no
