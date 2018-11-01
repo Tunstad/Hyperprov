@@ -162,8 +162,8 @@ services:
     volumes:
       - /var/run/:/host/var/run/
       - /home/pi/hlf_multihost/hyperledger-pi-composer/logs:/home/logs
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/msp:/etc/hyperledger/fabric/msp
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/tls:/etc/hyperledger/fabric/tls
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer2.org1.ptunstad.no/msp:/etc/hyperledger/fabric/msp
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer2.org1.ptunstad.no/tls:/etc/hyperledger/fabric/tls
     ports:
       - 9051:7051
       - 9053:7053
@@ -206,8 +206,8 @@ services:
     volumes:
       - /var/run/:/host/var/run/
       - /home/pi/hlf_multihost/hyperledger-pi-composer/logs:/home/logs
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer1.org1.ptunstad.no/msp:/etc/hyperledger/fabric/msp
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer1.org1.ptunstad.no/tls:/etc/hyperledger/fabric/tls
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer3.org1.ptunstad.no/msp:/etc/hyperledger/fabric/msp
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer3.org1.ptunstad.no/tls:/etc/hyperledger/fabric/tls
     ports:
       - 10051:7051
       - 10053:7053
