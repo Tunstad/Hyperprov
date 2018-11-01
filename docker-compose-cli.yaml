@@ -26,8 +26,6 @@ services:
       - CORE_CHAINCODE_JAVA=jmotacek/fabric-javaenv:armv7l-1.0.7
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric
     hostname: orderer.ptunstad.no
-    networks:
-      - host
     volumes:
       - /home/pi/hlf_multihost/hyperledger-pi-composer/channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
       - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/ordererOrganizations/ptunstad.no/orderers/orderer.ptunstad.no/msp:/var/hyperledger/orderer/msp
@@ -65,8 +63,6 @@ services:
       - CORE_CHAINCODE_JAVA=jmotacek/fabric-javaenv:armv7l-1.0.7
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     hostname: peer0.org1.ptunstad.no
-    networks:
-      - host
     volumes:
       - /var/run/:/host/var/run/
       - /home/pi/hlf_multihost/hyperledger-pi-composer/logs:/home/logs
@@ -110,8 +106,6 @@ services:
       - CORE_CHAINCODE_JAVA=jmotacek/fabric-javaenv:armv7l-1.0.7
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     hostname: peer1.org1.ptunstad.no
-    networks:
-      - host
     volumes:
       - /var/run/:/host/var/run/
       - /home/pi/hlf_multihost/hyperledger-pi-composer/logs:/home/logs
@@ -155,8 +149,6 @@ services:
       - CORE_CHAINCODE_JAVA=jmotacek/fabric-javaenv:armv7l-1.0.7
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     hostname: peer2.org1.ptunstad.no
-    networks:
-      - host
     volumes:
       - /var/run/:/host/var/run/
       - /home/pi/hlf_multihost/hyperledger-pi-composer/logs:/home/logs
@@ -200,8 +192,6 @@ services:
       - CORE_CHAINCODE_JAVA=jmotacek/fabric-javaenv:armv7l-1.0.7
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     hostname: peer3.org1.ptunstad.no
-    networks:
-      - host
     volumes:
       - /var/run/:/host/var/run/
       - /home/pi/hlf_multihost/hyperledger-pi-composer/logs:/home/logs
@@ -257,6 +247,4 @@ services:
       placement:
         constraints:
           - node.hostname == hlf_node_3
-    networks:
-      - host
 
