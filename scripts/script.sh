@@ -50,15 +50,15 @@ setGlobals () {
 			CORE_PEER_ADDRESS=peer1.org1.ptunstad.no:7051
 		fi
 	else
-		CORE_PEER_LOCALMSPID="org1MSP"
+		CORE_PEER_LOCALMSPID="Org1MSP"
 		CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/tls/ca.crt
 		CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/users/Admin@org1.ptunstad.no/msp
     CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/tls/server.crt
     CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/tls/server.key
 		if [ $1 -eq 2 ]; then
-			CORE_PEER_ADDRESS=peer0.org1.ptunstad.no:7051
+			CORE_PEER_ADDRESS=peer2.org1.ptunstad.no:7051
 		else
-			CORE_PEER_ADDRESS=peer1.org1.ptunstad.no:7051
+			CORE_PEER_ADDRESS=peer3.org1.ptunstad.no:7051
 		fi
 	fi
 

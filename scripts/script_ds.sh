@@ -50,15 +50,15 @@ setGlobals () {
 			CORE_PEER_ADDRESS=peer1.org1.ptunstad.no:7051
 		fi
 	else
-		CORE_PEER_LOCALMSPID="Org2MSP"
-		CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.ptunstad.no/peers/peer0.org2.ptunstad.no/tls/ca.crt
-		CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.ptunstad.no/users/Admin@org2.ptunstad.no/msp
-    CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.ptunstad.no/peers/peer0.org2.ptunstad.no/tls/server.crt
-    CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.ptunstad.no/peers/peer0.org2.ptunstad.no/tls/server.key
+		CORE_PEER_LOCALMSPID="Org1MSP"
+		CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/tls/ca.crt
+		CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/users/Admin@org1.ptunstad.no/msp
+    CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/tls/server.crt
+    CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/tls/server.key
 		if [ $1 -eq 2 ]; then
-			CORE_PEER_ADDRESS=peer0.org2.ptunstad.no:7051
+			CORE_PEER_ADDRESS=peer2.org1.ptunstad.no:7051
 		else
-			CORE_PEER_ADDRESS=peer1.org2.ptunstad.no:7051
+			CORE_PEER_ADDRESS=peer3.org1.ptunstad.no:7051
 		fi
 	fi
 
@@ -139,9 +139,9 @@ instantiateChaincode () {
 	# while 'peer chaincode' command can get the orderer endpoint from the peer (if join was successful),
 	# lets supply it directly as we know it using the "-o" option
 	if [ -z "$CORE_PEER_TLS_ENABLED" -o "$CORE_PEER_TLS_ENABLED" = "false" ]; then
-		peer chaincode instantiate -o orderer.ptunstad.no:7050 -C $CHANNEL_NAME -n myccds -v 1.0 -c '{"Args":["c","asdf"]}' -P "OR	('Org1MSP.member','Org2MSP.member')" >&log.txt
+		peer chaincode instantiate -o orderer.ptunstad.no:7050 -C $CHANNEL_NAME -n myccds -v 1.0 -c '{"Args":["c","asdf"]}' -P "OR	('Org1MSP.member','org1MSP.member')" >&log.txt
 	else
-		peer chaincode instantiate -o orderer.ptunstad.no:7050 --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA -C $CHANNEL_NAME -n myccds -v 1.0 -c '{"Args":["c","asdf"]}' -P "OR('Org1MSP.member','Org2MSP.member')" >&log.txt
+		peer chaincode instantiate -o orderer.ptunstad.no:7050 --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA -C $CHANNEL_NAME -n myccds -v 1.0 -c '{"Args":["c","asdf"]}' -P "OR('Org1MSP.member','org1MSP.member')" >&log.txt
 	fi
 	res=$?
 	cat log.txt
@@ -208,20 +208,20 @@ joinChannel
 echo "Updating anchor peers for org1..."
 sleep 10
 updateAnchorPeers 0
-echo "Updating anchor peers for org2..."
+echo "Updating anchor peers for org1..."
 sleep 10
 updateAnchorPeers 2
 
-## Install chaincode on Peer0/Org1 and Peer2/Org2
+## Install chaincode on Peer0/Org1 and Peer2/org1
 echo "Installing chaincode on org1/peer0..."
 sleep 10
 installChaincode 0
-echo "Install chaincode on org2/peer2..."
+echo "Install chaincode on org1/peer2..."
 sleep 10
 installChaincode 2
 
-#Instantiate chaincode on Peer2/Org2
-echo "Instantiating chaincode on org2/peer2..."
+#Instantiate chaincode on Peer2/org1
+echo "Instantiating chaincode on org1/peer2..."
 sleep 10
 instantiateChaincode 2
 
@@ -235,13 +235,13 @@ echo "Sending invoke transaction on org1/peer0..."
 sleep 10
 chaincodeInvoke 0
 
-## Install chaincode on Peer3/Org2
-echo "Installing chaincode on org2/peer3..."
+## Install chaincode on Peer3/org1
+echo "Installing chaincode on org1/peer3..."
 sleep 10
 installChaincode 3
 
-#Query on chaincode on Peer3/Org2, check if the result is 90
-echo "Querying chaincode on org2/peer3..."
+#Query on chaincode on Peer3/org1, check if the result is 90
+echo "Querying chaincode on org1/peer3..."
 sleep 10
 chaincodeQuery 3 wasda
 
