@@ -79,6 +79,9 @@ services:
     ports:
       - 7051:7051
       - 7053:7053
+    expose:
+      - "7051"
+      - "7053"
     deploy:
       placement:
         constraints:
@@ -112,7 +115,6 @@ services:
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     hostname: peer1.org1.ptunstad.no
     networks:
-      host:
       hyperledger-fabric:
         aliases:
           - peer1.org1.ptunstad.no
@@ -124,6 +126,9 @@ services:
     ports:
       - 8051:7051
       - 8053:7053
+    expose:
+      - "8051"
+      - "8053"
     deploy:
       placement:
         constraints:
@@ -168,6 +173,9 @@ services:
     ports:
       - 9051:7051
       - 9053:7053
+    expose:
+      - "9051"
+      - "9053"
     deploy:
       placement:
         constraints:
@@ -212,6 +220,9 @@ services:
     ports:
       - 10051:7051
       - 10053:7053
+    expose:
+      - "10051"
+      - "10053"
     deploy:
       placement:
         constraints:
