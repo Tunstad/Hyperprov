@@ -147,7 +147,7 @@ services:
       - CORE_PEER_ADDRESS=peer2.org1.ptunstad.no:7051
       - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer2.org1.ptunstad.no:7051
       - CORE_PEER_GOSSIP_BOOTSTRAP=peer2.org1.ptunstad.no:7051
-      - CORE_PEER_LOCALMSPID=org1MSP
+      - CORE_PEER_LOCALMSPID=Org1MSP
       - CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
       - CORE_CHAINCODE_BUILDER=jmotacek/fabric-ccenv:armv7l-1.0.7
       - CORE_CHAINCODE_GOLANG_RUNTIME=jmotacek/fabric-baseos:armv7l-0.3.2
@@ -191,7 +191,7 @@ services:
       - CORE_PEER_ADDRESS=peer3.org1.ptunstad.no:7051
       - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer3.org1.ptunstad.no:7051
       - CORE_PEER_GOSSIP_BOOTSTRAP=peer3.org1.ptunstad.no:7051
-      - CORE_PEER_LOCALMSPID=org1MSP
+      - CORE_PEER_LOCALMSPID=Org1MSP
       - CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
       - CORE_CHAINCODE_BUILDER=jmotacek/fabric-ccenv:armv7l-1.0.7
       - CORE_CHAINCODE_GOLANG_RUNTIME=jmotacek/fabric-baseos:armv7l-0.3.2
