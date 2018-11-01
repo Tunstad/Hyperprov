@@ -12,15 +12,27 @@ var Fabric_Client = require('fabric-client');
 var path = require('path');
 var util = require('util');
 var os = require('os');
-
+var fs = require("fs")
 //
 var fabric_client = new Fabric_Client();
 
 // setup the fabric network
 var channel = fabric_client.newChannel('mychannel');
-var peer = fabric_client.newPeer('grpc://node3.ptunstad.no:7051');
-channel.addPeer(peer);
 
+var somepath = "../crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer1.org1.ptunstad.no"
+let serverCert = fs.readFileSync(path.join(__dirname, somepath + '/msp/tlscacerts/tlsca.org1.ptunstad.no-cert.pem'));
+let clientKey = fs.readFileSync(path.join(__dirname, somepath + '/tls/server.key'));
+let clientCert = fs.readFileSync(path.join(__dirname, somepath + '/tls/server.crt'));
+
+let peer = fabric_client.newPeer(
+        'grpcs://node1.ptunstad.no:7051',
+        {
+          'pem': Buffer.from(serverCert).toString(),
+          'clientKey': Buffer.from(clientKey).toString(),
+          'clientCert': Buffer.from(clientCert).toString(),
+        }
+);
+channel.addPeer(peer);
 //
 var member_user = null;
 var store_path = path.join(__dirname, 'hfc-key-store');

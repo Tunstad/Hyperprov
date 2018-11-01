@@ -25,15 +25,15 @@ services:
       - CORE_CHAINCODE_CAR_RUNTIME=jmotacek/fabric-baseos:armv7l-0.3.2
       - CORE_CHAINCODE_JAVA=jmotacek/fabric-javaenv:armv7l-1.0.7
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric
-    hostname: orderer.example.com
+    hostname: orderer.ptunstad.no
     networks:
       hyperledger-fabric:
         aliases:
-          - orderer.example.com
+          - orderer.ptunstad.no
     volumes:
       - /home/pi/hlf_multihost/hyperledger-pi-composer/channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp:/var/hyperledger/orderer/msp
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/:/var/hyperledger/orderer/tls
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/ordererOrganizations/ptunstad.no/orderers/orderer.ptunstad.no/msp:/var/hyperledger/orderer/msp
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/ordererOrganizations/ptunstad.no/orderers/orderer.ptunstad.no/tls/:/var/hyperledger/orderer/tls
     ports:
       - 7050:7050
     deploy:
@@ -52,12 +52,13 @@ services:
       - CORE_PEER_GOSSIP_USELEADERELECTION=true
       - CORE_PEER_GOSSIP_ORGLEADER=false
       - CORE_PEER_PROFILE_ENABLED=true
+      - CORE_PEER_TLS_CLIENTAUTHREQUIRED = true
       - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
-      - CORE_PEER_ID=peer0.org1.example.com
-      - CORE_PEER_ADDRESS=peer0.org1.example.com:7051
-      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org1.example.com:7051
+      - CORE_PEER_ID=peer0.org1.ptunstad.no
+      - CORE_PEER_ADDRESS=peer0.org1.ptunstad.no:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org1.ptunstad.no:7051
       - CORE_PEER_LOCALMSPID=Org1MSP
       - CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
       - CORE_CHAINCODE_BUILDER=jmotacek/fabric-ccenv:armv7l-1.0.7
@@ -65,16 +66,16 @@ services:
       - CORE_CHAINCODE_CAR_RUNTIME=jmotacek/fabric-baseos:armv7l-0.3.2
       - CORE_CHAINCODE_JAVA=jmotacek/fabric-javaenv:armv7l-1.0.7
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
-    hostname: peer0.org1.example.com
+    hostname: peer0.org1.ptunstad.no
     networks:
       hyperledger-fabric:
         aliases:
-          - peer0.org1.example.com
+          - peer0.org1.ptunstad.no
     volumes:
       - /var/run/:/host/var/run/
       - /home/pi/hlf_multihost/hyperledger-pi-composer/logs:/home/logs
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp:/etc/hyperledger/fabric/msp
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls:/etc/hyperledger/fabric/tls
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/msp:/etc/hyperledger/fabric/msp
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/tls:/etc/hyperledger/fabric/tls
     ports:
       - 7051:7051
       - 7053:7053
@@ -94,13 +95,14 @@ services:
       - CORE_PEER_GOSSIP_USELEADERELECTION=true
       - CORE_PEER_GOSSIP_ORGLEADER=false
       - CORE_PEER_PROFILE_ENABLED=true
+      - CORE_PEER_TLS_CLIENTAUTHREQUIRED = true
       - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
-      - CORE_PEER_ID=peer1.org1.example.com
-      - CORE_PEER_ADDRESS=peer1.org1.example.com:7051
-      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.org1.example.com:7051
-      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org1.example.com:7051
+      - CORE_PEER_ID=peer1.org1.ptunstad.no
+      - CORE_PEER_ADDRESS=peer1.org1.ptunstad.no:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.org1.ptunstad.no:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org1.ptunstad.no:7051
       - CORE_PEER_LOCALMSPID=Org1MSP
       - CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
       - CORE_CHAINCODE_BUILDER=jmotacek/fabric-ccenv:armv7l-1.0.7
@@ -108,16 +110,16 @@ services:
       - CORE_CHAINCODE_CAR_RUNTIME=jmotacek/fabric-baseos:armv7l-0.3.2
       - CORE_CHAINCODE_JAVA=jmotacek/fabric-javaenv:armv7l-1.0.7
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
-    hostname: peer1.org1.example.com
+    hostname: peer1.org1.ptunstad.no
     networks:
       hyperledger-fabric:
         aliases:
-          - peer1.org1.example.com
+          - peer1.org1.ptunstad.no
     volumes:
       - /var/run/:/host/var/run/
       - /home/pi/hlf_multihost/hyperledger-pi-composer/logs:/home/logs
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/msp:/etc/hyperledger/fabric/msp
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/tls:/etc/hyperledger/fabric/tls
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer1.org1.ptunstad.no/msp:/etc/hyperledger/fabric/msp
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer1.org1.ptunstad.no/tls:/etc/hyperledger/fabric/tls
     ports:
       - 8051:7051
       - 8053:7053
@@ -127,7 +129,7 @@ services:
           - node.hostname == hlf_node_1
     command: bash -c "peer node start > /home/logs/peer1org1log.txt 2>&1"
 
-  peer0_org2:
+  peer2_org1:
     image: jmotacek/fabric-peer:armv7l-1.0.7
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
@@ -137,30 +139,31 @@ services:
       - CORE_PEER_GOSSIP_USELEADERELECTION=true
       - CORE_PEER_GOSSIP_ORGLEADER=false
       - CORE_PEER_PROFILE_ENABLED=true
+      - CORE_PEER_TLS_CLIENTAUTHREQUIRED = true
       - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
-      - CORE_PEER_ID=peer0.org2.example.com
-      - CORE_PEER_ADDRESS=peer0.org2.example.com:7051
-      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org2.example.com:7051
-      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org2.example.com:7051
-      - CORE_PEER_LOCALMSPID=Org2MSP
+      - CORE_PEER_ID=peer2.org1.ptunstad.no
+      - CORE_PEER_ADDRESS=peer2.org1.ptunstad.no:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer2.org1.ptunstad.no:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer2.org1.ptunstad.no:7051
+      - CORE_PEER_LOCALMSPID=org1MSP
       - CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
       - CORE_CHAINCODE_BUILDER=jmotacek/fabric-ccenv:armv7l-1.0.7
       - CORE_CHAINCODE_GOLANG_RUNTIME=jmotacek/fabric-baseos:armv7l-0.3.2
       - CORE_CHAINCODE_CAR_RUNTIME=jmotacek/fabric-baseos:armv7l-0.3.2
       - CORE_CHAINCODE_JAVA=jmotacek/fabric-javaenv:armv7l-1.0.7
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
-    hostname: peer0.org2.example.com
+    hostname: peer2.org1.ptunstad.no
     networks:
       hyperledger-fabric:
         aliases:
-          - peer0.org2.example.com
+          - peer2.org1.ptunstad.no
     volumes:
       - /var/run/:/host/var/run/
       - /home/pi/hlf_multihost/hyperledger-pi-composer/logs:/home/logs
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/msp:/etc/hyperledger/fabric/msp
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls:/etc/hyperledger/fabric/tls
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/msp:/etc/hyperledger/fabric/msp
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/tls:/etc/hyperledger/fabric/tls
     ports:
       - 9051:7051
       - 9053:7053
@@ -170,7 +173,7 @@ services:
           - node.hostname == hlf_node_2
     command: bash -c "peer node start > /home/logs/peer0org2log.txt 2>&1"
 
-  peer1_org2:
+  peer3_org1:
     image: jmotacek/fabric-peer:armv7l-1.0.7
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
@@ -180,30 +183,31 @@ services:
       - CORE_PEER_GOSSIP_USELEADERELECTION=true
       - CORE_PEER_GOSSIP_ORGLEADER=false
       - CORE_PEER_PROFILE_ENABLED=true
+      - CORE_PEER_TLS_CLIENTAUTHREQUIRED = true
       - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
-      - CORE_PEER_ID=peer1.org2.example.com
-      - CORE_PEER_ADDRESS=peer1.org2.example.com:7051
-      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.org2.example.com:7051
-      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.org2.example.com:7051
-      - CORE_PEER_LOCALMSPID=Org2MSP
+      - CORE_PEER_ID=peer3.org1.ptunstad.no
+      - CORE_PEER_ADDRESS=peer3.org1.ptunstad.no:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer3.org1.ptunstad.no:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer3.org1.ptunstad.no:7051
+      - CORE_PEER_LOCALMSPID=org1MSP
       - CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
       - CORE_CHAINCODE_BUILDER=jmotacek/fabric-ccenv:armv7l-1.0.7
       - CORE_CHAINCODE_GOLANG_RUNTIME=jmotacek/fabric-baseos:armv7l-0.3.2
       - CORE_CHAINCODE_CAR_RUNTIME=jmotacek/fabric-baseos:armv7l-0.3.2
       - CORE_CHAINCODE_JAVA=jmotacek/fabric-javaenv:armv7l-1.0.7
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
-    hostname: peer1.org2.example.com
+    hostname: peer3.org1.ptunstad.no
     networks:
       hyperledger-fabric:
         aliases:
-          - peer1.org2.example.com
+          - peer3.org1.ptunstad.no
     volumes:
       - /var/run/:/host/var/run/
       - /home/pi/hlf_multihost/hyperledger-pi-composer/logs:/home/logs
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/msp:/etc/hyperledger/fabric/msp
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/tls:/etc/hyperledger/fabric/tls
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer1.org1.ptunstad.no/msp:/etc/hyperledger/fabric/msp
+      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer1.org1.ptunstad.no/tls:/etc/hyperledger/fabric/tls
     ports:
       - 10051:7051
       - 10053:7053
@@ -221,13 +225,13 @@ services:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_LOGGING_LEVEL=DEBUG
       - CORE_PEER_ID=cli
-      - CORE_PEER_ADDRESS=peer0.org1.example.com:7051
+      - CORE_PEER_ADDRESS=peer0.org1.ptunstad.no:7051
       - CORE_PEER_LOCALMSPID=Org1MSP
       - CORE_PEER_TLS_ENABLED=true
-      - CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/server.crt
-      - CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/server.key
-      - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
-      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp
+      - CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/users/Admin@org1.ptunstad.no/msp
       - CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
       - CORE_CHAINCODE_BUILDER=jmotacek/fabric-ccenv:armv7l-1.0.7
       - CORE_CHAINCODE_GOLANG=jmotacek/fabric-baseos:armv7l-0.3.2
@@ -245,8 +249,8 @@ services:
       - orderer
       - peer0_org1
       - peer1_org1
-      - peer0_org2
-      - peer1_org2
+      - peer2_org1
+      - peer3_org1
     deploy:
       placement:
         constraints:
@@ -254,7 +258,7 @@ services:
     networks:
       hyperledger-fabric:
         aliases:
-          - cli.example.com
+          - cli.ptunstad.no
 
 networks:
   hyperledger-fabric:

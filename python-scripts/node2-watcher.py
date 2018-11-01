@@ -45,7 +45,7 @@ try:
                     if 'chaincode canonical name: mycc:1.0' in line:
                         GPIO.output(17,GPIO.HIGH)
                     # Flip red on when identified as an anchor peer
-                    if 'Anchor peers for org Org2MSP are anchor_peers:<host:"peer0.org2.example.com"' in line:
+                    if 'Anchor peers for org Org2MSP are anchor_peers:<host:"peer0.org2.ptunstad.no"' in line:
                         GPIO.output(27,GPIO.HIGH)
             except UnicodeDecodeError:
                 # Do nothing with it... you lose sir, good day.... I SAID GOOD DAY SIR!
