@@ -27,9 +27,7 @@ services:
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric
     hostname: orderer.ptunstad.no
     networks:
-      hyperledger-fabric:
-        aliases:
-          - orderer.ptunstad.no
+      - host
     volumes:
       - /home/pi/hlf_multihost/hyperledger-pi-composer/channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
       - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/ordererOrganizations/ptunstad.no/orderers/orderer.ptunstad.no/msp:/var/hyperledger/orderer/msp
@@ -68,9 +66,7 @@ services:
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     hostname: peer0.org1.ptunstad.no
     networks:
-      hyperledger-fabric:
-        aliases:
-          - peer0.org1.ptunstad.no
+      - host
     volumes:
       - /var/run/:/host/var/run/
       - /home/pi/hlf_multihost/hyperledger-pi-composer/logs:/home/logs
@@ -115,9 +111,7 @@ services:
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     hostname: peer1.org1.ptunstad.no
     networks:
-      hyperledger-fabric:
-        aliases:
-          - peer1.org1.ptunstad.no
+      - host
     volumes:
       - /var/run/:/host/var/run/
       - /home/pi/hlf_multihost/hyperledger-pi-composer/logs:/home/logs
@@ -162,9 +156,7 @@ services:
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     hostname: peer2.org1.ptunstad.no
     networks:
-      hyperledger-fabric:
-        aliases:
-          - peer2.org1.ptunstad.no
+      - host
     volumes:
       - /var/run/:/host/var/run/
       - /home/pi/hlf_multihost/hyperledger-pi-composer/logs:/home/logs
@@ -209,9 +201,7 @@ services:
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     hostname: peer3.org1.ptunstad.no
     networks:
-      hyperledger-fabric:
-        aliases:
-          - peer3.org1.ptunstad.no
+      - host
     volumes:
       - /var/run/:/host/var/run/
       - /home/pi/hlf_multihost/hyperledger-pi-composer/logs:/home/logs
@@ -268,10 +258,5 @@ services:
         constraints:
           - node.hostname == hlf_node_3
     networks:
-      hyperledger-fabric:
-        aliases:
-          - cli.ptunstad.no
+      - host
 
-networks:
-  hyperledger-fabric:
-    external: true
