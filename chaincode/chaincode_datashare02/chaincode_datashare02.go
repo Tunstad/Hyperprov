@@ -96,7 +96,14 @@ func getkeyhistory(stub shim.ChaincodeStubInterface, args []string) (string, err
 	if value == nil {
 		return "", fmt.Errorf("Asset not found: %s", args[0])
 	}
-	return "History of key " args[0] + " is " + string(value), nil
+
+	result := ""
+	for value.HasNext() {
+		kvpair, err := value.Next()
+		result = result + string(kvpair.Value)
+	}
+
+	return result, nil
 }
 
 // Get returns the value of the specified asset key
