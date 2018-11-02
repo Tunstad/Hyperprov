@@ -127,7 +127,7 @@ joinChannel () {
 installChaincode () {
 	PEER=$1
 	setGlobals $PEER
-	peer chaincode install -n myccds -v 1.0 -p github.com/hyperledger/fabric/examples/chaincode/go/chaincode_datashare02 >&log.txt
+	peer chaincode install -n myccds -v 1.1 -p github.com/hyperledger/fabric/examples/chaincode/go/chaincode_datashare02 >&log.txt
 	res=$?
 	cat log.txt
         verifyResult $res "Chaincode2 installation on remote peer PEER$PEER has Failed"
@@ -141,9 +141,9 @@ instantiateChaincode () {
 	# while 'peer chaincode' command can get the orderer endpoint from the peer (if join was successful),
 	# lets supply it directly as we know it using the "-o" option
 	if [ -z "$CORE_PEER_TLS_ENABLED" -o "$CORE_PEER_TLS_ENABLED" = "false" ]; then
-		peer chaincode instantiate -o orderer.ptunstad.no:7050 -C $CHANNEL_NAME -n myccds -v 1.0 -c '{"Args":["c","asdf"]}' -P "OR	('Org1MSP.member','Org1MSP.member')" >&log.txt
+		peer chaincode instantiate -o orderer.ptunstad.no:7050 -C $CHANNEL_NAME -n myccds -v 1.1 -c '{"Args":["c","asdf"]}' -P "OR	('Org1MSP.member','Org1MSP.member')" >&log.txt
 	else
-		peer chaincode instantiate -o orderer.ptunstad.no:7050 --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA -C $CHANNEL_NAME -n myccds -v 1.0 -c '{"Args":["c","asdf"]}' -P "OR('Org1MSP.member','Org1MSP.member')" >&log.txt
+		peer chaincode instantiate -o orderer.ptunstad.no:7050 --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA -C $CHANNEL_NAME -n myccds -v 1.1 -c '{"Args":["c","asdf"]}' -P "OR('Org1MSP.member','Org1MSP.member')" >&log.txt
 	fi
 	res=$?
 	cat log.txt
