@@ -127,7 +127,7 @@ joinChannel () {
 installChaincode () {
 	PEER=$1
 	setGlobals $PEER
-	peer chaincode install -n myccds -v 1.0 -p github.com/hyperledger/fabric/examples/chaincode/go/chaincode_datashare >&log.txt
+	peer chaincode install -n myccds -v 1.0 -p github.com/hyperledger/fabric/examples/chaincode/go/chaincode_datashare02 >&log.txt
 	res=$?
 	cat log.txt
         verifyResult $res "Chaincode2 installation on remote peer PEER$PEER has Failed"
