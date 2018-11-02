@@ -27,7 +27,7 @@ console.log(' Store path:'+store_path);
 // setup the fabric network
 var channel = fabric_client.newChannel('mychannel');
 
-var peer = fabric_client.newPeer('grpc://node3.ptunstad.no:7051');
+var peer = fabric_client.newPeer('grpc://node1.ptunstad.no:7051');
 channel.addPeer(peer);
 // create the key value store as defined in the fabric-client/config/default.json 'key-value-store' setting
 Fabric_Client.newDefaultKeyValueStore({ path: store_path
