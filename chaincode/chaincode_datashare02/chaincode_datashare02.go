@@ -99,7 +99,7 @@ func getkeyhistory(stub shim.ChaincodeStubInterface, args []string) (string, err
 
 	result := ""
 	for value.HasNext() {
-		kvpair, err := value.Next()
+		kvpair, _ := value.Next()
 		result = result + string(kvpair.Value)
 	}
 
