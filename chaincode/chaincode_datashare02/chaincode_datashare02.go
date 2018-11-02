@@ -44,7 +44,7 @@ func (t *SimpleAsset) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	if err != nil {
 		return shim.Error(err.Error())
 	}
-	if result == nil {
+	if result == "" {
 		return shim.Error(err.Error())
 	}
 
