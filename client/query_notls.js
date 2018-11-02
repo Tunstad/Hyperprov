@@ -11,7 +11,7 @@
  */
 
 var Fabric_Client = require('fabric-client');
-var Fabric_CA_Client = require('fabric-ca-client');
+//var Fabric_CA_Client = require('fabric-ca-client');
 var path = require('path');
 var util = require('util');
 var os = require('os');
@@ -45,7 +45,7 @@ Fabric_Client.newDefaultKeyValueStore({ path: store_path
     	verify: false
     };
     // be sure to change the http to https when the CA is running TLS enabled
-    fabric_ca_client = new Fabric_CA_Client('http://agc.ptunstad.no:7054', null , '', crypto_suite);
+    //fabric_ca_client = new Fabric_CA_Client('http://agc.ptunstad.no:7054', null , '', crypto_suite);
 
     // first check to see if the admin is already enrolled
     return fabric_client.getUserContext('admin', true);
@@ -60,9 +60,9 @@ Fabric_Client.newDefaultKeyValueStore({ path: store_path
 
 	const request = {
 		//targets : --- letting this default to the peers assigned to the channel
-		chaincodeId: 'mycc',
-		fcn: 'query',
-		args: ['a']
+		chaincodeId: 'myccds',
+		fcn: 'getkeyhistory',
+		args: ['c']
 	};
 
 	// send the query proposal to the peer
