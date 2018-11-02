@@ -246,7 +246,7 @@ services:
       - CORE_CHAINCODE_CAR=jmotacek/fabric-baseos:armv7l-0.3.2
       - CORE_CHAINCODE_JAVA=jmotacek/fabric-javaenv:armv7l-1.0.7
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
-    command: /bin/bash -c 'sleep 30; ./scripts/script.sh; while true; do sleep 20170504; done'
+    command: /bin/bash -c 'sleep 30; ./scripts/script_ds.sh; while true; do sleep 20170504; done'
     volumes:
       - /var/run/:/host/var/run/
       - /home/pi/hlf_multihost/hyperledger-pi-composer/chaincode:/opt/gopath/src/github.com/hyperledger/fabric/examples/chaincode/go
