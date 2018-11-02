@@ -79,7 +79,7 @@ func get(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	if value == nil {
 		return "", fmt.Errorf("Asset not found: %s", args[0])
 	}
-	return string(value), nil
+	return "value: " + string(value), nil
 }
 
 // Set stores the asset (both key and value) on the ledger. If the key exists,
