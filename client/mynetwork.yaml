@@ -1,0 +1,92 @@
+name: "hyperledger-fabric"
+version: "1.0"
+
+channels:
+  mychannel:
+    orderers:
+      - orderer.ptunstad.no
+    peers:
+      peer0.org1.ptunstad.no:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+      peer1.org1.ptunstad.no:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+      peer0.org2.ptunstad.no:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+      peer1.org2.ptunstad.no:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+
+organizations:
+  Org1:
+    mspid: Org1MSP
+    peers:
+      - peer0.org1.ptunstad.no
+      - peer1.org1.ptunstad.no
+    adminPrivateKey:
+      path: ../crypto-config/peerOrganizations/org1.ptunstad.no/users/Admin@org1.ptunstad.no/msp/keystore/2802917e85e5f4bbc90d3325120cde2193ec8e724c4cbf317f39bb508357fccc_sk
+    signedCert:
+      path: ../crypto-config/peerOrganizations/org1.ptunstad.no/users/Admin@org1.ptunstad.no/msp/signcerts/Admin@org1.ptunstad.no-cert.pem
+
+  Org2:
+    mspid: Org2MSP
+    peers:
+      - peer0.org2.ptunstad.no
+      - peer1.org2.ptunstad.no
+    adminPrivateKey:
+      path: ../crypto-config/peerOrganizations/org2.ptunstad.no/users/Admin@org2.ptunstad.no/msp/keystore/44fadf6e3978c411e5492f51bd856f400e5098f707909b7985d8d8fe7877827c_sk
+    signedCert:
+      path: ../crypto-config/peerOrganizations/org2.ptunstad.no/users/Admin@org2.ptunstad.no/msp/signcerts/Admin@org2.ptunstad.no-cert.pem
+
+orderers:
+  orderer.ptunstad.no:
+    url: grpcs://node3.ptunstad.no:7050
+    grpcOptions:
+      ssl-target-name-override: orderer.ptunstad.no
+      grpc-max-send-message-length: 15
+    tlsCACerts:
+      path: ../crypto-config/ordererOrganizations/ptunstad.no/orderers/orderer.ptunstad.no/msp/tlscacerts/tlsca.ptunstad.no-cert.pem
+
+peers:
+  peer0.org1.ptunstad.no:
+    url: grpcs://node3.ptunstad.no:7051
+    eventUrl: grpcs://node3.ptunstad.no:7053
+    grpcOptions:
+      ssl-target-name-override: peer0.org1.ptunstad.no
+      grpc.keepalive_time_ms: 600000
+    tlsCACerts:
+      path: ../crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/msp/tlscacerts/tlsca.org1.ptunstad.no-cert.pem
+
+  peer1.org1.ptunstad.no:
+    url: grpcs://node1.ptunstad.no:8051
+    eventUrl: grpcs://node1.ptunstad.no:8053
+    grpcOptions:
+      ssl-target-name-override: peer0.org2.ptunstad.no
+    tlsCACerts:
+      path: ../crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer1.org1.ptunstad.no/msp/tlscacerts/tlsca.org1.ptunstad.no-cert.pem
+  
+  peer0.org2.ptunstad.no:
+    url: grpcs://node2.ptunstad.no:9051
+    eventUrl: grpcs://node2.ptunstad.no:9053
+    grpcOptions:
+      ssl-target-name-override: peer0.org2.ptunstad.no
+    tlsCACerts:
+      path: ../crypto-config/peerOrganizations/org2.ptunstad.no/peers/peer0.org2.ptunstad.no/msp/tlscacerts/tlsca.org2.ptunstad.no-cert.pem
+  
+  peer1.org2.ptunstad.no:
+    url: grpcs://node0.ptunstad.no:10051
+    eventUrl: grpcs://node0.ptunstad.no:10053
+    grpcOptions:
+      ssl-target-name-override: peer0.org2.ptunstad.no
+    tlsCACerts:
+      path: ../crypto-config/peerOrganizations/org2.ptunstad.no/peers/peer1.org2.ptunstad.no/msp/tlscacerts/tlsca.org2.ptunstad.no-cert.pem
