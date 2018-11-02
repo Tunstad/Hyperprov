@@ -44,6 +44,9 @@ func (t *SimpleAsset) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	if err != nil {
 		return shim.Error(err.Error())
 	}
+	if result == nil {
+		return shim.Error(err.Error())
+	}
 
 	// Return the result as success payload
 	return shim.Success([]byte(result))
@@ -93,7 +96,7 @@ func gethistoryforkey(stub shim.ChaincodeStubInterface, args []string) (string, 
 	if value == nil {
 		return "", fmt.Errorf("Asset not found: %s", args[0])
 	}
-	return string(value), nil
+	return "History of key " args[0] + " is " + string(value), nil
 }
 
 // Get returns the value of the specified asset key
