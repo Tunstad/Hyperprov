@@ -41,6 +41,9 @@ func (t *SimpleAsset) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	} else if fn == "getkeyhistory" {
 		result, err = getkeyhistory(stub, args)
 	}
+	} else if fn == "getbyrange" {
+		result, err = getbyrange(stub, args)
+	}
 	if err != nil {
 		return shim.Error(err.Error())
 	}
@@ -82,8 +85,7 @@ func get(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	return string(value), nil
 }
 
-// Set stores the asset (both key and value) on the ledger. If the key exists,
-// it will override the value with the new one
+// Gets the full history of a key
 func getkeyhistory(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	if len(args) != 1 {
 		return "", fmt.Errorf("Incorrect arguments. Expecting a key")
@@ -97,36 +99,42 @@ func getkeyhistory(stub shim.ChaincodeStubInterface, args []string) (string, err
 		return "", fmt.Errorf("Asset not found: %s", args[0])
 	}
 
-	result := ""
+	result := "["
 	for value.HasNext() {
 		kvpair, _ := value.Next()
-		result = result + string(kvpair.Value)
+		result = result + string(kvpair.Timestamp) + ": " + string(kvpair.Value)
+		if value.HasNext() {
+			result = result + ", "
+		}
 	}
-
-	return result, nil
+	return result + "]", nil
 }
 
-// Get returns the value of the specified asset key
-/*func getmultiple(stub shim.ChaincodeStubInterface, args []string) (string, error) {
-	if len(args) != 1 {
-		return "", fmt.Errorf("Incorrect arguments. Expecting a count")
+// Gets the KV-pairs within a range of keys
+func getbyrange(stub shim.ChaincodeStubInterface, args []string) (string, error) {
+	if len(args) != 2 {
+		return "", fmt.Errorf("Incorrect arguments. Expecting a start-key and end-key")
 	}
 
-	value, err := stub.GetStateByRange("", "")
+	value, err := stub.GetStateByRange(args[0], args[1])
 	if err != nil {
 		return "", fmt.Errorf("Failed to get asset: %s with error: %s", args[0], err)
 	}
 	if value == nil {
-		return "", fmt.Errorf("Asset not found: %s", args[0])
+		return "", fmt.Errorf("No assset found: %s", args[0])
 	}
-	result := ""
+
+	result := "["
 	for value.HasNext() {
-		kvpair, err := value.Next()
-		result = result + string(kvpair.Value)
+		kvpair, _ := value.Next()
+		result = result + string(kvpair.Key) + ": " + string(kvpair.Value)
+		if value.HasNext() {
+			result = result + ", "
+		}
 	}
-	return result, nil
+	return result + "]", nil
 }
-*/
+
 func main() {
 	err := shim.Start(new(SimpleAsset))
 	if err != nil {
