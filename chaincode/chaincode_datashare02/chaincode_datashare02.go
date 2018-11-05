@@ -101,7 +101,7 @@ func getkeyhistory(stub shim.ChaincodeStubInterface, args []string) (string, err
 	result := "["
 	for value.HasNext() {
 		kvpair, _ := value.Next()
-		result = result + string(kvpair.Timestamp) + ": " + string(kvpair.Value)
+		result = result + kvpair.Timestamp.String() + ": " + string(kvpair.Value)
 		if value.HasNext() {
 			result = result + ", "
 		}
