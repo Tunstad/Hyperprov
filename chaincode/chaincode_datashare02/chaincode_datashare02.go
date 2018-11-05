@@ -40,7 +40,6 @@ func (t *SimpleAsset) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		result, err = get(stub, args)
 	} else if fn == "getkeyhistory" {
 		result, err = getkeyhistory(stub, args)
-	}
 	} else if fn == "getbyrange" {
 		result, err = getbyrange(stub, args)
 	}
