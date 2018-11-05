@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
@@ -101,7 +102,7 @@ func getkeyhistory(stub shim.ChaincodeStubInterface, args []string) (string, err
 	result := "["
 	for value.HasNext() {
 		kvpair, _ := value.Next()
-		result = result + string(kvpair.Timestamp.GetSeconds()) + ": " + string(kvpair.Value)
+		result = result + strconv.FormatInt(kvpair.Timestamp.GetSeconds(), 10) + ": " + string(kvpair.Value)
 		if value.HasNext() {
 			result = result + ", "
 		}
