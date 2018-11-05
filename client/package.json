@@ -9,7 +9,8 @@
     "dependencies": {
         "fabric-ca-client": "1.0.2",
         "fabric-client": "1.0.2",
-        "grpc": "1.9.1"
+        "grpc": "1.9.1",
+        "inquirer": "^6.2.0"
     },
     "author": "Anthony O'Dowd",
     "license": "Apache-2.0",
