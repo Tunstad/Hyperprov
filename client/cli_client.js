@@ -17,6 +17,10 @@ var util = require('util');
 var os = require('os');
 var fs = require("fs")
 
+
+var numbenchmarks = 20;
+var currentbenchmarks = 0;
+
 const inquirer = require('inquirer')
 //
 var fabric_client = new Fabric_Client();
@@ -30,7 +34,7 @@ var store_path = path.join(__dirname, 'hfc-key-store');
 // setup the fabric network
 var channel = fabric_client.newChannel('mychannel');
 
-var peer = fabric_client.newPeer('grpc://node3.ptunstad.no:7051');
+var peer = fabric_client.newPeer('grpc://node2.ptunstad.no:7051');
 channel.addPeer(peer);
 var order = fabric_client.newOrderer('grpc://node3.ptunstad.no:7050')
 channel.addOrderer(order);
@@ -54,22 +58,19 @@ inquirer.prompt(questions).then(answers => {
     var myargumentslist = myarguments.split(", ")
     console.log(myargumentslist)
     if(myfunction == "set"){
-        ccset(myargumentslist);
+        ccSet(myargumentslist);
     }else if(myfunction == "bms"){
-        benchmarkset(3, 4000)
+        benchmarkSet(numbenchmarks, 4000)
     }else if(myfunction == "sendfile"){
-        storefile(myargumentslist)
+        storeFile(myargumentslist)
     }else if(myfunction == "getfile"){
-        retrievefile(myargumentslist)
+        retrieveFile(myargumentslist)
     }else{
-        var retval = ccget(myfunction, myargumentslist);
-        console.log(retval)
-
+        ccGet(myfunction, myargumentslist, getCallback);
     }
 })
 
-
-function ccset(ccargs){
+function ccSet(ccargs, callback){
     Fabric_Client.newDefaultKeyValueStore({ path: store_path
     }).then((state_store) => {
         // assign the store to the fabric client
@@ -199,7 +200,9 @@ function ccset(ccargs){
     
         if(results && results[1] && results[1].event_status === 'VALID') {
             console.log('Successfully committed the change to the ledger by the peer');
-            return "OK"
+            if (typeof callback === "function") {
+                callback()
+            }
         } else {
             console.log('Transaction failed to be committed to the ledger due to ::'+results[1].event_status);
         }
@@ -207,7 +210,11 @@ function ccset(ccargs){
         console.error('Failed to invoke successfully :: ' + err);
     });
 }
-function ccget(ccfunc, ccargs, callback){
+
+function getCallback(result){
+    console.log("Result is : " + result)
+}
+function ccGet(ccfunc, ccargs, callback){
     Fabric_Client.newDefaultKeyValueStore({ path: store_path
     }).then((state_store) => {
         // assign the store to the fabric client
@@ -265,55 +272,60 @@ function ccget(ccfunc, ccargs, callback){
     console.error('Failed to query successfully :: ' + err);
     });
 }
-function benchmarkset(numitems, datalength){
-    
-    
-    for(var i=0; i < numitems; i++){
-        
-        var key = "name" + i.toString();
-        var value = [...Array(datalength)].map(i=>(~~(Math.random()*36)).toString(36)).join('')
-        console.log(value)
-        var args = [key, value]
-        console.log("Storing " + args.toString())
-        var retval = ccset(args)
-        if(retval == "OK"){
-            console.log("Proposal was accepted")
-        }
-    }
-    console.log("Done!")
 
+function benchmarkSetCallback(){
+    currentbenchmarks += 1;
+    console.log("Finished set number " + currentbenchmarks.toString())
+    if(currentbenchmarks >= numbenchmarks){
+        console.log("Finished, printing time...")
+        console.timeEnd('benchmarkset')
+    }
 }
 
-function Base64fromFile(inputfile){
+async function benchmarkSet(numitems, datalength){
+    console.time('benchmarkset');
+    for(var i=0; i < numitems; i++){    
+        var key = "name" + i.toString();
+        var value = [...Array(datalength)].map(i=>(~~(Math.random()*36)).toString(36)).join('')
+        var args = [key, value]
+        ccSet(args, benchmarkSetCallback)
+        await sleep(50)
+    }
+    console.log("Done sending operations!")
+}
+
+function sleep(ms){
+    return new Promise(resolve=>{
+        setTimeout(resolve,ms)
+    })
+}
+
+function base64fromFile(inputfile){
     var file = fs.readFileSync(inputfile)
     return new Buffer(file).toString('base64');
 }
 
-function FilefromBase64(inputstring, outputfile){
+function filefromBase64(inputstring, outputfile){
     var decoded = new Buffer(inputstring, 'base64')
     fs.writeFileSync(outputfile, decoded)
 }
 
-function storefile(arglist){
+function storeFile(arglist){
     if(arglist.length < 2){
         console.log("Need two arguments to store file. Usage: key, file.jpg")
     }
     var key = arglist[0]
-    var value = Base64fromFile(arglist[1])
+    var value = base64fromFile(arglist[1])
     var args = [key, value]
-    var retval = ccset(args)
-    if(retval == "OK"){
-        console.log("Proposal was accepted")
-    }
+    ccSet(args)
 }
 
-function retrievefile(arglist){
+function retrieveFile(arglist){
     if(arglist.length < 2){
         console.log("Need two arguments to retrieve file. Usage: key, newfile.jpg")
     }
     var key = [arglist[0]]
-    ccget('get', key, function(result)  {
-        FilefromBase64(result, arglist[1])
+    ccGet('get', key, function(result)  {
+        filefromBase64(result, arglist[1])
     })
-
 }
