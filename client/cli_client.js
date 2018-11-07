@@ -30,7 +30,7 @@ var store_path = path.join(__dirname, 'hfc-key-store');
 // setup the fabric network
 var channel = fabric_client.newChannel('mychannel');
 
-var peer = fabric_client.newPeer('grpc://node2.ptunstad.no:7051');
+var peer = fabric_client.newPeer('grpc://node3.ptunstad.no:7051');
 channel.addPeer(peer);
 var order = fabric_client.newOrderer('grpc://node3.ptunstad.no:7050')
 channel.addOrderer(order);
@@ -57,8 +57,14 @@ inquirer.prompt(questions).then(answers => {
         ccset(myargumentslist);
     }else if(myfunction == "bms"){
         benchmarkset(3, 4000)
+    }else if(myfunction == "sendfile"){
+        storefile(myargumentslist)
+    }else if(myfunction == "getfile"){
+        retrievefile(myargumentslist)
     }else{
-        ccget(myfunction, myargumentslist);
+        var retval = ccget(myfunction, myargumentslist);
+        console.log(retval)
+
     }
 })
 
@@ -201,7 +207,7 @@ function ccset(ccargs){
         console.error('Failed to invoke successfully :: ' + err);
     });
 }
-function ccget(ccfunc, ccargs){
+function ccget(ccfunc, ccargs, callback){
     Fabric_Client.newDefaultKeyValueStore({ path: store_path
     }).then((state_store) => {
         // assign the store to the fabric client
@@ -246,7 +252,11 @@ function ccget(ccfunc, ccargs){
         if (query_responses[0] instanceof Error) {
             console.error("error from query = ", query_responses[0]);
         } else {
-            console.log("Response is ", query_responses[0].toString());
+            //console.log("Response is ", query_responses[0].toString());
+            if (typeof callback === "function") {
+                callback(query_responses[0].toString())
+            }
+            //return query_responses[0].toString();
         }
     } else {
         console.log("No payloads were returned from query");
@@ -271,5 +281,39 @@ function benchmarkset(numitems, datalength){
         }
     }
     console.log("Done!")
+
+}
+
+function Base64fromFile(inputfile){
+    var file = fs.readFileSync(inputfile)
+    return new Buffer(file).toString('base64');
+}
+
+function FilefromBase64(inputstring, outputfile){
+    var decoded = new Buffer(inputstring, 'base64')
+    fs.writeFileSync(outputfile, decoded)
+}
+
+function storefile(arglist){
+    if(arglist.length < 2){
+        console.log("Need two arguments to store file. Usage: key, file.jpg")
+    }
+    var key = arglist[0]
+    var value = Base64fromFile(arglist[1])
+    var args = [key, value]
+    var retval = ccset(args)
+    if(retval == "OK"){
+        console.log("Proposal was accepted")
+    }
+}
+
+function retrievefile(arglist){
+    if(arglist.length < 2){
+        console.log("Need two arguments to retrieve file. Usage: key, newfile.jpg")
+    }
+    var key = [arglist[0]]
+    ccget('get', key, function(result)  {
+        FilefromBase64(result, arglist[1])
+    })
 
 }
