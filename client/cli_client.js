@@ -30,7 +30,7 @@ var store_path = path.join(__dirname, 'hfc-key-store');
 // setup the fabric network
 var channel = fabric_client.newChannel('mychannel');
 
-var peer = fabric_client.newPeer('grpc://node1.ptunstad.no:7051');
+var peer = fabric_client.newPeer('grpc://node2.ptunstad.no:7051');
 channel.addPeer(peer);
 var order = fabric_client.newOrderer('grpc://node3.ptunstad.no:7050')
 channel.addOrderer(order);
@@ -55,6 +55,8 @@ inquirer.prompt(questions).then(answers => {
     console.log(myargumentslist)
     if(myfunction == "set"){
         ccset(myargumentslist);
+    }else if(myfunction == "bms"){
+        benchmarkset(3, 4000)
     }else{
         ccget(myfunction, myargumentslist);
     }
@@ -191,6 +193,7 @@ function ccset(ccargs){
     
         if(results && results[1] && results[1].event_status === 'VALID') {
             console.log('Successfully committed the change to the ledger by the peer');
+            return "OK"
         } else {
             console.log('Transaction failed to be committed to the ledger due to ::'+results[1].event_status);
         }
@@ -251,4 +254,22 @@ function ccget(ccfunc, ccargs){
     }).catch((err) => {
     console.error('Failed to query successfully :: ' + err);
     });
+}
+function benchmarkset(numitems, datalength){
+    
+    
+    for(var i=0; i < numitems; i++){
+        
+        var key = "name" + i.toString();
+        var value = [...Array(datalength)].map(i=>(~~(Math.random()*36)).toString(36)).join('')
+        console.log(value)
+        var args = [key, value]
+        console.log("Storing " + args.toString())
+        var retval = ccset(args)
+        if(retval == "OK"){
+            console.log("Proposal was accepted")
+        }
+    }
+    console.log("Done!")
+
 }
