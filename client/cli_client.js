@@ -17,8 +17,10 @@ var util = require('util');
 var os = require('os');
 var fs = require("fs")
 
+var totaltime_seconds = 200;        //3600 = 1h, 600 = 10m
+var bm_datalength = 2000;
 
-var numbenchmarks = 20;
+var numbenchmarks = 200;
 var currentbenchmarks = 0;
 
 const inquirer = require('inquirer')
@@ -60,7 +62,7 @@ inquirer.prompt(questions).then(answers => {
     if(myfunction == "set"){
         ccSet(myargumentslist);
     }else if(myfunction == "bms"){
-        benchmarkSet(numbenchmarks, 4000)
+        benchmarkSet(numbenchmarks, bm_datalength)
     }else if(myfunction == "sendfile"){
         storeFile(myargumentslist)
     }else if(myfunction == "getfile"){
@@ -285,11 +287,12 @@ function benchmarkSetCallback(){
 async function benchmarkSet(numitems, datalength){
     console.time('benchmarkset');
     for(var i=0; i < numitems; i++){    
-        var key = "name" + i.toString();
+        var key = i.toString();
         var value = [...Array(datalength)].map(i=>(~~(Math.random()*36)).toString(36)).join('')
         var args = [key, value]
+        console.log("Sending transaction " + String(i))
         ccSet(args, benchmarkSetCallback)
-        await sleep(50)
+        await sleep((totaltime_seconds/numbenchmarks)*1000)
     }
     console.log("Done sending operations!")
 }
