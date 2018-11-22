@@ -72,7 +72,7 @@ inquirer.prompt(questions).then(answers => {
     }
 })
 
-function ccSet(ccargs, callback){
+function ccSet(ccargs, callback, callback2){
     Fabric_Client.newDefaultKeyValueStore({ path: store_path
     }).then((state_store) => {
         // assign the store to the fabric client
@@ -134,6 +134,10 @@ function ccSet(ccargs, callback){
                 'Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s"',
                 proposalResponses[0].response.status, proposalResponses[0].response.message));
     
+            //Callback to print time to proposalresponse
+            if (typeof callback2 === "function") {
+                callback2()
+            }
             // build up the request for the orderer to have the transaction committed
             var request = {
                 proposalResponses: proposalResponses,
@@ -283,9 +287,13 @@ function benchmarkSetCallback(){
         console.timeEnd('benchmarkset')
     }
 }
+function proposalOkCallback(){
+        console.timeEnd('proposalok')
+}
 
 async function benchmarkSet(numitems, datalength){
     console.time('benchmarkset');
+    console.time("proposalok")
     for(var i=0; i < numitems; i++){    
         var key = i.toString();
         var value = [...Array(datalength)].map(i=>(~~(Math.random()*36)).toString(36)).join('')
@@ -294,7 +302,7 @@ async function benchmarkSet(numitems, datalength){
         var args = [key, value]
         
         console.log("Sending transaction " + String(i))
-        ccSet(args, benchmarkSetCallback)
+        ccSet(args, benchmarkSetCallback, proposalOkCallback)
         await sleep((totaltime_seconds/numbenchmarks)*1000)
     }
     console.log("Done sending operations!")
