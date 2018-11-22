@@ -18,7 +18,7 @@ var os = require('os');
 var fs = require("fs")
 
 var totaltime_seconds = 1;        //3600 = 1h, 600 = 10m
-var bm_datalength = 1000000; // MAX == 1398101 characters/bytes
+//var bm_datalength = 1000000; // MAX == 1398101 characters/bytes
 
 var numbenchmarks = 1;
 var currentbenchmarks = 0;
@@ -36,7 +36,7 @@ var store_path = path.join(__dirname, 'hfc-key-store');
 // setup the fabric network
 var channel = fabric_client.newChannel('mychannel');
 
-var peer = fabric_client.newPeer('grpc://127.0.0.1:7051');
+var peer = fabric_client.newPeer('grpc://node3.ptunstad.no:7051');
 channel.addPeer(peer);
 var order = fabric_client.newOrderer('grpc://node3.ptunstad.no:7050')
 channel.addOrderer(order);
@@ -62,7 +62,7 @@ inquirer.prompt(questions).then(answers => {
     if(myfunction == "set"){
         ccSet(myargumentslist);
     }else if(myfunction == "bms"){
-        benchmarkSet(numbenchmarks, bm_datalength)
+        benchmarkSet(numbenchmarks, parseInt(myargumentslist[0]))
     }else if(myfunction == "sendfile"){
         storeFile(myargumentslist)
     }else if(myfunction == "getfile"){
