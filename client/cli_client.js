@@ -17,10 +17,10 @@ var util = require('util');
 var os = require('os');
 var fs = require("fs")
 
-var totaltime_seconds = 200;        //3600 = 1h, 600 = 10m
-var bm_datalength = 2000;
+var totaltime_seconds = 1;        //3600 = 1h, 600 = 10m
+var bm_datalength = 1000000; // MAX == 1398101 characters/bytes
 
-var numbenchmarks = 200;
+var numbenchmarks = 1;
 var currentbenchmarks = 0;
 
 const inquirer = require('inquirer')
@@ -36,7 +36,7 @@ var store_path = path.join(__dirname, 'hfc-key-store');
 // setup the fabric network
 var channel = fabric_client.newChannel('mychannel');
 
-var peer = fabric_client.newPeer('grpc://node2.ptunstad.no:7051');
+var peer = fabric_client.newPeer('grpc://127.0.0.1:7051');
 channel.addPeer(peer);
 var order = fabric_client.newOrderer('grpc://node3.ptunstad.no:7050')
 channel.addOrderer(order);
@@ -289,7 +289,10 @@ async function benchmarkSet(numitems, datalength){
     for(var i=0; i < numitems; i++){    
         var key = i.toString();
         var value = [...Array(datalength)].map(i=>(~~(Math.random()*36)).toString(36)).join('')
+        console.log(value.length)
+        console.log(Buffer.byteLength(value))
         var args = [key, value]
+        
         console.log("Sending transaction " + String(i))
         ccSet(args, benchmarkSetCallback)
         await sleep((totaltime_seconds/numbenchmarks)*1000)
