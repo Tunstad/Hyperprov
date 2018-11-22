@@ -17,10 +17,10 @@ var util = require('util');
 var os = require('os');
 var fs = require("fs")
 
-var totaltime_seconds = 1;        //3600 = 1h, 600 = 10m
+var totaltime_seconds = 60;        //3600 = 1h, 600 = 10m
 //var bm_datalength = 1000000; // MAX == 1398101 characters/bytes
 
-var numbenchmarks = 1;
+var numbenchmarks = 0;
 var currentbenchmarks = 0;
 
 const inquirer = require('inquirer')
@@ -62,6 +62,7 @@ inquirer.prompt(questions).then(answers => {
     if(myfunction == "set"){
         ccSet(myargumentslist);
     }else if(myfunction == "bms"){
+        numbenchmarks = parseInt(myargumentslist[1])
         benchmarkSet(numbenchmarks, parseInt(myargumentslist[0]))
     }else if(myfunction == "sendfile"){
         storeFile(myargumentslist)
