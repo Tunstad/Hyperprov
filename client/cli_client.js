@@ -14,36 +14,47 @@ var Fabric_Client = require('fabric-client');
 //var Fabric_CA_Client = require('fabric-ca-client');
 var path = require('path');
 var util = require('util');
-var os = require('os');
+//var os = require('os');
 var fs = require("fs")
 
+//Inquirer used to supply the CLI
+const inquirer = require('inquirer')
+
+//The time a benchmark is set to run
 var totaltime_seconds = 600;        //3600 = 1h, 600 = 10m
+
 //var bm_datalength = 1000000; // MAX == 1398101 characters/bytes
 
+//The global variables for number of benchmarks to be run, and the 
+//current number of benchmarks that have been run. Numbenchmarks is 
+//set by the inquirer-prompt.
 var numbenchmarks = 0;
 var currentbenchmarks = 0;
 
-const inquirer = require('inquirer')
-//
 var fabric_client = new Fabric_Client();
-var fabric_ca_client = null;
-var admin_user = null;
-var member_user = null;
+// var fabric_ca_client = null;
+// var admin_user = null;
+// var member_user = null;
 var tx_id = null;
 var store_path = path.join(__dirname, 'hfc-key-store');
-//console.log(' Store path:'+store_path);
 
-// setup the fabric network
+// setup the fabric network mychannel
 var channel = fabric_client.newChannel('mychannel');
 
+//Set the peer to recieve operations and add it to the channel object
 var peer = fabric_client.newPeer('grpc://node2.ptunstad.no:7051');
 channel.addPeer(peer);
+
+//Set the orderer to be used by the set-functionality in the blockchain.
 var order = fabric_client.newOrderer('grpc://node3.ptunstad.no:7050')
 channel.addOrderer(order);
 
+
+//Begin CLI to retrieve user input of application. This could for other use-cases be
+//changed to something more along the lines of a REST API if outside access is needed or
+//a local API available only to another application for our use case.
 var myfunction = ""
 var myarguments = ""
-
 var questions = [{
     type: 'input',
     name: 'inputfunc',
@@ -54,6 +65,8 @@ var questions = [{
     message: "List you arguments. (Example:'a, d')",
 }]
 
+//Select the command specified and call the correct subfunction with the 
+//appropriate arguments.
 inquirer.prompt(questions).then(answers => {
     myfunction = answers['inputfunc']
     myarguments = answers['inputargs']
@@ -73,6 +86,8 @@ inquirer.prompt(questions).then(answers => {
     }
 })
 
+//Function to set chaincode based on arguments. For myccds it expects argument to be of type
+//key, value. This is the only way to change values.
 function ccSet(ccargs, callback, callback2){
     Fabric_Client.newDefaultKeyValueStore({ path: store_path
     }).then((state_store) => {
@@ -88,7 +103,8 @@ function ccSet(ccargs, callback, callback2){
             trustedRoots: [],
             verify: false
         };
-        // be sure to change the http to https when the CA is running TLS enabled
+        //Be sure to change the http to https when the CA is running TLS enabled
+        //Not neccesary.
         //fabric_ca_client = new Fabric_CA_Client('http://agc.ptunstad.no:7054', null , '', crypto_suite);
     
         // first check to see if the admin is already enrolled
@@ -105,8 +121,6 @@ function ccSet(ccargs, callback, callback2){
         tx_id = fabric_client.newTransactionID();
         console.log("Assigning transaction_id: ", tx_id._transaction_id);
     
-        // createCar chaincode function - requires 5 args, ex: args: ['CAR12', 'Honda', 'Accord', 'Black', 'Tom'],
-        // changeCarOwner chaincode function - requires 2 args , ex: args: ['CAR10', 'Dave'],
         // must send the proposal to endorsing peers
         var request = {
             //targets: let default to the peer assigned to the client
@@ -135,7 +149,8 @@ function ccSet(ccargs, callback, callback2){
                 'Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s"',
                 proposalResponses[0].response.status, proposalResponses[0].response.message));
     
-            //Callback to print time to proposalresponse
+            //Callback to print time to proposalresponse. Only neccesary for measurements
+            //and can be disabled for runs with more than a sinlge transaction.
             if (typeof callback2 === "function") {
                 callback2()
             }
@@ -207,6 +222,8 @@ function ccSet(ccargs, callback, callback2){
     
         if(results && results[1] && results[1].event_status === 'VALID') {
             console.log('Successfully committed the change to the ledger by the peer');
+            //Callback function used to measure time-to-commit.
+            //This functionality is only used for measurements and can be disabled otherwise.
             if (typeof callback === "function") {
                 callback()
             }
@@ -218,9 +235,14 @@ function ccSet(ccargs, callback, callback2){
     });
 }
 
+//Callback function used in get-function. 
+//Currently not neccesary and only prints result.
 function getCallback(result){
     console.log("Result is : " + result)
 }
+
+//Get functionality to call chaincode to get current value of a provided key.
+//Takes in as arument 0 only a key string and callback-function only prints to console.
 function ccGet(ccfunc, ccargs, callback){
     Fabric_Client.newDefaultKeyValueStore({ path: store_path
     }).then((state_store) => {
@@ -249,7 +271,6 @@ function ccGet(ccfunc, ccargs, callback){
             throw new Error('Failed to get admin.... run enrollAdmin.js');
         }
     
-    
         const request = {
             //targets : --- letting this default to the peers assigned to the channel
             chaincodeId: 'myccds',
@@ -266,10 +287,12 @@ function ccGet(ccfunc, ccargs, callback){
         if (query_responses[0] instanceof Error) {
             console.error("error from query = ", query_responses[0]);
         } else {
-            //console.log("Response is ", query_responses[0].toString());
+            //Use callback function provided to send result of query to.
+            //Currently prints the string to console.
             if (typeof callback === "function") {
                 callback(query_responses[0].toString())
             }
+            //Function could also return the result
             //return query_responses[0].toString();
         }
     } else {
@@ -280,6 +303,9 @@ function ccGet(ccfunc, ccargs, callback){
     });
 }
 
+//For benchmarking use a custom callbackfunction for each completed SET action
+//For every completed action increment the counter, and once all operations have
+//been completed, print the time it took to perform all operations.
 function benchmarkSetCallback(){
     currentbenchmarks += 1;
     console.log("Finished set number " + currentbenchmarks.toString())
@@ -288,10 +314,16 @@ function benchmarkSetCallback(){
         console.timeEnd('benchmarkset')
     }
 }
+//Custom callback used to measure the time required for a transaction to reach
+//the point where a proposal is accepted.
 function proposalOkCallback(){
         console.timeEnd('proposalok')
 }
 
+//Function used to benchmark by storing a specified number of data items of a
+//certain datalength. Based on the totaltime_seconds variable set sleep for some 
+//amount of time between transactions. The key is just incremented on count and 
+//the value stored is a randomly generated string of the specified lenght.
 async function benchmarkSet(numitems, datalength){
     console.time('benchmarkset');
     console.time("proposalok")
@@ -309,22 +341,14 @@ async function benchmarkSet(numitems, datalength){
     console.log("Done sending operations!")
 }
 
+//Subfunction used to await sleep in benchmarking function
 function sleep(ms){
     return new Promise(resolve=>{
         setTimeout(resolve,ms)
     })
 }
 
-function base64fromFile(inputfile){
-    var file = fs.readFileSync(inputfile)
-    return new Buffer(file).toString('base64');
-}
-
-function filefromBase64(inputstring, outputfile){
-    var decoded = new Buffer(inputstring, 'base64')
-    fs.writeFileSync(outputfile, decoded)
-}
-
+//Functionality for storing a file as a key,value entry in the blockchain.
 function storeFile(arglist){
     if(arglist.length < 2){
         console.log("Need two arguments to store file. Usage: key, file.jpg")
@@ -335,6 +359,7 @@ function storeFile(arglist){
     ccSet(args)
 }
 
+//Functionality for storing a file as a base64 encoded key,value entry in the blockchain.
 function retrieveFile(arglist){
     if(arglist.length < 2){
         console.log("Need two arguments to retrieve file. Usage: key, newfile.jpg")
@@ -343,4 +368,16 @@ function retrieveFile(arglist){
     ccGet('get', key, function(result)  {
         filefromBase64(result, arglist[1])
     })
+}
+
+//Subfunction used to generate a base64 string from a file object, used by storeFile.
+function base64fromFile(inputfile){
+    var file = fs.readFileSync(inputfile)
+    return new Buffer(file).toString('base64');
+}
+
+//Subfunction used to generate a file based on a base64 string, used by retrieveFile.
+function filefromBase64(inputstring, outputfile){
+    var decoded = new Buffer(inputstring, 'base64')
+    fs.writeFileSync(outputfile, decoded)
 }

@@ -35,6 +35,7 @@ func (t *SimpleAsset) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 
 	var result string
 	var err error
+	//Switch on functionality specified in the transaction.
 	if fn == "set" {
 		result, err = set(stub, args)
 	} else if fn == "get" {
@@ -56,7 +57,7 @@ func (t *SimpleAsset) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 }
 
 // Set stores the asset (both key and value) on the ledger. If the key exists,
-// it will override the value with the new one
+// it will override the value with the new one. The history is still stored in the ledger.
 func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	if len(args) != 2 {
 		return "", fmt.Errorf("Incorrect arguments. Expecting a key and a value")
@@ -69,7 +70,7 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	return args[1], nil
 }
 
-// Get returns the value of the specified asset key
+// Get returns the current value of the specified asset key. 
 func get(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	if len(args) != 1 {
 		return "", fmt.Errorf("Incorrect arguments. Expecting a key")
@@ -85,7 +86,10 @@ func get(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	return string(value), nil
 }
 
-// Gets the full history of a key
+// Gets the full history of a key, The historic values are coupled with the timestamp of change.
+// TODO: This function should evertually include a point for each historic value of which client
+// or the credentials used to make the change.
+// Example format of returned value is [ 12341251234: firstvalue, 12341235235: secondvalue]
 func getkeyhistory(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	if len(args) != 1 {
 		return "", fmt.Errorf("Incorrect arguments. Expecting a key")
@@ -110,7 +114,9 @@ func getkeyhistory(stub shim.ChaincodeStubInterface, args []string) (string, err
 	return result + "]", nil
 }
 
-// Gets the KV-pairs within a range of keys
+// Gets the KV-pairs within a range of keys. The range specified is not specified on the range of 
+// strings but rather the value of theese strings. This means that searching for keys between eg.
+// key123 and key133352 might not returnt only those named key between key123 and key133352.
 func getbyrange(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	if len(args) != 2 {
 		return "", fmt.Errorf("Incorrect arguments. Expecting a start-key and end-key")
