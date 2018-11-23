@@ -82,7 +82,7 @@ inquirer.prompt(questions).then(answers => {
     }else if(myfunction == "getfile"){
         retrieveFile(myargumentslist)
     }else{
-        ccGet(myfunction, myargumentslist, getCallback);
+        ccFunc(myfunction, myargumentslist, getCallback);
     }
 })
 
@@ -241,9 +241,10 @@ function getCallback(result){
     console.log("Result is : " + result)
 }
 
-//Get functionality to call chaincode to get current value of a provided key.
-//Takes in as arument 0 only a key string and callback-function only prints to console.
-function ccGet(ccfunc, ccargs, callback){
+//Functionality to call chaincode to retrieve some sort of data from the blockchain.
+//Some supported ccfuncs are 'get', 'getkeyhistory' and 'getbyrange'.
+//Takes in as aruments as a key string and callback-function only prints result to console.
+function ccFunc(ccfunc, ccargs, callback){
     Fabric_Client.newDefaultKeyValueStore({ path: store_path
     }).then((state_store) => {
         // assign the store to the fabric client
@@ -365,7 +366,7 @@ function retrieveFile(arglist){
         console.log("Need two arguments to retrieve file. Usage: key, newfile.jpg")
     }
     var key = [arglist[0]]
-    ccGet('get', key, function(result)  {
+    ccFunc('get', key, function(result)  {
         filefromBase64(result, arglist[1])
     })
 }
