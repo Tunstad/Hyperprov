@@ -33,7 +33,7 @@ var currentbenchmarks = 0;
 
 var fabric_client = new Fabric_Client();
 // var fabric_ca_client = null;
-// var admin_user = null;
+var admin_user = null;
 // var member_user = null;
 var tx_id = null;
 var store_path = path.join(__dirname, 'hfc-key-store');
