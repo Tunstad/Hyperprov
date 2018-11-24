@@ -63,8 +63,11 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 		return "", fmt.Errorf("Incorrect arguments. Expecting a key and a value")
 	}
 	creator, cerr := stub.GetCreator()
+	if cerr != nil {
+		return "", fmt.Errorf("Failed to get creator info: %s", args[0])
+	}
 
-	err := stub.PutState(args[0], append([]byte(args[1]), creator...))
+	err := stub.PutState(args[0], append(creator, []byte(args[1])...))
 	if err != nil {
 		return "", fmt.Errorf("Failed to set asset: %s", args[0])
 	}
