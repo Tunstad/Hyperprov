@@ -62,15 +62,16 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	if len(args) != 2 {
 		return "", fmt.Errorf("Incorrect arguments. Expecting a key and a value")
 	}
+	creator, cerr := stub.GetCreator()
 
-	err := stub.PutState(args[0], []byte(args[1]))
+	err := stub.PutState(args[0], append([]byte(args[1]), creator...))
 	if err != nil {
 		return "", fmt.Errorf("Failed to set asset: %s", args[0])
 	}
 	return args[1], nil
 }
 
-// Get returns the current value of the specified asset key. 
+// Get returns the current value of the specified asset key.
 func get(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	if len(args) != 1 {
 		return "", fmt.Errorf("Incorrect arguments. Expecting a key")
@@ -114,7 +115,7 @@ func getkeyhistory(stub shim.ChaincodeStubInterface, args []string) (string, err
 	return result + "]", nil
 }
 
-// Gets the KV-pairs within a range of keys. The range specified is not specified on the range of 
+// Gets the KV-pairs within a range of keys. The range specified is not specified on the range of
 // strings but rather the value of theese strings. This means that searching for keys between eg.
 // key123 and key133352 might not returnt only those named key between key123 and key133352.
 func getbyrange(stub shim.ChaincodeStubInterface, args []string) (string, error) {
