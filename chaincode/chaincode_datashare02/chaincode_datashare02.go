@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 	"strconv"
 
@@ -62,12 +64,26 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	if len(args) != 2 {
 		return "", fmt.Errorf("Incorrect arguments. Expecting a key and a value")
 	}
-	creator, cerr := stub.GetCreator()
-	if cerr != nil {
-		return "", fmt.Errorf("Failed to get creator info: %s", args[0])
+	serializedID, _ := stub.GetCreator()
+
+	sId := &msp.SerializedIdentity{}
+	err := proto.Unmarshal(serializedID, sId)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Could not deserialize a SerializedIdentity, err %s", err))
 	}
 
-	err := stub.PutState(args[0], append(creator, []byte(args[1])...))
+	bl, _ := pem.Decode(sId.IdBytes)
+	if bl == nil {
+		return shim.Error(fmt.Sprintf("Could not decode the PEM structure"))
+	}
+	cert, err := x509.ParseCertificate(bl.Bytes)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("ParseCertificate failed %s", err))
+	}
+
+	fmt.Println(cert)
+
+	err := stub.PutState(args[0], append([]byte(cert), []byte(args[1])...))
 	if err != nil {
 		return "", fmt.Errorf("Failed to set asset: %s", args[0])
 	}
