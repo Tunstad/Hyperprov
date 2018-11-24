@@ -25,6 +25,10 @@ var totaltime_seconds = 600;        //3600 = 1h, 600 = 10m
 
 //var bm_datalength = 1000000; // MAX == 1398101 characters/bytes
 
+//The user to interact with blockchain as, theese are found in hfc-key-store and generated 
+//by having enrollAdmin.js and registerUser.js interact with a fabric CA server
+var currentUser = 'Node2'
+
 //The global variables for number of benchmarks to be run, and the 
 //current number of benchmarks that have been run. Numbenchmarks is 
 //set by the inquirer-prompt.
@@ -32,9 +36,11 @@ var numbenchmarks = 0;
 var currentbenchmarks = 0;
 
 var fabric_client = new Fabric_Client();
-// var fabric_ca_client = null;
+
+//User variables stored here if needed, but getUserContext is sufficient to set user for fabric_client
 var admin_user = null;
-// var member_user = null;
+var member_user = null;
+
 var tx_id = null;
 var store_path = path.join(__dirname, 'hfc-key-store');
 
@@ -108,13 +114,13 @@ function ccSet(ccargs, callback, callback2){
         //fabric_ca_client = new Fabric_CA_Client('http://agc.ptunstad.no:7054', null , '', crypto_suite);
     
         // first check to see if the admin is already enrolled
-        return fabric_client.getUserContext('admin', true);
+        return fabric_client.getUserContext(currentUser, true);
     }).then((user_from_store) => {
         if (user_from_store && user_from_store.isEnrolled()) {
-            console.log('Successfully loaded admin from persistence');
-            admin_user = user_from_store;
+            console.log('Successfully loaded user from persistence');
+            member_user = user_from_store;
         } else {
-            throw new Error('Failed to get admin.... run enrollAdmin.js');
+            throw new Error('Failed to get user.... run enrollAdmin.js (and maybe RegisterUser)');
         }
     
         // get a transaction id object based on the current user assigned to fabric client
@@ -263,13 +269,13 @@ function ccFunc(ccfunc, ccargs, callback){
         //fabric_ca_client = new Fabric_CA_Client('http://agc.ptunstad.no:7054', null , '', crypto_suite);
     
         // first check to see if the admin is already enrolled
-        return fabric_client.getUserContext('admin', true);
+        return fabric_client.getUserContext(currentUser, true);
     }).then((user_from_store) => {
         if (user_from_store && user_from_store.isEnrolled()) {
-            console.log('Successfully loaded admin from persistence');
-            admin_user = user_from_store;
+            console.log('Successfully loaded user from persistence');
+            member_user = user_from_store;
         } else {
-            throw new Error('Failed to get admin.... run enrollAdmin.js');
+            throw new Error('Failed to get user.... run enrollAdmin.js (and maybe RegisterUser)');
         }
     
         const request = {
