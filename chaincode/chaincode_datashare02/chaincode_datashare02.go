@@ -183,9 +183,9 @@ func getbyrange(stub shim.ChaincodeStubInterface, args []string) (string, error)
 		kvpair, _ := value.Next()
 		if strings.Contains(string(kvpair.Value), "-----BEGIN CERTIFICATE-----") {
 			valueSlice := strings.Split(string(kvpair.Value), "-----END CERTIFICATE-----")
-			retval := strings.TrimLeft(valueSlice[1], "\n")
+			retval = strings.TrimLeft(valueSlice[1], "\n")
 		} else {
-			retval := string(kvpair.Value)
+			retval = string(kvpair.Value)
 		}
 		result = result + string(kvpair.Key) + ": " + retval
 		if value.HasNext() {
