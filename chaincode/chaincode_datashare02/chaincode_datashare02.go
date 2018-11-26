@@ -114,7 +114,7 @@ func get(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	if strings.Contains(string(value), "----BEGIN -----") {
 		valueSlice := strings.Split(string(value), "-----END -----")
 		retval = strings.TrimLeft(valueSlice[1], "\n")
-	} else strings.Contains(string(value), "----BEGIN CERTIFICATE-----"){
+	}else if strings.Contains(string(value), "----BEGIN CERTIFICATE-----"){
 		valueSlice := strings.Split(string(value), "-----END CERTIFICATE-----")
 		retval = strings.TrimLeft(valueSlice[1], "\n")
 	}
