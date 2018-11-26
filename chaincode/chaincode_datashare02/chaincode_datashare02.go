@@ -22,8 +22,10 @@ func (t *SimpleAsset) Init(stub shim.ChaincodeStubInterface) pb.Response {
 
 	// Set up any variables or assets here by calling stub.PutState()
 
-	// We store the key and the value on the ledger
-	err := stub.PutState(args[0], []byte(args[1]))
+	// We store the creator data, key and the value on the ledger
+	val, _ := stub.GetCreator()
+
+	err := stub.PutState(args[0], append([]byte(val), []byte(args[1])...))
 	if err != nil {
 		return shim.Error(fmt.Sprintf("Failed to create asset: %s", args[0]))
 	}
@@ -107,8 +109,8 @@ func get(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	if value == nil {
 		return "", fmt.Errorf("Asset not found: %s", args[0])
 	}
-	valueSlice := strings.Split(string(value), "\n")
-	return valueSlice[len(valueSlice)-1], nil
+	valueSlice := strings.Split(string(kvpair.Value), "-----END CERTIFICATE-----")
+	return valueSlice[1], nil
 }
 
 // Gets the full history of a key, The historic values are coupled with the timestamp of change.
@@ -131,8 +133,10 @@ func getkeyhistory(stub shim.ChaincodeStubInterface, args []string) (string, err
 	result := "["
 	for value.HasNext() {
 		kvpair, _ := value.Next()
-		valueSlice := strings.Split(string(kvpair.Value), "\n")
-		result = result + strconv.FormatInt(kvpair.Timestamp.GetSeconds(), 10) + ": " + valueSlice[len(valueSlice)-1] + "cert: " + valueSlice[len(valueSlice)-3]
+		valueSlice := strings.Split(string(kvpair.Value), "-----END CERTIFICATE-----")
+		firstcertSlice := strings.Split(string(kvpair.Value), "-----BEGIN CERTIFICATE-----")
+		finalCertSlice := strings.Split(string(firstcertSlice[1]), "-----END CERTIFICATE-----")
+		result = result + strconv.FormatInt(kvpair.Timestamp.GetSeconds(), 10) + ": " + valueSlice[1] + "cert: " + finalCertSlice[0]
 		if value.HasNext() {
 			result = result + ", "
 		}
@@ -159,8 +163,8 @@ func getbyrange(stub shim.ChaincodeStubInterface, args []string) (string, error)
 	result := "["
 	for value.HasNext() {
 		kvpair, _ := value.Next()
-		valueSlice := strings.Split(string(kvpair.Value), "\n")
-		result = result + string(kvpair.Key) + ": " + valueSlice[len(valueSlice)-1]
+		valueSlice := strings.Split(string(kvpair.Value), "-----END CERTIFICATE-----")
+		result = result + string(kvpair.Key) + ": " + valueSlice[1]
 		if value.HasNext() {
 			result = result + ", "
 		}
