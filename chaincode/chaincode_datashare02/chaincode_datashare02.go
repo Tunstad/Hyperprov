@@ -23,7 +23,7 @@ func (t *SimpleAsset) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	// Set up any variables or assets here by calling stub.PutState()
 
 	// We store the creator data, key and the value on the ledger
-	err := stub.PutState(args[0], []byte(args[1])...)
+	err := stub.PutState(args[0], []byte(args[1]))
 	if err != nil {
 		return shim.Error(fmt.Sprintf("Failed to create asset: %s", args[0]))
 	}
@@ -111,7 +111,7 @@ func get(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 		return "", fmt.Errorf("Asset not found: %s", args[0])
 	}
 	var retval string
-	if strings.Contains(value, "-----BEGIN CERTIFICATE-----") {
+	if strings.Contains(string(value), "-----BEGIN CERTIFICATE-----") {
 		valueSlice := strings.Split(string(value), "-----END CERTIFICATE-----")
 		retval = strings.TrimLeft(valueSlice[1], "\n")
 	} else {
