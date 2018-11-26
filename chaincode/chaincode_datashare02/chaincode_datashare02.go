@@ -111,8 +111,8 @@ func get(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 		return "", fmt.Errorf("Asset not found: %s", args[0])
 	}
 	var retval string
-	if strings.Contains(string(value), "-----BEGIN CERTIFICATE-----") {
-		valueSlice := strings.Split(string(value), "-----END CERTIFICATE-----")
+	if strings.Contains(string(value), "----BEGIN -----") {
+		valueSlice := strings.Split(string(value), "-----END -----")
 		retval = strings.TrimLeft(valueSlice[1], "\n")
 	} else {
 		retval = string(value)
@@ -143,11 +143,11 @@ func getkeyhistory(stub shim.ChaincodeStubInterface, args []string) (string, err
 	result := "["
 	for value.HasNext() {
 		kvpair, _ := value.Next()
-		if strings.Contains(string(kvpair.Value), "-----BEGIN CERTIFICATE-----") {
-			valueSlice := strings.Split(string(kvpair.Value), "-----END CERTIFICATE-----")
+		if strings.Contains(string(kvpair.Value), "----BEGIN -----") {
+			valueSlice := strings.Split(string(kvpair.Value), "-----END -----")
 			retval = strings.TrimLeft(valueSlice[1], "\n")
-			firstcertSlice := strings.Split(string(kvpair.Value), "-----BEGIN CERTIFICATE-----")
-			finalCertSlice := strings.Split(string(firstcertSlice[1]), "-----END CERTIFICATE-----")
+			firstcertSlice := strings.Split(string(kvpair.Value), "----BEGIN -----")
+			finalCertSlice := strings.Split(string(firstcertSlice[1]), "-----END -----")
 			certificate = finalCertSlice[0]
 		} else {
 			retval = string(kvpair.Value)
@@ -181,8 +181,8 @@ func getbyrange(stub shim.ChaincodeStubInterface, args []string) (string, error)
 	var retval string
 	for value.HasNext() {
 		kvpair, _ := value.Next()
-		if strings.Contains(string(kvpair.Value), "-----BEGIN CERTIFICATE-----") {
-			valueSlice := strings.Split(string(kvpair.Value), "-----END CERTIFICATE-----")
+		if strings.Contains(string(kvpair.Value), "----BEGIN -----") {
+			valueSlice := strings.Split(string(kvpair.Value), "-----END -----")
 			retval = strings.TrimLeft(valueSlice[1], "\n")
 		} else {
 			retval = string(kvpair.Value)
