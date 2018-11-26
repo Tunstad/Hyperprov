@@ -153,7 +153,7 @@ func getkeyhistory(stub shim.ChaincodeStubInterface, args []string) (string, err
 			retval = string(kvpair.Value)
 			certificate = "null"
 		}
-		result = result + strconv.FormatInt("timestamp: "+kvpair.Timestamp.GetSeconds(), 10) + " value: " + retval + " certificate: " + certificate
+		result = result + "timestamp: " + strconv.FormatInt(kvpair.Timestamp.GetSeconds(), 10) + " value: " + retval + " certificate: " + certificate
 		if value.HasNext() {
 			result = result + ", "
 		}
