@@ -109,7 +109,7 @@ func get(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	if value == nil {
 		return "", fmt.Errorf("Asset not found: %s", args[0])
 	}
-	valueSlice := strings.Split(string(kvpair.Value), "-----END CERTIFICATE-----")
+	valueSlice := strings.Split(string(value), "-----END CERTIFICATE-----")
 	return valueSlice[1], nil
 }
 
