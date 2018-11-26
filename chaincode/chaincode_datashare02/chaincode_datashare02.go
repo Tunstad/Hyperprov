@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
-	"github.com/hyperledger/fabric/core/chaincode/lib/cid"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
 )
@@ -64,45 +64,28 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 		return "", fmt.Errorf("Incorrect arguments. Expecting a key and a value")
 	}
 
-	id, err := cid.GetID(stub)
-	if err != nil {
-		return "", fmt.Errorf("Failed to get id for asset: %s", args[0])
-	}
-	fmt.Println(id)
-	mspid, err := cid.GetMSPID(stub)
-	if err != nil {
-		return "", fmt.Errorf("Failed to get mspid for asset: %s", args[0])
-	}
-	fmt.Println(mspid)
-	val, ok, err := cid.GetAttributeValue(stub, "name")
-	if err != nil {
-		return "", fmt.Errorf("Failed to get attribute name for asset: %s", args[0])
-		// There was an error trying to retrieve the attribute
-	}
-	if !ok {
-		return "", fmt.Errorf("Identity does not posess the attribute name: %s", args[0])
-		// The client identity does not possess the attribute
-	}
+	// id, err := cid.GetID(stub)
+	// if err != nil {
+	// 	return "", fmt.Errorf("Failed to get id for asset: %s", args[0])
+	// }
+	// fmt.Println(id)
+	// mspid, err := cid.GetMSPID(stub)
+	// if err != nil {
+	// 	return "", fmt.Errorf("Failed to get mspid for asset: %s", args[0])
+	// }
+	// fmt.Println(mspid)
+	// val, ok, err := cid.GetAttributeValue(stub, "name")
+	// if err != nil {
+	// 	return "", fmt.Errorf("Failed to get attribute name for asset: %s", args[0])
+	// 	// There was an error trying to retrieve the attribute
+	// }
+	// if !ok {
+	// 	return "", fmt.Errorf("Identity does not posess the attribute name: %s", args[0])
+	// 	// The client identity does not possess the attribute
+	// }
 	// Do something with the value of 'val'
 
-	// serializedID, _ := stub.GetCreator()
-
-	// sId := &msp.SerializedIdentity{}
-	// err := proto.Unmarshal(serializedID, sId)
-	// if err != nil {
-	// 	return shim.Error(fmt.Sprintf("Could not deserialize a SerializedIdentity, err %s", err))
-	// }
-
-	// bl, _ := pem.Decode(sId.IdBytes)
-	// if bl == nil {
-	// 	return shim.Error(fmt.Sprintf("Could not decode the PEM structure"))
-	// }
-	// cert, err := x509.ParseCertificate(bl.Bytes)
-	// if err != nil {
-	// 	return shim.Error(fmt.Sprintf("ParseCertificate failed %s", err))
-	// }
-
-	// fmt.Println(cert)
+	val, _ := stub.GetCreator()
 
 	err := stub.PutState(args[0], append([]byte(val), []byte(args[1])...))
 	if err != nil {
@@ -124,7 +107,8 @@ func get(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	if value == nil {
 		return "", fmt.Errorf("Asset not found: %s", args[0])
 	}
-	return string(value), nil
+	valueSlice = strings.Split(string(value), "\n")
+	return valueSlice[1], nil
 }
 
 // Gets the full history of a key, The historic values are coupled with the timestamp of change.
@@ -147,7 +131,8 @@ func getkeyhistory(stub shim.ChaincodeStubInterface, args []string) (string, err
 	result := "["
 	for value.HasNext() {
 		kvpair, _ := value.Next()
-		result = result + strconv.FormatInt(kvpair.Timestamp.GetSeconds(), 10) + ": " + string(kvpair.Value)
+		valueSlice = strings.Split(string(kvpair.value), "\n")
+		result = result + strconv.FormatInt(kvpair.Timestamp.GetSeconds(), 10) + ": " + valueSlice[1] + "cert: " + valueSlice[0]
 		if value.HasNext() {
 			result = result + ", "
 		}
@@ -174,7 +159,8 @@ func getbyrange(stub shim.ChaincodeStubInterface, args []string) (string, error)
 	result := "["
 	for value.HasNext() {
 		kvpair, _ := value.Next()
-		result = result + string(kvpair.Key) + ": " + string(kvpair.Value)
+		valueSlice = strings.Split(string(kvpair.value), "\n")
+		result = result + string(kvpair.Key) + ": " + valueSlice[1]
 		if value.HasNext() {
 			result = result + ", "
 		}
