@@ -143,7 +143,7 @@ func getkeyhistory(stub shim.ChaincodeStubInterface, args []string) (string, err
 	result := "["
 	for value.HasNext() {
 		kvpair, _ := value.Next()
-		if kvpair.Value.contains("-----BEGIN CERTIFICATE-----") {
+		if string(kvpair.Value).contains("-----BEGIN CERTIFICATE-----") {
 			valueSlice := strings.Split(string(kvpair.Value), "-----END CERTIFICATE-----")
 			retval = strings.TrimLeft(valueSlice[1], "\n")
 			firstcertSlice := strings.Split(string(kvpair.Value), "-----BEGIN CERTIFICATE-----")
@@ -181,7 +181,7 @@ func getbyrange(stub shim.ChaincodeStubInterface, args []string) (string, error)
 	var retval string
 	for value.HasNext() {
 		kvpair, _ := value.Next()
-		if kvpair.Value.contains("-----BEGIN CERTIFICATE-----") {
+		if string(kvpair.Value).contains("-----BEGIN CERTIFICATE-----") {
 			valueSlice := strings.Split(string(kvpair.Value), "-----END CERTIFICATE-----")
 			retval := strings.TrimLeft(valueSlice[1], "\n")
 		} else {
