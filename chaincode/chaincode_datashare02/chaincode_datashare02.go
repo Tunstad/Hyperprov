@@ -23,7 +23,7 @@ func (t *SimpleAsset) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	// Set up any variables or assets here by calling stub.PutState()
 
 	// We store the creator data, key and the value on the ledger
-	err := stub.PutState(args[0], []byte(args[1])...))
+	err := stub.PutState(args[0], []byte(args[1])...)
 	if err != nil {
 		return shim.Error(fmt.Sprintf("Failed to create asset: %s", args[0]))
 	}
@@ -111,10 +111,10 @@ func get(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 		return "", fmt.Errorf("Asset not found: %s", args[0])
 	}
 	var retval string
-	if(s.contains("-----BEGIN CERTIFICATE-----")){
+	if s.contains("-----BEGIN CERTIFICATE-----") {
 		valueSlice := strings.Split(string(value), "-----END CERTIFICATE-----")
 		retval = strings.TrimLeft(valueSlice[1], "\n")
-	}else{
+	} else {
 		retval = string(value)
 	}
 
@@ -138,19 +138,18 @@ func getkeyhistory(stub shim.ChaincodeStubInterface, args []string) (string, err
 		return "", fmt.Errorf("Asset not found: %s", args[0])
 	}
 
-
 	var retval string
 	var certificate string
 	result := "["
 	for value.HasNext() {
 		kvpair, _ := value.Next()
-		if(s.contains("-----BEGIN CERTIFICATE-----")){
+		if s.contains("-----BEGIN CERTIFICATE-----") {
 			valueSlice := strings.Split(string(kvpair.Value), "-----END CERTIFICATE-----")
 			retval = strings.TrimLeft(valueSlice[1], "\n")
 			firstcertSlice := strings.Split(string(kvpair.Value), "-----BEGIN CERTIFICATE-----")
 			finalCertSlice := strings.Split(string(firstcertSlice[1]), "-----END CERTIFICATE-----")
 			certificate = finalCertSlice[0]
-		}else{
+		} else {
 			retval = string(kvpair.Value)
 			certificate = "null"
 		}
