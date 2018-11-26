@@ -108,7 +108,7 @@ func get(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 		return "", fmt.Errorf("Asset not found: %s", args[0])
 	}
 	valueSlice := strings.Split(string(value), "\n")
-	return valueSlice[1], nil
+	return valueSlice[len(valueSlice)-1], nil
 }
 
 // Gets the full history of a key, The historic values are coupled with the timestamp of change.
@@ -132,7 +132,7 @@ func getkeyhistory(stub shim.ChaincodeStubInterface, args []string) (string, err
 	for value.HasNext() {
 		kvpair, _ := value.Next()
 		valueSlice := strings.Split(string(kvpair.Value), "\n")
-		result = result + strconv.FormatInt(kvpair.Timestamp.GetSeconds(), 10) + ": " + valueSlice[1] + "cert: " + valueSlice[0]
+		result = result + strconv.FormatInt(kvpair.Timestamp.GetSeconds(), 10) + ": " + valueSlice[len(valueSlice)-1] + "cert: " + valueSlice[len(valueSlice)-3]
 		if value.HasNext() {
 			result = result + ", "
 		}
@@ -160,7 +160,7 @@ func getbyrange(stub shim.ChaincodeStubInterface, args []string) (string, error)
 	for value.HasNext() {
 		kvpair, _ := value.Next()
 		valueSlice := strings.Split(string(kvpair.Value), "\n")
-		result = result + string(kvpair.Key) + ": " + valueSlice[1]
+		result = result + string(kvpair.Key) + ": " + valueSlice[len(valueSlice)-1]
 		if value.HasNext() {
 			result = result + ", "
 		}
