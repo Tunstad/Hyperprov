@@ -92,7 +92,7 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 
 	val, cerr := stub.GetCreator()
 	if cerr != nil {
-		return shim.Error(fmt.Sprintf("Failed to get creator of asset: %s", args[0]))
+		return "", fmt.Errorf("Failed to get creator of asset: %s", args[0])
 	}
 
 	err := stub.PutState(args[0], append([]byte(val), []byte(args[1])...))
