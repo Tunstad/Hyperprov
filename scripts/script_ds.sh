@@ -218,6 +218,9 @@ installChaincode 0
 echo "Install chaincode on org1/peer2..."
 sleep 10
 installChaincode 2
+echo "Install chaincode on org1/peer1..."
+sleep 10
+installChaincode 1
 
 #Instantiate chaincode on Peer2/org1
 echo "Instantiating chaincode on org1/peer2..."

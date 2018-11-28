@@ -21,13 +21,13 @@ var fs = require("fs")
 const inquirer = require('inquirer')
 
 //The time a benchmark is set to run
-var totaltime_seconds = 600;        //3600 = 1h, 600 = 10m
+var totaltime_seconds = 5;        //3600 = 1h, 600 = 10m
 
 //var bm_datalength = 1000000; // MAX == 1398101 characters/bytes
 
 //The user to interact with blockchain as, theese are found in hfc-key-store and generated 
 //by having enrollAdmin.js and registerUser.js interact with a fabric CA server
-var currentUser = 'Node2'
+var currentUser = 'Node3'
 
 //The global variables for number of benchmarks to be run, and the 
 //current number of benchmarks that have been run. Numbenchmarks is 
@@ -48,7 +48,7 @@ var store_path = path.join(__dirname, 'hfc-key-store');
 var channel = fabric_client.newChannel('mychannel');
 
 //Set the peer to recieve operations and add it to the channel object
-var peer = fabric_client.newPeer('grpc://node2.ptunstad.no:7051');
+var peer = fabric_client.newPeer('grpc://node1.ptunstad.no:7051');
 channel.addPeer(peer);
 
 //Set the orderer to be used by the set-functionality in the blockchain.
@@ -178,7 +178,7 @@ function ccSet(ccargs, callback, callback2){
             // get an eventhub once the fabric client has a user assigned. The user
             // is required bacause the event registration must be signed
             let event_hub = fabric_client.newEventHub();
-            event_hub.setPeerAddr('grpc://node3.ptunstad.no:7053');
+            event_hub.setPeerAddr('grpc://node2.ptunstad.no:7053');
     
             // using resolve the promise so that result status may be processed
             // under the then clause rather than having the catch clause process
