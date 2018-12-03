@@ -48,6 +48,8 @@ To use the CLI Client to interact with the chaincode move to the folder `\client
 #### Client with REST-api
 To enable the client to use REST-api instead of command-line input change to `var RESTAPI = true` in `client/cli-client.js` and run the program.
 The API will accept all requests on port 8080. Below is documentation for the current version of the API:
+
+
 | URL            | HTTP METHOD | 'arguments'-header | POST BODY           | RESULT                                                                                                                         |
 |----------------|-------------|--------------------|---------------------|--------------------------------------------------------------------------------------------------------------------------------|
 | /set           | POST        | key, value         |                     | Successfully committed the change to the ledger by the peer or error message                                                   |
@@ -56,6 +58,7 @@ The API will accept all requests on port 8080. Below is documentation for the cu
 | /getbyrange    | GET         | startkey, endkey   |                     | [key1: value1, key2: value2]                                                                                                   |
 | /sendfile      | POST        | key                | BASE64-encoded file | Successfully committed the change to the ledger by the peer or error message                                                   |
 | /getfile       | GET         | key                |                     | BASE64-encoded file string                                                                                                     |
+
 
 ### Starting the CA server
 To run the CA server you need Go 1.9 installed, GOPATH set correctly and have `sudo apt install libtool libltdl-dev` installed.
