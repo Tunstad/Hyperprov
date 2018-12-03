@@ -20,7 +20,7 @@ var fs = require("fs")
 const inquirer = require('inquirer')
 
 //Switch to enable REST-api access or disable for CLI
-var RESTAPI = false;
+var RESTAPI = true;
 
 //The time a benchmark is set to run
 var totaltime_seconds = 600;        //3600 = 1h, 600 = 10m
@@ -57,6 +57,8 @@ channel.addPeer(peer);
 var order = fabric_client.newOrderer('grpc://node3.ptunstad.no:7050')
 channel.addOrderer(order);
 
+
+//REST-api functionality to interact with client application from external device.
 if(RESTAPI){
     var express = require('express');
     var bodyParser = require('body-parser');

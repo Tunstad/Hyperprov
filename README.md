@@ -45,6 +45,18 @@ And to further change the value of c run `peer chaincode invoke -o orderer.ptuns
 ### Using the CLI Client to interact with the chaincode.
 To use the CLI Client to interact with the chaincode move to the folder `\client` and run `npm install`, this will install the required node dependencies. Then run the client with `node cli_client.js` and you will be prompted with the question of what function you want to invoke. The options available at this point is `get`, `set`, `getkeyhistory`, `getbyrange`, `sendfile` and `getfile`. Get takes in a single argument: `key`. Set takes two arguments: `key, value`. Getkeyhistory also takes in just a single argument: `key`, and returns the change history of the key with matching timestamps of the changes. Getbyrange takes in two arguments: `startkey, endkey` and returns all kv-pairs within that specified range, based on key values not strings. Sendfile takes in two arguments: `key, path/to/file.jpg`and stores the file in the blockchain. Currently there is a limit of 1,39MB from the grpc protocol in node. Getfile similarly takes two arguments: `key, path/to/file.jpg` and retrieves the file from the blockchain before storing it at the specified path.
 
+#### Client with REST-api
+To enable the client to use REST-api instead of command-line input change to `var RESTAPI = true` in `client/cli-client.js` and run the program.
+The API will accept all requests on port 8080. Below is documentation for the current version of the API:
+| URL            | HTTP METHOD | 'arguments'-header | POST BODY           | RESULT                                                                                                                         |
+|----------------|-------------|--------------------|---------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| /set           | POST        | key, value         |                     | Successfully committed the change to the ledger by the peer or error message                                                   |
+| /get           | GET         | key                |                     | value                                                                                                                          |
+| /getkeyhistory | GET         | key                |                     | [timestamp: timestamp1 value: value2 certificate: certificate1, timestamp: timestamp2 value: value2 certificate: certificate2] |
+| /getbyrange    | GET         | startkey, endkey   |                     | [key1: value1, key2: value2]                                                                                                   |
+| /sendfile      | POST        | key                | BASE64-encoded file | Successfully committed the change to the ledger by the peer or error message                                                   |
+| /getfile       | GET         | key                |                     | BASE64-encoded file string                                                                                                     |
+
 ### Starting the CA server
 To run the CA server you need Go 1.9 installed, GOPATH set correctly and have `sudo apt install libtool libltdl-dev` installed.
 Then run the command `go get -u github.com/hyperledger/fabric-ca/cmd/...` to install fabric-ca server to GOPATH/bin.
