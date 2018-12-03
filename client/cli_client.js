@@ -16,12 +16,14 @@ var path = require('path');
 var util = require('util');
 //var os = require('os');
 var fs = require("fs")
-
 //Inquirer used to supply the CLI
 const inquirer = require('inquirer')
 
+//Switch to enable REST-api access or disable for CLI
+var RESTAPI = false;
+
 //The time a benchmark is set to run
-var totaltime_seconds = 5;        //3600 = 1h, 600 = 10m
+var totaltime_seconds = 600;        //3600 = 1h, 600 = 10m
 
 //var bm_datalength = 1000000; // MAX == 1398101 characters/bytes
 
@@ -48,53 +50,94 @@ var store_path = path.join(__dirname, 'hfc-key-store');
 var channel = fabric_client.newChannel('mychannel');
 
 //Set the peer to recieve operations and add it to the channel object
-var peer = fabric_client.newPeer('grpc://node1.ptunstad.no:7051');
+var peer = fabric_client.newPeer('grpc://node2.ptunstad.no:7051');
 channel.addPeer(peer);
 
 //Set the orderer to be used by the set-functionality in the blockchain.
 var order = fabric_client.newOrderer('grpc://node3.ptunstad.no:7050')
 channel.addOrderer(order);
 
+if(RESTAPI){
+    var express = require('express');
+    var bodyParser = require('body-parser');
+    var app = express();
+    var fs = require("fs");
+    app.use(bodyParser.urlencoded({ extended: true }));
 
-//Begin CLI to retrieve user input of application. This could for other use-cases be
-//changed to something more along the lines of a REST API if outside access is needed or
-//a local API available only to another application for our use case.
-var myfunction = ""
-var myarguments = ""
-var questions = [{
-    type: 'input',
-    name: 'inputfunc',
-    message: "What function do you want to invoke? (Example: 'getbyrange')",
-},{
-    type: 'input',
-    name: 'inputargs',
-    message: "List you arguments. (Example:'a, d')",
-}]
+    app.post('/set', function (req, res) {
+        var requestarguments = req.get('arguments').toString().split(", ")
+        ccSet(requestarguments, SetCallback, null, res)
+    })
+    app.get('/get', function (req, res) {
+        console.log("Request GET")
+        var requestarguments = req.get('arguments').toString()
+        ccFunc('get', requestarguments, getCallback, res)
+    })
+    app.get('/getkeyhistory', function (req, res) {
+        console.log("Request GET")
+        var requestarguments = req.get('arguments').toString()
+        ccFunc('getkeyhistory', requestarguments, getCallback, res)
+    })
+    app.get('/getbyrange', function (req, res) {
+        console.log("Request GET")
+        var requestarguments = req.get('arguments').toString().split(", ")
+        ccFunc('getbyrange', requestarguments, getCallback, res)
+    })
+    app.post('/sendfile', function (req, res) {
+        var requestarguments = req.get('arguments').toString()
+        storeFile(requestarguments, res, req.body)
+    })
+    app.get('/getfile', function (req, res) {
+        var requestarguments = req.get('arguments').toString()
+        retrieveFile(requestarguments, res)
+    })
 
-//Select the command specified and call the correct subfunction with the 
-//appropriate arguments.
-inquirer.prompt(questions).then(answers => {
-    myfunction = answers['inputfunc']
-    myarguments = answers['inputargs']
-    var myargumentslist = myarguments.split(", ")
-    console.log(myargumentslist)
-    if(myfunction == "set"){
-        ccSet(myargumentslist);
-    }else if(myfunction == "bms"){
-        numbenchmarks = parseInt(myargumentslist[1])
-        benchmarkSet(numbenchmarks, parseInt(myargumentslist[0]))
-    }else if(myfunction == "sendfile"){
-        storeFile(myargumentslist)
-    }else if(myfunction == "getfile"){
-        retrieveFile(myargumentslist)
-    }else{
-        ccFunc(myfunction, myargumentslist, getCallback);
-    }
-})
+    var server = app.listen(8080, function () {
+    var host = server.address().address
+    var port = server.address().port
+    console.log("Example app listening at http://%s:%s", host, port)
+    })
 
+}else{
+    //Begin CLI to retrieve user input of application. This could for other use-cases be
+    //changed to something more along the lines of a REST API if outside access is needed or
+    //a local API available only to another application for our use case.
+    var myfunction = ""
+    var myarguments = ""
+    var questions = [{
+        type: 'input',
+        name: 'inputfunc',
+        message: "What function do you want to invoke? (Example: 'getbyrange')",
+    },{
+        type: 'input',
+        name: 'inputargs',
+        message: "List you arguments. (Example:'a, d')",
+    }]
+
+    //Select the command specified and call the correct subfunction with the 
+    //appropriate arguments.
+    inquirer.prompt(questions).then(answers => {
+        myfunction = answers['inputfunc']
+        myarguments = answers['inputargs']
+        var myargumentslist = myarguments.split(", ")
+        console.log(myargumentslist)
+        if(myfunction == "set"){
+            ccSet(myargumentslist);
+        }else if(myfunction == "bms"){
+            numbenchmarks = parseInt(myargumentslist[1])
+            benchmarkSet(numbenchmarks, parseInt(myargumentslist[0]))
+        }else if(myfunction == "sendfile"){
+            storeFile(myargumentslist)
+        }else if(myfunction == "getfile"){
+            retrieveFile(myargumentslist)
+        }else{
+            ccFunc(myfunction, myargumentslist, getCallback);
+        }
+    })
+}
 //Function to set chaincode based on arguments. For myccds it expects argument to be of type
 //key, value. This is the only way to change values.
-function ccSet(ccargs, callback, callback2){
+function ccSet(ccargs, callback, callback2, resp){
     Fabric_Client.newDefaultKeyValueStore({ path: store_path
     }).then((state_store) => {
         // assign the store to the fabric client
@@ -227,11 +270,11 @@ function ccSet(ccargs, callback, callback2){
         }
     
         if(results && results[1] && results[1].event_status === 'VALID') {
-            console.log('Successfully committed the change to the ledger by the peer');
+            //console.log('Successfully committed the change to the ledger by the peer');
             //Callback function used to measure time-to-commit.
             //This functionality is only used for measurements and can be disabled otherwise.
             if (typeof callback === "function") {
-                callback()
+                callback('Successfully committed the change to the ledger by the peer', resp)
             }
         } else {
             console.log('Transaction failed to be committed to the ledger due to ::'+results[1].event_status);
@@ -243,14 +286,15 @@ function ccSet(ccargs, callback, callback2){
 
 //Callback function used in get-function. 
 //Currently not neccesary and only prints result.
-function getCallback(result){
+function getCallback(result, resp){
     console.log("Result is : " + result)
+    resp.end(result)
 }
 
 //Functionality to call chaincode to retrieve some sort of data from the blockchain.
 //Some supported ccfuncs are 'get', 'getkeyhistory' and 'getbyrange'.
 //Takes in as aruments as a key string and callback-function only prints result to console.
-function ccFunc(ccfunc, ccargs, callback){
+function ccFunc(ccfunc, ccargs, callback, resp){
     Fabric_Client.newDefaultKeyValueStore({ path: store_path
     }).then((state_store) => {
         // assign the store to the fabric client
@@ -293,11 +337,14 @@ function ccFunc(ccfunc, ccargs, callback){
     if (query_responses && query_responses.length == 1) {
         if (query_responses[0] instanceof Error) {
             console.error("error from query = ", query_responses[0]);
+            if (typeof callback === "function") {
+                callback(query_responses[0].toString(), resp)
+            }
         } else {
             //Use callback function provided to send result of query to.
             //Currently prints the string to console.
             if (typeof callback === "function") {
-                callback(query_responses[0].toString())
+                callback(query_responses[0].toString(), resp)
             }
             //Function could also return the result
             //return query_responses[0].toString();
@@ -313,12 +360,17 @@ function ccFunc(ccfunc, ccargs, callback){
 //For benchmarking use a custom callbackfunction for each completed SET action
 //For every completed action increment the counter, and once all operations have
 //been completed, print the time it took to perform all operations.
-function benchmarkSetCallback(){
+function SetCallback(result, res){
+    if(res){
+        res.end(result)
+    }else{
     currentbenchmarks += 1;
+    console.log(result)
     console.log("Finished set number " + currentbenchmarks.toString())
-    if(currentbenchmarks >= numbenchmarks){
-        console.log("Finished, printing time...")
-        console.timeEnd('benchmarkset')
+        if(currentbenchmarks >= numbenchmarks){
+            console.log("Finished, printing time...")
+            console.timeEnd('benchmarkset')
+        }      
     }
 }
 //Custom callback used to measure the time required for a transaction to reach
@@ -326,6 +378,7 @@ function benchmarkSetCallback(){
 function proposalOkCallback(){
         console.timeEnd('proposalok')
 }
+
 
 //Function used to benchmark by storing a specified number of data items of a
 //certain datalength. Based on the totaltime_seconds variable set sleep for some 
@@ -342,7 +395,7 @@ async function benchmarkSet(numitems, datalength){
         var args = [key, value]
         
         console.log("Sending transaction " + String(i))
-        ccSet(args, benchmarkSetCallback, proposalOkCallback)
+        ccSet(args, SetCallback, proposalOkCallback)
         await sleep((totaltime_seconds/numbenchmarks)*1000)
     }
     console.log("Done sending operations!")
@@ -356,25 +409,38 @@ function sleep(ms){
 }
 
 //Functionality for storing a file as a key,value entry in the blockchain.
-function storeFile(arglist){
-    if(arglist.length < 2){
-        console.log("Need two arguments to store file. Usage: key, file.jpg")
+function storeFile(arglist, resp, body){
+    if(resp){
+        var key = arglist[0]
+        var args = [key, body]
+        ccSet(args, SetCallback, null, resp)
+
+    }else{
+        if(arglist.length < 2){
+            console.log("Need two arguments to store file. Usage: key, file.jpg")
+        }
+        var key = arglist[0]
+        var value = base64fromFile(arglist[1])
+        var args = [key, value]
+        ccSet(args)
     }
-    var key = arglist[0]
-    var value = base64fromFile(arglist[1])
-    var args = [key, value]
-    ccSet(args)
 }
 
 //Functionality for storing a file as a base64 encoded key,value entry in the blockchain.
-function retrieveFile(arglist){
-    if(arglist.length < 2){
-        console.log("Need two arguments to retrieve file. Usage: key, newfile.jpg")
+function retrieveFile(arglist, resp){
+    if(resp){
+        var key = arglist[0]
+        ccFunc('get', key, getCallback, resp)
+
+    }else{
+        if(arglist.length < 2){
+            console.log("Need two arguments to retrieve file. Usage: key, newfile.jpg")
+        }
+        var key = [arglist[0]]
+        ccFunc('get', key, function(result)  {
+            filefromBase64(result, arglist[1])
+        })
     }
-    var key = [arglist[0]]
-    ccFunc('get', key, function(result)  {
-        filefromBase64(result, arglist[1])
-    })
 }
 
 //Subfunction used to generate a base64 string from a file object, used by storeFile.
