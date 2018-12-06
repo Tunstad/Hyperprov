@@ -1,12 +1,66 @@
-# HLv1_RPiDS - Build Your First Network (BYFN)
+# Technical guidelines
+Install and Quick Start is based on HLv1_RPiDS - Build Your First Network (BYFN) and the [Hyperledger Fabric v1.0 on a Raspberry Pi Docker Swarm series](http://www.joemotacek.com/hyperledger-fabric-v1-0-on-a-raspberry-pi-docker-swarm-part-4/) written by Joe Motacek.  
 
-For use with the Hyperledger Fabric v1.0 on a Raspberry Pi Docker Swarm series written by Joe Motacek.
-http://www.joemotacek.com/hyperledger-fabric-v1-0-on-a-raspberry-pi-docker-swarm-part-4/
+## Quick install
+### Operating System
+The experiments were run on Raspberry Pi 3 using the Raspbian 3 Stretch OS which you can download from [here](https://www.raspberrypi.org/downloads/raspbian/).
 
-Please see the above article for his details on this repos use.
+### Installing Go
+The version of Go used for this project was Go 1.7.5, installing it on RPI can be done by
 
-# My personal notes after working with this
+```
+wget https://dl.google.com/go/go1.7.5.linux-armv6l.tar.gz
+sudo tar -C /usr/local -xzf go1.7.5.linux-armv6l.tar.gz
+sudo echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.profile 
+sudo echo 'export GOPATH=$HOME/go' >> ~/.profile
+```
+To verify run `go version ` and `echo $GOPATH` to verify its /home/pi/go.
+### Install Docker and Docker Compose
+```
+curl -sSL https://get.docker.com | sh
+curl -s https://packagecloud.io/install/repositories/Hypriot/Schatzkiste/script.deb.sh | sudo bash
+```
+#### If you get a problem with docker compose
+Run next step first then run `sudo pip install --trusted-host pypi.org docker-compose`
+
+### Other/python libraries
+```
+sudo apt-get install git python-pip python-dev docker-compose build-essential libtool libltdl-dev libssl-dev libevent-dev libffi-dev
+sudo pip install --upgrade pip
+sudo pip install --upgrade setuptools
+sudo pip install behave nose docker-compose
+sudo pip install -I flask==0.10.1 python-dateutil==2.2 pytz==2014.3 pyyaml==3.10 couchdb==1.0 flask-cors==2.0.1 requests==2.4.3 pyOpenSSL==16.2.0 pysha3==1.0b1 grpcio==1.0.4
+```
+After installing dependencies it may be neccesary to do a reboot for changes to take into effect.
+### Install NodeJS
+```
+curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+sudo apt-get install -y nodejs
+```
+### Pull Pre-Built docker images
+You can compile your own images, but to pull the pre-built HLF V1 images by Joe Motacek run:
+
+```
+docker pull jmotacek/fabric-baseos:armv7l-0.3.2 &&
+docker pull jmotacek/fabric-basejvm:armv7l-0.3.2 &&
+docker pull jmotacek/fabric-baseimage:armv7l-0.3.2 &&
+docker pull jmotacek/fabric-ccenv:armv7l-1.0.7 &&
+docker pull jmotacek/fabric-javaenv:armv7l-1.0.7 &&
+docker pull jmotacek/fabric-peer:armv7l-1.0.7 &&
+docker pull jmotacek/fabric-orderer:armv7l-1.0.7 &&
+docker pull jmotacek/fabric-buildenv:armv7l-1.0.7 &&
+docker pull jmotacek/fabric-testenv:armv7l-1.0.7 &&
+docker pull jmotacek/fabric-zookeeper:armv7l-1.0.7 &&
+docker pull jmotacek/fabric-kafka:armv7l-1.0.7 &&
+docker pull jmotacek/fabric-couchdb:armv7l-1.0.7 &&
+docker pull jmotacek/fabric-tools:armv7l-1.0.7
+```
+This will take a while to complete as the images are quite large.
+
 ## Quick start
+### Setup Docker Swarm
+The solution uses Docker Swarm for easy management and communication between nodes. To start a swarm run `docker swarm init` on one of your nodes. This will be the same node you use to start and shut down the network. This will return a command along the lines of `docker swarm join --token SWMTKN-1-xxxxxxxx 192.168.1.xxx:2377` which you need to call on all your other nodes to join the network. You can verify that all nodes have been joined by running `docker node ls` on the initial node. The initial node should also initialize an overlay network by running `docker network create -d overlay --attachable hyperledger-fabric`.
+### Start network
 With all prerequisites installed and docker images in place run:
 `docker node ls` to see that all nodes in swarm is up and running.
 `docker network create -d overlay --attachable hyperledger-fabric ` to create overlay network if not already present.
@@ -59,8 +113,31 @@ The API will accept all requests on port 8080. Below is documentation for the cu
 | /sendfile      | POST        | key                | BASE64-encoded file | Successfully committed the change to the ledger by the peer or error message                                                   |
 | /getfile       | GET         | key                |                     | BASE64-encoded file string                                                                                                     |
 
+#### Get certificates from CA server with client
+The client comes with two scripts `enrollAdmin.js` and `registerUser.js` that have functionality for first retrieving an admin certificate from the CA server and then using it to generate user certificates for each device. For the current version of certificates, four user certificates for each node is already stored in `hfc-key-store`. The used certificate is specified in the client application by the line `var currentUser = 'Node3'`. 
 
+## Certificates and Chaincode changes
+
+### Updaing the Chaincode
+Updates to the chaincode is not issued if it detects already running chaincode with the same version number. To delete current chaincode this need to be performed on all nodes: `docker stop $(docker ps -aq) && docker rm -f $(docker ps -aq) && docker images` then do `docker rmi xxxxxxxxxxx` replacing the x's with the image id of running chaincode images.
+
+### Regenerating Certificates
+If you need to make any changes to either `crypto-config.yaml` or `configtx.yaml` you may need to regenerate the certificates for your network. To do this first delete the folder `/crypto-config` and `/channel-artifacts`. Then run `export PATH=<replace this with your path>/bin:$PATH` with the full path to your bin folder.  
+To generate network entities such as peers, organizations and genesisblock run the following 
+
+```
+bin/cryptogen generate --config=./crypto-config.yaml
+export FABRIC_CFG_PATH=$PWD
+bin/configtxgen -profile TwoOrgsOrdererGenesis -outputBlock ./channel-artifacts/genesis.block
+```
+Then to generate a channel for our peers to interact on run 
+
+```
+export CHANNEL_NAME=mychannel  && bin/configtxgen -profile TwoOrgsChannel -outputCreateChannelTx ./channel-artifacts/channel.tx -channelID $CHANNEL_NAME
+bin/configtxgen -profile TwoOrgsChannel -outputAnchorPeersUpdate ./channel-artifacts/Org1MSPanchors.tx -channelID $CHANNEL_NAME -asOrg Org1MSP
+```
 ### Starting the CA server
 To run the CA server you need Go 1.9 installed, GOPATH set correctly and have `sudo apt install libtool libltdl-dev` installed.
 Then run the command `go get -u github.com/hyperledger/fabric-ca/cmd/...` to install fabric-ca server to GOPATH/bin.
 Then to start it move to `/fabric-ca` and run `docker-compose up -d`. This will start the CA server by default on port 7054 and allow it to respond to requests. The scripts responsible for interacting with the CA-server is `client/enrollAdmin.js` and `client/registerUser.js`, where the latter can have the variable username modified to represent the user you wish to register and retrieve certificates for. After the certificates have been retrieved the CA-server is not required to be up and can be shut down with `docker-compose down` in the `/fabric-ca` folder.
+
