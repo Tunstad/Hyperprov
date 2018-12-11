@@ -20,7 +20,7 @@ var fs = require("fs")
 const inquirer = require('inquirer')
 
 //Switch to enable REST-api access or disable for CLI
-var RESTAPI = true;
+var RESTAPI = false;
 
 //The time a benchmark is set to run
 var totaltime_seconds = 600;        //3600 = 1h, 600 = 10m
@@ -29,7 +29,7 @@ var totaltime_seconds = 600;        //3600 = 1h, 600 = 10m
 
 //The user to interact with blockchain as, theese are found in hfc-key-store and generated 
 //by having enrollAdmin.js and registerUser.js interact with a fabric CA server
-var currentUser = 'Node3'
+var currentUser = 'Node2'
 
 //The global variables for number of benchmarks to be run, and the 
 //current number of benchmarks that have been run. Numbenchmarks is 
@@ -239,7 +239,7 @@ function ccSet(ccargs, callback, callback2, resp){
                     // first some clean up of event listener
                     clearTimeout(handle);
                     event_hub.unregisterTxEvent(transaction_id_string);
-                    event_hub.disconnect();
+                    //event_hub.disconnect();
     
                     // now let the application know what happened
                     var return_status = {event_status : code, tx_id : transaction_id_string};
