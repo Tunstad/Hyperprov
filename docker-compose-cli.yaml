@@ -168,7 +168,7 @@ services:
       placement:
         constraints:
           - node.hostname == hlf_node_2
-    command: bash -c "peer node start > /home/logs/peer0org2log.txt 2>&1"
+    command: bash -c "peer node start > /home/logs/peer2org1log.txt 2>&1"
 
   peer3_org1:
     image: jmotacek/fabric-peer:armv7l-1.0.7
@@ -211,7 +211,7 @@ services:
       placement:
         constraints:
           - node.hostname == hlf_node_0
-    command: bash -c "peer node start > /home/logs/peer1org2log.txt 2>&1"
+    command: bash -c "peer node start > /home/logs/peer3org1log.txt 2>&1"
 
   cli:
     image: jmotacek/fabric-tools:armv7l-1.0.7
