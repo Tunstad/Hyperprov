@@ -1,5 +1,5 @@
 # Technical guidelines
-Install and Quick Start is based on HLv1_RPiDS - Build Your First Network (BYFN) and the [Hyperledger Fabric v1.0 on a Raspberry Pi Docker Swarm series](http://www.joemotacek.com/hyperledger-fabric-v1-0-on-a-raspberry-pi-docker-swarm-part-4/) written by Joe Motacek.  
+The docker compose setup for Raspberry Pi is based on the [repository](https://github.com/Cleanshooter/hyperledger-pi- composer) and [guide](https://www.joemotacek.com/hyperledger-fabric-v1-0-on-a-raspberry-pi-docker-swarm-part-1/) by Joe Motacek. The chaincode, client and CA-server implementation is built on top of examples from the official hyperledger [fabric samples](https://github.com/hyperledger/fabric-samples). The guidelines assumes you have access to multiple devices, in our case we used four Raspberry Pi 3 B+.
 
 ## Quick install
 ### Operating System
@@ -141,3 +141,24 @@ To run the CA server you need Go 1.9 installed, GOPATH set correctly and have `s
 Then run the command `go get -u github.com/hyperledger/fabric-ca/cmd/...` to install fabric-ca server to GOPATH/bin.
 Then to start it move to `/fabric-ca` and run `docker-compose up -d`. This will start the CA server by default on port 7054 and allow it to respond to requests. The scripts responsible for interacting with the CA-server is `client/enrollAdmin.js` and `client/registerUser.js`, where the latter can have the variable username modified to represent the user you wish to register and retrieve certificates for. After the certificates have been retrieved the CA-server is not required to be up and can be shut down with `docker-compose down` in the `/fabric-ca` folder.
 
+## Measurements
+Measurements on throughput was performed with the benchmarking functionality added to the client application. To test, run client in CLI mode(`var RESTAPI  ̄ false`) and set `var totaltime_seconds  = 600` for 10 minute benchmarks. Then to run the benchmarkingsolution do `node cli_client.js` with function `bms` and parameters e.g `100000, 60` to run 60 transactions of 100KB over 10 minutes. The result time ttc is printed as `benchmarkset` and ttp for the first transaction can be seen as `proposalok`. Energy was measured simultaneously with a manual power meter, specifically an ODROID Power Meter V3.
+CPU and Memory measurements were performed using the python tool psrecord. you can instal it using:
+
+```
+sudo pip install psrecord
+sudo apt-get install python-matplotlib python-tk
+```
+For a single 1 minute measurement you can run:
+`psrecord $(pgrep peer) --interval 1 --duration 60 --plot peer1m.png`
+and for measuring both peer and client simultaneously for 10 minutes run the shell script:
+
+```
+#!/bin/bash
+psrecord $(pgrep peer) --interval 1 --duration 600 --plot peer10m.png &
+P1=$!
+psrecord $(pgrep node) --interval 1 --duration 600 --plot node10m.png &
+P2=$!
+wait $P1 $P2
+echo 'Done'
+```
