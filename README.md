@@ -1,5 +1,5 @@
 # Technical guidelines
-The docker compose setup for Raspberry Pi is based on the [repository](https://github.com/Cleanshooter/hyperledger-pi- composer) and [guide](https://www.joemotacek.com/hyperledger-fabric-v1-0-on-a-raspberry-pi-docker-swarm-part-1/) by Joe Motacek. The chaincode, client and CA-server implementation is built on top of examples from the official hyperledger [fabric samples](https://github.com/hyperledger/fabric-samples). The guidelines assumes you have access to multiple devices, in our case we used four Raspberry Pi 3 B+.
+The docker compose setup for Raspberry Pi is based on the [repository](https://github.com/Cleanshooter/hyperledger-pi-composer) and [guide](https://www.joemotacek.com/hyperledger-fabric-v1-0-on-a-raspberry-pi-docker-swarm-part-1/) by Joe Motacek. The chaincode, client and CA-server implementation is built on top of examples from the official hyperledger [fabric samples](https://github.com/hyperledger/fabric-samples). The guidelines assumes you have access to multiple devices, in our case we used four Raspberry Pi 3 B+.
 
 ## Quick install
 ### Operating System
