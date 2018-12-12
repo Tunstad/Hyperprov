@@ -276,7 +276,12 @@ function ccSet(ccargs, callback, callback2, resp){
             //Callback function used to measure time-to-commit.
             //This functionality is only used for measurements and can be disabled otherwise.
             if (typeof callback === "function") {
-                callback('Successfully committed the change to the ledger by the peer', resp)
+                if(resp){
+                    callback('Successfully committed the change to the ledger by the peer', resp)
+                }else{
+                    callback('Successfully committed the change to the ledger by the peer')
+                }
+                
             }
         } else {
             console.log('Transaction failed to be committed to the ledger due to ::'+results[1].event_status);
@@ -290,7 +295,10 @@ function ccSet(ccargs, callback, callback2, resp){
 //Currently not neccesary and only prints result.
 function getCallback(result, resp){
     console.log("Result is : " + result)
-    resp.end(result)
+    if (resp){
+        resp.end(result)
+    }
+    
 }
 
 //Functionality to call chaincode to retrieve some sort of data from the blockchain.
