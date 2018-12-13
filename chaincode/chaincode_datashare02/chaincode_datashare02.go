@@ -59,11 +59,16 @@ func (t *SimpleAsset) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 
 // Set stores the asset (both key and value) on the ledger. If the key exists,
 // it will override the value with the new one. The history is still stored in the ledger.
+// Getcreator is used to store the creator/updater of a change in terms of provenance.
+// This stores the certificate used to perform the change as part of the value and
+// will be parsed away for all other operations than getkeyhistory which
+// returns this certificate to indicate who performed the change.
 func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	if len(args) != 2 {
 		return "", fmt.Errorf("Incorrect arguments. Expecting a key and a value")
 	}
 
+	// Potential code for additional identity functionality added in HLF v1.1
 	// id, err := cid.GetID(stub)
 	// if err != nil {
 	// 	return "", fmt.Errorf("Failed to get id for asset: %s", args[0])
@@ -125,9 +130,10 @@ func get(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 }
 
 // Gets the full history of a key, The historic values are coupled with the timestamp of change.
-// TODO: This function should evertually include a point for each historic value of which client
-// or the credentials used to make the change.
-// Example format of returned value is [ 12341251234: firstvalue, 12341235235: secondvalue]
+// This function includes a timestamp, the new changed value and the certficiates used to perform the change.
+// The certificates used are stored unencrypted in the value variable but are only acccessable trough this function.
+// This is a potential security issue and may later require this function to be role-gated, certificates to be encrypted or used for encrypting a shared variable as proof.
+// Example format of returned value is [ timestamp: 12341251234: value: firstvalue certificate: A4FC32XyCdfEa... , timestamp: 12341251239: value: secondvalue certificate: B4fVyC32XyCdfEa... ]
 func getkeyhistory(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	if len(args) != 1 {
 		return "", fmt.Errorf("Incorrect arguments. Expecting a key")
