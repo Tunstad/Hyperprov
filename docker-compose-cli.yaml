@@ -7,7 +7,7 @@ version: '3'
 
 services:
   orderer:
-    image: jmotacek/fabric-orderer:armv7l-1.0.7
+    image: hyperledger/fabric-orderer:x86_64-1.0.4
     environment:
       - ORDERER_GENERAL_LOGLEVEL=debug
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
@@ -20,10 +20,10 @@ services:
       - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
       - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
       - CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
-      - CORE_CHAINCODE_BUILDER=jmotacek/fabric-ccenv:armv7l-1.0.7
-      - CORE_CHAINCODE_GOLANG_RUNTIME=jmotacek/fabric-baseos:armv7l-0.3.2
-      - CORE_CHAINCODE_CAR_RUNTIME=jmotacek/fabric-baseos:armv7l-0.3.2
-      - CORE_CHAINCODE_JAVA=jmotacek/fabric-javaenv:armv7l-1.0.7
+      - CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv:x86_64-1.0.4
+      - CORE_CHAINCODE_GOLANG_RUNTIME=hyperledger/fabric-baseos:x86_64-0.3.2
+      - CORE_CHAINCODE_CAR_RUNTIME=hyperledger/fabric-baseos:x86_64-0.3.2
+      - CORE_CHAINCODE_JAVA=hyperledger/fabric-javaenv:x86_64-1.0.4
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric
     hostname: orderer.ptunstad.no
     networks:
@@ -39,11 +39,11 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == hlf_node_3
+          - node.hostname == agc-lab2
     command: orderer
     
   peer0_org1:
-    image: jmotacek/fabric-peer:armv7l-1.0.7
+    image: hyperledger/fabric-peer:x86_64-1.0.4
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=hyperledger-fabric
@@ -60,10 +60,10 @@ services:
       - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org1.ptunstad.no:7051
       - CORE_PEER_LOCALMSPID=Org1MSP
       - CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
-      - CORE_CHAINCODE_BUILDER=jmotacek/fabric-ccenv:armv7l-1.0.7
-      - CORE_CHAINCODE_GOLANG_RUNTIME=jmotacek/fabric-baseos:armv7l-0.3.2
-      - CORE_CHAINCODE_CAR_RUNTIME=jmotacek/fabric-baseos:armv7l-0.3.2
-      - CORE_CHAINCODE_JAVA=jmotacek/fabric-javaenv:armv7l-1.0.7
+      - CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv:x86_64-1.0.4
+      - CORE_CHAINCODE_GOLANG_RUNTIME=hyperledger/fabric-baseos:x86_64-0.3.2
+      - CORE_CHAINCODE_CAR_RUNTIME=hyperledger/fabric-baseos:x86_64-0.3.2
+      - CORE_CHAINCODE_JAVA=hyperledger/fabric-javaenv:x86_64-1.0.4
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     hostname: peer0.org1.ptunstad.no
     networks:
@@ -81,11 +81,11 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == hlf_node_3
+          - node.hostname == agc-lab2
     command: bash -c "peer node start > /home/logs/peer0org1log.txt 2>&1"
 
   peer1_org1:
-    image: jmotacek/fabric-peer:armv7l-1.0.7
+    image: hyperledger/fabric-peer:x86_64-1.0.4
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=hyperledger-fabric
@@ -103,10 +103,10 @@ services:
       - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org1.ptunstad.no:7051
       - CORE_PEER_LOCALMSPID=Org1MSP
       - CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
-      - CORE_CHAINCODE_BUILDER=jmotacek/fabric-ccenv:armv7l-1.0.7
-      - CORE_CHAINCODE_GOLANG_RUNTIME=jmotacek/fabric-baseos:armv7l-0.3.2
-      - CORE_CHAINCODE_CAR_RUNTIME=jmotacek/fabric-baseos:armv7l-0.3.2
-      - CORE_CHAINCODE_JAVA=jmotacek/fabric-javaenv:armv7l-1.0.7
+      - CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv:x86_64-1.0.4
+      - CORE_CHAINCODE_GOLANG_RUNTIME=hyperledger/fabric-baseos:x86_64-0.3.2
+      - CORE_CHAINCODE_CAR_RUNTIME=hyperledger/fabric-baseos:x86_64-0.3.2
+      - CORE_CHAINCODE_JAVA=hyperledger/fabric-javaenv:x86_64-1.0.4
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     hostname: peer1.org1.ptunstad.no
     networks:
@@ -124,11 +124,11 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == hlf_node_1
+          - node.hostname == ptserv
     command: bash -c "peer node start > /home/logs/peer1org1log.txt 2>&1"
 
   peer2_org1:
-    image: jmotacek/fabric-peer:armv7l-1.0.7
+    image: hyperledger/fabric-peer:x86_64-1.0.4
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=hyperledger-fabric
@@ -146,10 +146,10 @@ services:
       - CORE_PEER_GOSSIP_BOOTSTRAP=peer2.org1.ptunstad.no:7051
       - CORE_PEER_LOCALMSPID=Org1MSP
       - CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
-      - CORE_CHAINCODE_BUILDER=jmotacek/fabric-ccenv:armv7l-1.0.7
-      - CORE_CHAINCODE_GOLANG_RUNTIME=jmotacek/fabric-baseos:armv7l-0.3.2
-      - CORE_CHAINCODE_CAR_RUNTIME=jmotacek/fabric-baseos:armv7l-0.3.2
-      - CORE_CHAINCODE_JAVA=jmotacek/fabric-javaenv:armv7l-1.0.7
+      - CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv:x86_64-1.0.4
+      - CORE_CHAINCODE_GOLANG_RUNTIME=hyperledger/fabric-baseos:x86_64-0.3.2
+      - CORE_CHAINCODE_CAR_RUNTIME=hyperledger/fabric-baseos:x86_64-0.3.2
+      - CORE_CHAINCODE_JAVA=hyperledger/fabric-javaenv:x86_64-1.0.4
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     hostname: peer2.org1.ptunstad.no
     networks:
@@ -167,11 +167,11 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == hlf_node_2
+          - node.hostname == agc-lab1
     command: bash -c "peer node start > /home/logs/peer2org1log.txt 2>&1"
 
   peer3_org1:
-    image: jmotacek/fabric-peer:armv7l-1.0.7
+    image: hyperledger/fabric-peer:x86_64-1.0.4
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=hyperledger-fabric
@@ -189,10 +189,10 @@ services:
       - CORE_PEER_GOSSIP_BOOTSTRAP=peer3.org1.ptunstad.no:7051
       - CORE_PEER_LOCALMSPID=Org1MSP
       - CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
-      - CORE_CHAINCODE_BUILDER=jmotacek/fabric-ccenv:armv7l-1.0.7
-      - CORE_CHAINCODE_GOLANG_RUNTIME=jmotacek/fabric-baseos:armv7l-0.3.2
-      - CORE_CHAINCODE_CAR_RUNTIME=jmotacek/fabric-baseos:armv7l-0.3.2
-      - CORE_CHAINCODE_JAVA=jmotacek/fabric-javaenv:armv7l-1.0.7
+      - CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv:x86_64-1.0.4
+      - CORE_CHAINCODE_GOLANG_RUNTIME=hyperledger/fabric-baseos:x86_64-0.3.2
+      - CORE_CHAINCODE_CAR_RUNTIME=hyperledger/fabric-baseos:x86_64-0.3.2
+      - CORE_CHAINCODE_JAVA=hyperledger/fabric-javaenv:x86_64-1.0.4
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     hostname: peer3.org1.ptunstad.no
     networks:
@@ -210,11 +210,11 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == hlf_node_0
+          - node.hostname == i3serv
     command: bash -c "peer node start > /home/logs/peer3org1log.txt 2>&1"
 
   cli:
-    image: jmotacek/fabric-tools:armv7l-1.0.7
+    image: hyperledger/fabric-tools:x86_64-1.0.4
     tty: true
     environment:
       - GOPATH=/opt/gopath
@@ -229,10 +229,10 @@ services:
       - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/tls/ca.crt
       - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/users/Admin@org1.ptunstad.no/msp
       - CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
-      - CORE_CHAINCODE_BUILDER=jmotacek/fabric-ccenv:armv7l-1.0.7
-      - CORE_CHAINCODE_GOLANG=jmotacek/fabric-baseos:armv7l-0.3.2
-      - CORE_CHAINCODE_CAR=jmotacek/fabric-baseos:armv7l-0.3.2
-      - CORE_CHAINCODE_JAVA=jmotacek/fabric-javaenv:armv7l-1.0.7
+      - CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv:x86_64-1.0.4
+      - CORE_CHAINCODE_GOLANG=hyperledger/fabric-baseos:x86_64-0.3.2
+      - CORE_CHAINCODE_CAR=hyperledger/fabric-baseos:x86_64-0.3.2
+      - CORE_CHAINCODE_JAVA=hyperledger/fabric-javaenv:x86_64-1.0.4
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     command: /bin/bash -c 'sleep 30; ./scripts/script_ds.sh; while true; do sleep 20170504; done'
     volumes:
@@ -250,7 +250,7 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == hlf_node_3
+          - node.hostname == agc-lab2
     networks:
       hyperledger-fabric:
         aliases:
