@@ -167,17 +167,19 @@ echo 'Done'
 ## Quick install for Ubuntu 16.04
 
 ### Installing Go
-The version of Go used for this project was Go 1.7.5, installing it on Ubuntu can be done by
+The version of Go used for this version was Go 1.9.2, installing it on Ubuntu can be done by
 
 ```
-sudo curl -O https://storage.googleapis.com/golang/go1.7.5.linux-amd64.tar.gz
-sudo tar -xvf go1.7.5.linux-amd64.tar.gz
+sudo curl -O https://storage.googleapis.com/golang/go1.9.2.linux-amd64.tar.gz &&
+sudo tar -xvf go1.9.2.linux-amd64.tar.gz &&
+sudo rm -rf /usr/local/go &&
 sudo mv go /usr/local
 sudo nano ~/.profile  -> put ´export PATH=$PATH:/usr/local/go/bin
  export GOPATH=$HOME/go´ at end of file.
 source ~/.profile 	and/or put it in .bashrc .zshrc
 ```
-To verify run `go version ` to see if its go version 1.7.5
+To verify run `go version ` to see if its go version 1.9.2
+
 ### Install Docker and Docker Compose
 ```
 curl -sSL https://get.docker.com | sh
@@ -201,22 +203,21 @@ curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
 sudo apt-get install -y nodejs
 ```
 ### Pull Pre-Built docker images
-You can compile your own images, but to pull the pre-built HLF V1 images by Joe Motacek run:
+Download images for Hyperledger Fabric v.1.1.0
 
 ```
-docker pull hyperledger/fabric-baseos:x86_64-0.3.2 &&
-docker pull hyperledger/fabric-basejvm:x86_64-0.3.2 &&
-docker pull hyperledger/fabric-baseimage:x86_64-0.3.2 &&
-docker pull hyperledger/fabric-ccenv:x86_64-1.0.4 &&
-docker pull hyperledger/fabric-javaenv:x86_64-1.0.4 &&
-docker pull hyperledger/fabric-peer:x86_64-1.0.4 &&
-docker pull hyperledger/fabric-orderer:x86_64-1.0.4 &&
-docker pull hyperledger/fabric-zookeeper:x86_64-1.0.4 &&
-docker pull hyperledger/fabric-kafka:x86_64-1.0.4 &&
-docker pull hyperledger/fabric-couchdb:x86_64-1.0.4 &&
-docker pull hyperledger/fabric-tools:x86_64-1.0.4
+docker pull hyperledger/fabric-baseos:x86_64-0.4.6 &&
+docker pull hyperledger/fabric-basejvm:x86_64-0.4.6 &&
+docker pull hyperledger/fabric-baseimage:x86_64-0.4.6 &&
+docker pull hyperledger/fabric-ccenv:x86_64-1.1.0 &&
+docker pull hyperledger/fabric-javaenv:x86_64-1.1.0 &&
+docker pull hyperledger/fabric-peer:x86_64-1.1.0 &&
+docker pull hyperledger/fabric-orderer:x86_64-1.1.0 &&
+docker pull hyperledger/fabric-tools:x86_64-1.1.0
 ```
 This will take a while to complete as the images are quite large.
+
+
 
 ### Clone repository to /data folder
 ```
