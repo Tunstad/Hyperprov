@@ -29,7 +29,7 @@ var totaltime_seconds = 1;        //3600 = 1h, 600 = 10m
 
 //The user to interact with blockchain as, theese are found in hfc-key-store and generated 
 //by having enrollAdmin.js and registerUser.js interact with a fabric CA server
-var currentUser = 'Node2'
+var currentUser = 'Peer2'
 
 //The global variables for number of benchmarks to be run, and the 
 //current number of benchmarks that have been run. Numbenchmarks is 
