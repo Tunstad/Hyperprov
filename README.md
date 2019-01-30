@@ -162,3 +162,64 @@ P2=$!
 wait $P1 $P2
 echo 'Done'
 ```
+
+
+## Quick install for Ubuntu 16.04
+
+### Installing Go
+The version of Go used for this project was Go 1.7.5, installing it on Ubuntu can be done by
+
+```
+sudo curl -O https://storage.googleapis.com/golang/go1.7.5.linux-amd64.tar.gz
+sudo tar -xvf go1.7.5.linux-amd64.tar.gz
+sudo mv go /usr/local
+sudo nano ~/.profile  -> put ´export PATH=$PATH:/usr/local/go/bin
+ export GOPATH=$HOME/go´ at end of file.
+source ~/.profile 	and/or put it in .bashrc .zshrc
+```
+To verify run `go version ` to see if its go version 1.7.5
+### Install Docker and Docker Compose
+```
+curl -sSL https://get.docker.com | sh
+curl -s https://packagecloud.io/install/repositories/Hypriot/Schatzkiste/script.deb.sh | sudo bash
+```
+#### If you get a problem with docker compose
+Run next step first then run `sudo pip install --trusted-host pypi.org docker-compose`
+
+### Other/python libraries
+```
+sudo apt-get install git python-pip python-dev docker-compose build-essential libtool libltdl-dev libssl-dev libevent-dev libffi-dev
+sudo pip install --upgrade pip
+sudo pip install --upgrade setuptools
+sudo pip install behave nose docker-compose
+sudo pip install -I flask==0.10.1 python-dateutil==2.2 pytz==2014.3 pyyaml==3.10 couchdb==1.0 flask-cors==2.0.1 requests==2.4.3 pyOpenSSL==16.2.0 pysha3==1.0b1 grpcio==1.0.4
+```
+After installing dependencies it may be neccesary to do a reboot for changes to take into effect.
+### Install NodeJS
+```
+curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+sudo apt-get install -y nodejs
+```
+### Pull Pre-Built docker images
+You can compile your own images, but to pull the pre-built HLF V1 images by Joe Motacek run:
+
+```
+docker pull hyperledger/fabric-baseos:x86_64-0.3.2 &&
+docker pull hyperledger/fabric-basejvm:x86_64-0.3.2 &&
+docker pull hyperledger/fabric-baseimage:x86_64-0.3.2 &&
+docker pull hyperledger/fabric-ccenv:x86_64-1.0.4 &&
+docker pull hyperledger/fabric-javaenv:x86_64-1.0.4 &&
+docker pull hyperledger/fabric-peer:x86_64-1.0.4 &&
+docker pull hyperledger/fabric-orderer:x86_64-1.0.4 &&
+docker pull hyperledger/fabric-zookeeper:x86_64-1.0.4 &&
+docker pull hyperledger/fabric-kafka:x86_64-1.0.4 &&
+docker pull hyperledger/fabric-couchdb:x86_64-1.0.4 &&
+docker pull hyperledger/fabric-tools:x86_64-1.0.4
+```
+This will take a while to complete as the images are quite large.
+
+### Clone repository to /data folder
+```
+sudo mkdir /data && sudo chmod -R ugo+rw /data
+git clone -b "desktop" https://github.com/Tunstad/hyperledger-pi-composer.git
+```

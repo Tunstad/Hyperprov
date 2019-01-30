@@ -23,7 +23,7 @@ const inquirer = require('inquirer')
 var RESTAPI = false;
 
 //The time a benchmark is set to run
-var totaltime_seconds = 600;        //3600 = 1h, 600 = 10m
+var totaltime_seconds = 1;        //3600 = 1h, 600 = 10m
 
 //var bm_datalength = 1000000; // MAX == 1398101 characters/bytes
 
@@ -50,11 +50,11 @@ var store_path = path.join(__dirname, 'hfc-key-store');
 var channel = fabric_client.newChannel('mychannel');
 
 //Set the peer to recieve operations and add it to the channel object
-var peer = fabric_client.newPeer('grpc://node2.ptunstad.no:7051');
+var peer = fabric_client.newPeer('grpc://mc.ptunstad.no:7051');
 channel.addPeer(peer);
 
 //Set the orderer to be used by the set-functionality in the blockchain.
-var order = fabric_client.newOrderer('grpc://node3.ptunstad.no:7050')
+var order = fabric_client.newOrderer('grpc://agc.ptunstad.no:7050')
 channel.addOrderer(order);
 
 
@@ -223,7 +223,7 @@ function ccSet(ccargs, callback, callback2, resp){
             // get an eventhub once the fabric client has a user assigned. The user
             // is required bacause the event registration must be signed
             let event_hub = fabric_client.newEventHub();
-            event_hub.setPeerAddr('grpc://node2.ptunstad.no:7053');
+            event_hub.setPeerAddr('grpc://mc.ptunstad.no:7053');
     
             // using resolve the promise so that result status may be processed
             // under the then clause rather than having the catch clause process
