@@ -13,18 +13,25 @@ CHANNEL_NAME="$1"
 DELAY="$2"
 LANGUAGE="$3"
 TIMEOUT="$4"
+VERBOSE="$5"
 : ${CHANNEL_NAME:="mychannel"}
 : ${DELAY:="3"}
 : ${LANGUAGE:="golang"}
 : ${TIMEOUT:="120"}
+: ${VERBOSE:="false"}
 LANGUAGE=`echo "$LANGUAGE" | tr [:upper:] [:lower:]`
 COUNTER=1
 MAX_RETRY=5
 ORDERER_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/ptunstad.no/orderers/orderer.ptunstad.no/msp/tlscacerts/tlsca.ptunstad.no-cert.pem
+PEER0_ORG1_CA=//opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/tls/ca.crt
 
 CC_SRC_PATH="github.com/hyperledger/fabric/examples/chaincode/go/chaincode_datashare02"
 if [ "$LANGUAGE" = "node" ]; then
 	CC_SRC_PATH="/opt/gopath/src/github.com/chaincode/chaincode_example02/node/"
+fi
+
+if [ "$LANGUAGE" = "java" ]; then
+	CC_SRC_PATH="/opt/gopath/src/github.com/chaincode/chaincode_example02/java/"
 fi
 
 echo "Channel name : "$CHANNEL_NAME
