@@ -207,14 +207,15 @@ chaincodeQuery () {
 
   # continue to poll
   # we either get a successful response, or reach TIMEOUT
-  while test "$(($(date +%s)-starttime))" -lt "$TIMEOUT" -a $rc -ne 0
+  while
+    test "$(($(date +%s) - starttime))" -lt "$TIMEOUT" -a $rc -ne 0
   do
-     sleep $DELAY
-     echo "Attempting to Query peer${PEER}.org${ORG} ...$(($(date +%s)-starttime)) secs"
-     set -x
-     peer chaincode query -C $CHANNEL_NAME -n myccds -c '{"Args":["get","c"]}' >&log.txt
-	 res=$?
-     set +x
+    sleep $DELAY
+    echo "Attempting to Query peer${PEER}.org${ORG} ...$(($(date +%s) - starttime)) secs"
+    set -x
+    peer chaincode query -C $CHANNEL_NAME -n myccds -c '{"Args":["get","c"]}' >&log.txt
+    res=$?
+    set +x
     test $res -eq 0 && VALUE=$(cat log.txt | awk '/Query Result/ {print $NF}')
     test "$VALUE" = "$EXPECTED_RESULT" && let rc=0
     # removed the string "Query Result" from peer chaincode query command
@@ -225,13 +226,13 @@ chaincodeQuery () {
   done
   echo
   cat log.txt
-  if test $rc -eq 0 ; then
-	echo "===================== Query on peer${PEER}.org${ORG} on channel '$CHANNEL_NAME' is successful ===================== "
+  if test $rc -eq 0; then
+    echo "===================== Query successful on peer${PEER}.org${ORG} on channel '$CHANNEL_NAME' ===================== "
   else
-	echo "!!!!!!!!!!!!!!! Query result on peer${PEER}.org${ORG} is INVALID !!!!!!!!!!!!!!!!"
-        echo "================== ERROR !!! FAILED to execute End-2-End Scenario =================="
-	echo
-	exit 1
+    echo "!!!!!!!!!!!!!!! Query result on peer${PEER}.org${ORG} is INVALID !!!!!!!!!!!!!!!!"
+    echo "================== ERROR !!! FAILED to execute End-2-End Scenario =================="
+    echo
+    exit 1
   fi
 }
 
