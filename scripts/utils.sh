@@ -28,33 +28,39 @@ setOrdererGlobals() {
 setGlobals () {
 	PEER=$1
 	ORG=$2
-	CORE_PEER_LOCALMSPID="Org1MSP"
-	CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/tls/ca.crt
-	CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/users/Admin@org1.ptunstad.no/msp
-	if [ $1 -eq 0 -o $1 -eq 1 ] ; then
-		
-		if [ $1 -eq 0 ]; then
-			CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/tls/server.crt
-    		CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/tls/server.key
-			CORE_PEER_ADDRESS=peer0.org1.ptunstad.no:7051
+	if [ $ORG -eq 1 ]; then
+		CORE_PEER_LOCALMSPID="Org1MSP"
+		CORE_PEER_TLS_ROOTCERT_FILE=$PEER0_ORG1_CA
+		CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/users/Admin@org1.ptunstad.no/msp
+		if [ $1 -eq 0 -o $1 -eq 1 ] ; then
+			
+			if [ $1 -eq 0 ]; then
+				#CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/tls/server.crt
+				#CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/tls/server.key
+				CORE_PEER_ADDRESS=peer0.org1.ptunstad.no:7051
+			else
+				#CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer1.org1.ptunstad.no/tls/server.crt
+				#CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer1.org1.ptunstad.no/tls/server.key
+				CORE_PEER_ADDRESS=peer1.org1.ptunstad.no:7051
+			fi
 		else
-			CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer1.org1.ptunstad.no/tls/server.crt
-    		CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer1.org1.ptunstad.no/tls/server.key
-			CORE_PEER_ADDRESS=peer1.org1.ptunstad.no:7051
+			if [ $1 -eq 2 ]; then
+				#CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer2.org1.ptunstad.no/tls/server.crt
+				#CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer2.org1.ptunstad.no/tls/server.key
+				CORE_PEER_ADDRESS=peer2.org1.ptunstad.no:7051
+			else
+				#CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer3.org1.ptunstad.no/tls/server.crt
+				#CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer3.org1.ptunstad.no/tls/server.key
+				CORE_PEER_ADDRESS=peer3.org1.ptunstad.no:7051
+			fi
 		fi
 	else
-		if [ $1 -eq 2 ]; then
-		    CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer2.org1.ptunstad.no/tls/server.crt
-    		CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer2.org1.ptunstad.no/tls/server.key
-			CORE_PEER_ADDRESS=peer2.org1.ptunstad.no:7051
-		else
-		    CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer3.org1.ptunstad.no/tls/server.crt
-    		CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer3.org1.ptunstad.no/tls/server.key
-			CORE_PEER_ADDRESS=peer3.org1.ptunstad.no:7051
-		fi
-	fi
+    echo "================== ERROR !!! ORG Unknown =================="
+  	fi
 
-	env |grep CORE
+	if [ "$VERBOSE" == "true" ]; then
+    	env | grep CORE
+  	fi
 }
 
 # setGlobals () {
@@ -305,7 +311,7 @@ parsePeerConnectionParameters() {
   while [ "$#" -gt 0 ]; do
     PEER="peer$1.org$2"
     PEERS="$PEERS $PEER"
-    PEER_CONN_PARMS="$PEER_CONN_PARMS --peerAddresses $PEER.example.com:7051"
+    PEER_CONN_PARMS="$PEER_CONN_PARMS --peerAddresses $PEER.ptunstad.no:7051"
     if [ -z "$CORE_PEER_TLS_ENABLED" -o "$CORE_PEER_TLS_ENABLED" = "true" ]; then
       TLSINFO=$(eval echo "--tlsRootCertFiles \$PEER$1_ORG$2_CA")
       PEER_CONN_PARMS="$PEER_CONN_PARMS $TLSINFO"
