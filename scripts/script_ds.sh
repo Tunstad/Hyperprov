@@ -40,10 +40,10 @@ echo "Channel name : "$CHANNEL_NAME
 #Prevents "Minimum memory limit allowed is 4MB" error on low RAM devices (like RasPi)
 CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
 # Sets the default images to use my build for the ARM architecture
-CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv:amd64-1.3.0 
-CORE_CHAINCODE_GOLANG=hyperledger/fabric-baseos:amd64-0.4.13 
-CORE_CHAINCODE_CAR=hyperledger/fabric-baseos:amd64-0.4.13 
-CORE_CHAINCODE_JAVA=hyperledger/fabric-javaenv::amd64-1.3.0 
+CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv:amd64-1.4.0 
+CORE_CHAINCODE_GOLANG=hyperledger/fabric-baseos:amd64-0.4.14 
+CORE_CHAINCODE_CAR=hyperledger/fabric-baseos:amd64-0.4.14 
+CORE_CHAINCODE_JAVA=hyperledger/fabric-javaenv::amd64-1.4.0 
 
 echo "Channel name : "$CHANNEL_NAME
 

@@ -5,7 +5,7 @@
 #
 ### Needs to be run on a x64 server, not an arm device.
 fabric-ca-server:
-   image: hyperledger/fabric-ca:amd64-1.3.0
+   image: hyperledger/fabric-ca:amd64-1.4.0
    container_name: fabric-ca-server
    ports:
      - "7054:7054"
