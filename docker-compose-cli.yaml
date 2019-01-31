@@ -75,7 +75,7 @@ services:
       - /data/hyperledger-pi-composer/logs:/home/logs
       - /data/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/msp:/etc/hyperledger/fabric/msp
       - /data/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/tls:/etc/hyperledger/fabric/tls
-      - peer0_org1:/var/hyperledger/production
+      ##- peer0_org1:/var/hyperledger/production
     ports:
       - 7051:7051
       - 7053:7053
@@ -119,7 +119,7 @@ services:
       - /data/hyperledger-pi-composer/logs:/home/logs
       - /data/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer1.org1.ptunstad.no/msp:/etc/hyperledger/fabric/msp
       - /data/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer1.org1.ptunstad.no/tls:/etc/hyperledger/fabric/tls
-      - peer1_org1:/var/hyperledger/production
+      ##- peer1_org1:/var/hyperledger/production
     ports:
       - 8051:7051
       - 8053:7053
@@ -163,7 +163,7 @@ services:
       - /data/hyperledger-pi-composer/logs:/home/logs
       - /data/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer2.org1.ptunstad.no/msp:/etc/hyperledger/fabric/msp
       - /data/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer2.org1.ptunstad.no/tls:/etc/hyperledger/fabric/tls
-      - peer2_org1:/var/hyperledger/production
+      ##- peer2_org1:/var/hyperledger/production
     ports:
       - 9051:7051
       - 9053:7053
@@ -207,7 +207,7 @@ services:
       - /data/hyperledger-pi-composer/logs:/home/logs
       - /data/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer3.org1.ptunstad.no/msp:/etc/hyperledger/fabric/msp
       - /data/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer3.org1.ptunstad.no/tls:/etc/hyperledger/fabric/tls
-      - peer3_org1:/var/hyperledger/production
+      ##- peer3_org1:/var/hyperledger/production
     ports:
       - 10051:7051
       - 10053:7053
