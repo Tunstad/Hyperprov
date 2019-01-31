@@ -186,9 +186,9 @@ joinChannel () {
 # 	# while 'peer chaincode' command can get the orderer endpoint from the peer (if join was successful),
 # 	# lets supply it directly as we know it using the "-o" option
 # 	if [ -z "$CORE_PEER_TLS_ENABLED" -o "$CORE_PEER_TLS_ENABLED" = "false" ]; then
-# 		peer chaincode instantiate -o orderer.ptunstad.no:7050 -C $CHANNEL_NAME -n myccds -v 1.2 -c '{"Args":["c","asdf"]}' -P "OR('Org1MSP.member','Org1MSP.member')" >&log.txt
+# 		peer chaincode instantiate -o orderer.ptunstad.no:7050 -C $CHANNEL_NAME -n myccds -v 1.2 -c '{"Args":["c","51"]}' -P "OR('Org1MSP.member','Org1MSP.member')" >&log.txt
 # 	else
-# 		peer chaincode instantiate -o orderer.ptunstad.no:7050 --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA -C $CHANNEL_NAME -n myccds -v 1.2 -c '{"Args":["c","asdf"]}' -P "OR('Org1MSP.member','Org1MSP.member')" >&log.txt
+# 		peer chaincode instantiate -o orderer.ptunstad.no:7050 --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA -C $CHANNEL_NAME -n myccds -v 1.2 -c '{"Args":["c","51"]}' -P "OR('Org1MSP.member','Org1MSP.member')" >&log.txt
 # 	fi
 # 	res=$?
 # 	cat log.txt
@@ -232,9 +232,9 @@ chaincodeInvoke () {
 	# while 'peer chaincode' command can get the orderer endpoint from the peer (if join was successful),
 	# lets supply it directly as we know it using the "-o" option
 	if [ -z "$CORE_PEER_TLS_ENABLED" -o "$CORE_PEER_TLS_ENABLED" = "false" ]; then
-		peer chaincode invoke -o orderer.ptunstad.no:7050 -C $CHANNEL_NAME -n myccds -c '{"Args":["set","c","wasda"]}' >&log.txt
+		peer chaincode invoke -o orderer.ptunstad.no:7050 -C $CHANNEL_NAME -n myccds -c '{"Args":["set","c","77"]}' >&log.txt
 	else
-		peer chaincode invoke -o orderer.ptunstad.no:7050 --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA -C $CHANNEL_NAME -n myccds -c '{"Args":["set","c","wasda"]}'
+		peer chaincode invoke -o orderer.ptunstad.no:7050 --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA -C $CHANNEL_NAME -n myccds -c '{"Args":["set","c","77"]}'
 	fi
 	res=$?
 	cat log.txt
@@ -275,7 +275,7 @@ instantiateChaincode 2 1 1.2
 #Query on chaincode on Peer0/Org1
 echo "Querying chaincode on org1/peer0..."
 sleep 10
-chaincodeQuery 0 1 asdf
+chaincodeQuery 0 1 51
 
 #Invoke on chaincode on Peer0/Org1
 echo "Sending invoke transaction on org1/peer0..."
@@ -290,7 +290,7 @@ installChaincode 3 1 1.2
 #Query on chaincode on Peer3/org1, check if the result is 90
 echo "Querying chaincode on org1/peer3..."
 sleep 10
-chaincodeQuery 3 1 wasda
+chaincodeQuery 3 1 77
 
 echo
 echo "========= All GOOD, BYFN execution completed =========== "
