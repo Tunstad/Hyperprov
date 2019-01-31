@@ -184,6 +184,9 @@ Application: &ApplicationDefaults
             Type: ImplicitMeta
             Rule: "MAJORITY Admins"
 
+    Capabilities:
+        <<: *ApplicationCapabilities
+
 ################################################################################
 #
 #   SECTION: Capabilities
@@ -308,3 +311,27 @@ Profiles:
             Capabilities:
                 <<: *ApplicationCapabilities
 
+    SampleDevModeKafka:
+        <<: *ChannelDefaults
+        Capabilities:
+            <<: *ChannelCapabilities
+        Orderer:
+            <<: *OrdererDefaults
+            OrdererType: kafka
+            Kafka:
+                Brokers:
+                - kafka.ptunstad.no:9092
+
+            Organizations:
+            - *OrdererOrg
+            Capabilities:
+                <<: *OrdererCapabilities
+        Application:
+            <<: *ApplicationDefaults
+            Organizations:
+            - <<: *OrdererOrg
+        Consortiums:
+            SampleConsortium:
+                Organizations:
+                - *Org1
+                #- *Org2
