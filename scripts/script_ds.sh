@@ -43,7 +43,7 @@ CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
 CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv:amd64-1.4.0 
 CORE_CHAINCODE_GOLANG=hyperledger/fabric-baseos:amd64-0.4.14 
 CORE_CHAINCODE_CAR=hyperledger/fabric-baseos:amd64-0.4.14 
-CORE_CHAINCODE_JAVA=hyperledger/fabric-javaenv::amd64-1.4.0 
+#CORE_CHAINCODE_JAVA=hyperledger/fabric-javaenv::amd64-1.4.0 
 
 echo "Channel name : "$CHANNEL_NAME
 
