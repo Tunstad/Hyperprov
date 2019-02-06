@@ -23,13 +23,13 @@ const inquirer = require('inquirer')
 var RESTAPI = false;
 
 //The time a benchmark is set to run
-var totaltime_seconds = 600;        //3600 = 1h, 600 = 10m
+var totaltime_seconds = 1;        //3600 = 1h, 600 = 10m
 
 //var bm_datalength = 1000000; // MAX == 1398101 characters/bytes
 
 //The user to interact with blockchain as, theese are found in hfc-key-store and generated 
 //by having enrollAdmin.js and registerUser.js interact with a fabric CA server
-var currentUser = 'Node2'
+var currentUser = 'Peer2'
 
 //The global variables for number of benchmarks to be run, and the 
 //current number of benchmarks that have been run. Numbenchmarks is 
@@ -50,16 +50,16 @@ var store_path = path.join(__dirname, 'hfc-key-store');
 var channel = fabric_client.newChannel('mychannel');
 
 //Set the peer to recieve operations and add it to the channel object
-var peer = fabric_client.newPeer('grpc://node2.ptunstad.no:7051');
+var peer = fabric_client.newPeer('grpc://mc.ptunstad.no:7051');
 channel.addPeer(peer);
 
 //Set the orderer to be used by the set-functionality in the blockchain.
-var order = fabric_client.newOrderer('grpc://node3.ptunstad.no:7050')
+var order = fabric_client.newOrderer('grpc://agc.ptunstad.no:7050')
 channel.addOrderer(order);
-
 
 //REST-api functionality to interact with client application from external device.
 if(RESTAPI){
+    console.log("Starting in REST-api mode..")
     var express = require('express');
     var bodyParser = require('body-parser');
     var app = express();
@@ -101,6 +101,7 @@ if(RESTAPI){
     })
 
 }else{
+    console.log("Starting in CLI input mode..")
     //Begin CLI to retrieve user input of application. This could for other use-cases be
     //changed to something more along the lines of a REST API if outside access is needed or
     //a local API available only to another application for our use case.
@@ -222,14 +223,16 @@ function ccSet(ccargs, callback, callback2, resp){
     
             // get an eventhub once the fabric client has a user assigned. The user
             // is required bacause the event registration must be signed
-            let event_hub = fabric_client.newEventHub();
-            event_hub.setPeerAddr('grpc://node2.ptunstad.no:7053');
-    
+            // let event_hub = fabric_client.newEventHub();
+            // event_hub.setPeerAddr('grpc://mc.ptunstad.no:7053');
+            let event_hub = channel.newChannelEventHub(peer);
+
             // using resolve the promise so that result status may be processed
             // under the then clause rather than having the catch clause process
             // the status
             let txPromise = new Promise((resolve, reject) => {
                 let handle = setTimeout(() => {
+                    event_hub.unregisterTxEvent(transaction_id_string);
                     event_hub.disconnect();
                     resolve({event_status : 'TIMEOUT'}); //we could use reject(new Error('Trnasaction did not complete within 30 seconds'));
                 }, 30000);
@@ -238,7 +241,7 @@ function ccSet(ccargs, callback, callback2, resp){
                     // this is the callback for transaction event status
                     // first some clean up of event listener
                     clearTimeout(handle);
-                    event_hub.unregisterTxEvent(transaction_id_string);
+                    //event_hub.unregisterTxEvent(transaction_id_string);
                     //event_hub.disconnect();
     
                     // now let the application know what happened
@@ -247,13 +250,16 @@ function ccSet(ccargs, callback, callback2, resp){
                         console.error('The transaction was invalid, code = ' + code);
                         resolve(return_status); // we could use reject(new Error('Problem with the tranaction, event status ::'+code));
                     } else {
-                        console.log('The transaction has been committed on peer ' + event_hub._ep._endpoint.addr);
+                        console.log('The transaction has been committed on peer ' + event_hub.getPeerAddr());
                         resolve(return_status);
                     }
                 }, (err) => {
                     //this is the callback if something goes wrong with the event registration or processing
                     reject(new Error('There was a problem with the eventhub ::'+err));
-                });
+                },
+                {disconnect: true} //disconnect when complete
+                );
+                event_hub.connect();
             });
             promises.push(txPromise);
     
@@ -268,7 +274,7 @@ function ccSet(ccargs, callback, callback2, resp){
         if (results && results[0] && results[0].status === 'SUCCESS') {
             console.log('Successfully sent transaction to the orderer.');
         } else {
-            console.error('Failed to order the transaction. Error code: ' + response.status);
+            console.error('Failed to order the transaction. Error code: ' + results[0].status);
         }
     
         if(results && results[1] && results[1].event_status === 'VALID') {

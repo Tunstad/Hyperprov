@@ -15,7 +15,7 @@ var path = require('path');
 var util = require('util');
 var os = require('os');
 
-var username = 'Node4'
+var username = 'Peer3'
 //
 var fabric_client = new Fabric_Client();
 var fabric_ca_client = null;

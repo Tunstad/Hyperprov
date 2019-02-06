@@ -20,10 +20,10 @@ ORDERER_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrga
 #Prevents "Minimum memory limit allowed is 4MB" error on low RAM devices (like RasPi)
 CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
 # Sets the default images to use my build for the ARM architecture
-CORE_CHAINCODE_BUILDER=jmotacek/fabric-ccenv:armv7l-1.0.0
-CORE_CHAINCODE_GOLANG=jmotacek/fabric-baseos:armv7l-0.3.1
-CORE_CHAINCODE_CAR=jmotacek/fabric-baseos:armv7l-0.3.1
-CORE_CHAINCODE_JAVA=jmotacek/fabric-javaenv::armv7l-1.0.0
+CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv:x86_64-1.1.0 
+CORE_CHAINCODE_GOLANG=hyperledger/fabric-baseos:x86_64-0.4.6 
+CORE_CHAINCODE_CAR=hyperledger/fabric-baseos:x86_64-0.4.6 
+CORE_CHAINCODE_JAVA=hyperledger/fabric-javaenv::x86_64-1.1.0 
 
 echo "Channel name : "$CHANNEL_NAME
 

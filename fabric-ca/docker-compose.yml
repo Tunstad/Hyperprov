@@ -5,7 +5,7 @@
 #
 ### Needs to be run on a x64 server, not an arm device.
 fabric-ca-server:
-   image: hyperledger/fabric-ca:amd64-1.3.0
+   image: hyperledger/fabric-ca:amd64-1.4.0
    container_name: fabric-ca-server
    ports:
      - "7054:7054"
@@ -13,7 +13,7 @@ fabric-ca-server:
       - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
       - FABRIC_CA_SERVER_CA_NAME=ca.ptunstad.no
       - FABRIC_CA_SERVER_CA_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org1.ptunstad.no-cert.pem
-      - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/fabric-ca-server-config/5b1b46e2cb689f504485c522a6e66af29575705b19efda3f4c9f999577b74e3f_sk
+      - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/fabric-ca-server-config/da428353a207abde2d43317950bd81e87de49ddea30053e42a4bc015222576cd_sk
    volumes:
      - ../crypto-config/peerOrganizations/org1.ptunstad.no/ca/:/etc/hyperledger/fabric-ca-server-config
    command: sh -c 'fabric-ca-server start -b admin:adminpw'

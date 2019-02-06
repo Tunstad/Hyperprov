@@ -5,9 +5,16 @@
 
 version: '3'
 
+volumes:
+  orderer.ptunstad.no:
+  peer0.org1.ptunstad.no:
+  peer1.org1.ptunstad.no:
+  peer2.org1.ptunstad.no:
+  peer3.org1.ptunstad.no:
+
 services:
   orderer:
-    image: jmotacek/fabric-orderer:armv7l-1.0.7
+    image: ptunstad/fabric-orderer:arm64-1.4.1
     environment:
       - ORDERER_GENERAL_LOGLEVEL=debug
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
@@ -20,10 +27,10 @@ services:
       - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
       - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
       - CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
-      - CORE_CHAINCODE_BUILDER=jmotacek/fabric-ccenv:armv7l-1.0.7
-      - CORE_CHAINCODE_GOLANG_RUNTIME=jmotacek/fabric-baseos:armv7l-0.3.2
-      - CORE_CHAINCODE_CAR_RUNTIME=jmotacek/fabric-baseos:armv7l-0.3.2
-      - CORE_CHAINCODE_JAVA=jmotacek/fabric-javaenv:armv7l-1.0.7
+      - CORE_CHAINCODE_BUILDER=ptunstad/fabric-ccenv:arm64-1.4.1
+      - CORE_CHAINCODE_GOLANG_RUNTIME=ptunstad/fabric-baseos:arm64-0.4.15
+      - CORE_CHAINCODE_CAR_RUNTIME=ptunstad/fabric-baseos:arm64-0.4.15
+      - CORE_CHAINCODE_JAVA=ptunstad/fabric-javaenv:arm64-1.4.1
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric
     hostname: orderer.ptunstad.no
     networks:
@@ -31,23 +38,23 @@ services:
         aliases:
           - orderer.ptunstad.no
     volumes:
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/ordererOrganizations/ptunstad.no/orderers/orderer.ptunstad.no/msp:/var/hyperledger/orderer/msp
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/ordererOrganizations/ptunstad.no/orderers/orderer.ptunstad.no/tls/:/var/hyperledger/orderer/tls
+      - /data/hyperledger-pi-composer/channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+      - /data/hyperledger-pi-composer/crypto-config/ordererOrganizations/ptunstad.no/orderers/orderer.ptunstad.no/msp:/var/hyperledger/orderer/msp
+      - /data/hyperledger-pi-composer/crypto-config/ordererOrganizations/ptunstad.no/orderers/orderer.ptunstad.no/tls/:/var/hyperledger/orderer/tls
     ports:
       - 7050:7050
     deploy:
       placement:
         constraints:
-          - node.hostname == hlf_node_3
+          - node.hostname == rpi3-node1
     command: orderer
     
   peer0_org1:
-    image: jmotacek/fabric-peer:armv7l-1.0.7
+    image: ptunstad/fabric-peer:arm64-1.4.1
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=hyperledger-fabric
-      - CORE_LOGGING_LEVEL=DEBUG
+      - FABRIC_LOGGING_SPEC=DEBUG
       - CORE_PEER_TLS_ENABLED=false
       - CORE_PEER_GOSSIP_USELEADERELECTION=true
       - CORE_PEER_GOSSIP_ORGLEADER=false
@@ -60,10 +67,10 @@ services:
       - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org1.ptunstad.no:7051
       - CORE_PEER_LOCALMSPID=Org1MSP
       - CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
-      - CORE_CHAINCODE_BUILDER=jmotacek/fabric-ccenv:armv7l-1.0.7
-      - CORE_CHAINCODE_GOLANG_RUNTIME=jmotacek/fabric-baseos:armv7l-0.3.2
-      - CORE_CHAINCODE_CAR_RUNTIME=jmotacek/fabric-baseos:armv7l-0.3.2
-      - CORE_CHAINCODE_JAVA=jmotacek/fabric-javaenv:armv7l-1.0.7
+      - CORE_CHAINCODE_BUILDER=ptunstad/fabric-ccenv:arm64-1.4.1
+      - CORE_CHAINCODE_GOLANG_RUNTIME=ptunstad/fabric-baseos:arm64-0.4.15
+      - CORE_CHAINCODE_CAR_RUNTIME=ptunstad/fabric-baseos:arm64-0.4.15
+      - CORE_CHAINCODE_JAVA=ptunstad/fabric-javaenv:arm64-1.4.1
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     hostname: peer0.org1.ptunstad.no
     networks:
@@ -72,24 +79,25 @@ services:
           - peer0.org1.ptunstad.no
     volumes:
       - /var/run/:/host/var/run/
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/logs:/home/logs
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/msp:/etc/hyperledger/fabric/msp
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/tls:/etc/hyperledger/fabric/tls
+      - /data/hyperledger-pi-composer/logs:/home/logs
+      - /data/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/msp:/etc/hyperledger/fabric/msp
+      - /data/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/tls:/etc/hyperledger/fabric/tls
+      ##- peer0_org1:/var/hyperledger/production
     ports:
       - 7051:7051
       - 7053:7053
     deploy:
       placement:
         constraints:
-          - node.hostname == hlf_node_3
+          - node.hostname == rpi3-node1
     command: bash -c "peer node start > /home/logs/peer0org1log.txt 2>&1"
 
   peer1_org1:
-    image: jmotacek/fabric-peer:armv7l-1.0.7
+    image: ptunstad/fabric-peer:arm64-1.4.1
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=hyperledger-fabric
-      - CORE_LOGGING_LEVEL=DEBUG
+      - FABRIC_LOGGING_SPEC=DEBUG
       - CORE_PEER_TLS_ENABLED=false
       - CORE_PEER_GOSSIP_USELEADERELECTION=true
       - CORE_PEER_GOSSIP_ORGLEADER=false
@@ -103,10 +111,10 @@ services:
       - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org1.ptunstad.no:7051
       - CORE_PEER_LOCALMSPID=Org1MSP
       - CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
-      - CORE_CHAINCODE_BUILDER=jmotacek/fabric-ccenv:armv7l-1.0.7
-      - CORE_CHAINCODE_GOLANG_RUNTIME=jmotacek/fabric-baseos:armv7l-0.3.2
-      - CORE_CHAINCODE_CAR_RUNTIME=jmotacek/fabric-baseos:armv7l-0.3.2
-      - CORE_CHAINCODE_JAVA=jmotacek/fabric-javaenv:armv7l-1.0.7
+      - CORE_CHAINCODE_BUILDER=ptunstad/fabric-ccenv:arm64-1.4.1
+      - CORE_CHAINCODE_GOLANG_RUNTIME=ptunstad/fabric-baseos:arm64-0.4.15
+      - CORE_CHAINCODE_CAR_RUNTIME=ptunstad/fabric-baseos:arm64-0.4.15
+      - CORE_CHAINCODE_JAVA=ptunstad/fabric-javaenv:arm64-1.4.1
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     hostname: peer1.org1.ptunstad.no
     networks:
@@ -115,24 +123,25 @@ services:
           - peer1.org1.ptunstad.no
     volumes:
       - /var/run/:/host/var/run/
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/logs:/home/logs
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer1.org1.ptunstad.no/msp:/etc/hyperledger/fabric/msp
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer1.org1.ptunstad.no/tls:/etc/hyperledger/fabric/tls
+      - /data/hyperledger-pi-composer/logs:/home/logs
+      - /data/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer1.org1.ptunstad.no/msp:/etc/hyperledger/fabric/msp
+      - /data/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer1.org1.ptunstad.no/tls:/etc/hyperledger/fabric/tls
+      ##- peer1_org1:/var/hyperledger/production
     ports:
       - 8051:7051
       - 8053:7053
     deploy:
       placement:
         constraints:
-          - node.hostname == hlf_node_1
+          - node.hostname == rpi3
     command: bash -c "peer node start > /home/logs/peer1org1log.txt 2>&1"
 
   peer2_org1:
-    image: jmotacek/fabric-peer:armv7l-1.0.7
+    image: ptunstad/fabric-peer:arm64-1.4.1
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=hyperledger-fabric
-      - CORE_LOGGING_LEVEL=DEBUG
+      - FABRIC_LOGGING_SPEC=DEBUG
       - CORE_PEER_TLS_ENABLED=false
       - CORE_PEER_GOSSIP_USELEADERELECTION=true
       - CORE_PEER_GOSSIP_ORGLEADER=false
@@ -146,10 +155,10 @@ services:
       - CORE_PEER_GOSSIP_BOOTSTRAP=peer2.org1.ptunstad.no:7051
       - CORE_PEER_LOCALMSPID=Org1MSP
       - CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
-      - CORE_CHAINCODE_BUILDER=jmotacek/fabric-ccenv:armv7l-1.0.7
-      - CORE_CHAINCODE_GOLANG_RUNTIME=jmotacek/fabric-baseos:armv7l-0.3.2
-      - CORE_CHAINCODE_CAR_RUNTIME=jmotacek/fabric-baseos:armv7l-0.3.2
-      - CORE_CHAINCODE_JAVA=jmotacek/fabric-javaenv:armv7l-1.0.7
+      - CORE_CHAINCODE_BUILDER=ptunstad/fabric-ccenv:arm64-1.4.1
+      - CORE_CHAINCODE_GOLANG_RUNTIME=ptunstad/fabric-baseos:arm64-0.4.15
+      - CORE_CHAINCODE_CAR_RUNTIME=ptunstad/fabric-baseos:arm64-0.4.15
+      - CORE_CHAINCODE_JAVA=ptunstad/fabric-javaenv:arm64-1.4.1
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     hostname: peer2.org1.ptunstad.no
     networks:
@@ -158,24 +167,25 @@ services:
           - peer2.org1.ptunstad.no
     volumes:
       - /var/run/:/host/var/run/
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/logs:/home/logs
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer2.org1.ptunstad.no/msp:/etc/hyperledger/fabric/msp
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer2.org1.ptunstad.no/tls:/etc/hyperledger/fabric/tls
+      - /data/hyperledger-pi-composer/logs:/home/logs
+      - /data/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer2.org1.ptunstad.no/msp:/etc/hyperledger/fabric/msp
+      - /data/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer2.org1.ptunstad.no/tls:/etc/hyperledger/fabric/tls
+      ##- peer2_org1:/var/hyperledger/production
     ports:
       - 9051:7051
       - 9053:7053
     deploy:
       placement:
         constraints:
-          - node.hostname == hlf_node_2
+          - node.hostname == rpi3-node2
     command: bash -c "peer node start > /home/logs/peer2org1log.txt 2>&1"
 
   peer3_org1:
-    image: jmotacek/fabric-peer:armv7l-1.0.7
+    image: ptunstad/fabric-peer:arm64-1.4.1
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=hyperledger-fabric
-      - CORE_LOGGING_LEVEL=DEBUG
+      - FABRIC_LOGGING_SPEC=DEBUG
       - CORE_PEER_TLS_ENABLED=false
       - CORE_PEER_GOSSIP_USELEADERELECTION=true
       - CORE_PEER_GOSSIP_ORGLEADER=false
@@ -189,10 +199,10 @@ services:
       - CORE_PEER_GOSSIP_BOOTSTRAP=peer3.org1.ptunstad.no:7051
       - CORE_PEER_LOCALMSPID=Org1MSP
       - CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
-      - CORE_CHAINCODE_BUILDER=jmotacek/fabric-ccenv:armv7l-1.0.7
-      - CORE_CHAINCODE_GOLANG_RUNTIME=jmotacek/fabric-baseos:armv7l-0.3.2
-      - CORE_CHAINCODE_CAR_RUNTIME=jmotacek/fabric-baseos:armv7l-0.3.2
-      - CORE_CHAINCODE_JAVA=jmotacek/fabric-javaenv:armv7l-1.0.7
+      - CORE_CHAINCODE_BUILDER=ptunstad/fabric-ccenv:arm64-1.4.1
+      - CORE_CHAINCODE_GOLANG_RUNTIME=ptunstad/fabric-baseos:arm64-0.4.15
+      - CORE_CHAINCODE_CAR_RUNTIME=ptunstad/fabric-baseos:arm64-0.4.15
+      - CORE_CHAINCODE_JAVA=ptunstad/fabric-javaenv:arm64-1.4.1
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     hostname: peer3.org1.ptunstad.no
     networks:
@@ -201,25 +211,26 @@ services:
           - peer3.org1.ptunstad.no
     volumes:
       - /var/run/:/host/var/run/
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/logs:/home/logs
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer3.org1.ptunstad.no/msp:/etc/hyperledger/fabric/msp
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer3.org1.ptunstad.no/tls:/etc/hyperledger/fabric/tls
+      - /data/hyperledger-pi-composer/logs:/home/logs
+      - /data/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer3.org1.ptunstad.no/msp:/etc/hyperledger/fabric/msp
+      - /data/hyperledger-pi-composer/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer3.org1.ptunstad.no/tls:/etc/hyperledger/fabric/tls
+      ##- peer3_org1:/var/hyperledger/production
     ports:
       - 10051:7051
       - 10053:7053
     deploy:
       placement:
         constraints:
-          - node.hostname == hlf_node_0
+          - node.hostname == rpi3-node2
     command: bash -c "peer node start > /home/logs/peer3org1log.txt 2>&1"
 
   cli:
-    image: jmotacek/fabric-tools:armv7l-1.0.7
+    image: ptunstad/fabric-tools:arm64-1.4.1
     tty: true
     environment:
       - GOPATH=/opt/gopath
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
-      - CORE_LOGGING_LEVEL=DEBUG
+      - FABRIC_LOGGING_SPEC=DEBUG
       - CORE_PEER_ID=cli
       - CORE_PEER_ADDRESS=peer0.org1.ptunstad.no:7051
       - CORE_PEER_LOCALMSPID=Org1MSP
@@ -229,18 +240,18 @@ services:
       - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/tls/ca.crt
       - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/users/Admin@org1.ptunstad.no/msp
       - CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
-      - CORE_CHAINCODE_BUILDER=jmotacek/fabric-ccenv:armv7l-1.0.7
-      - CORE_CHAINCODE_GOLANG=jmotacek/fabric-baseos:armv7l-0.3.2
-      - CORE_CHAINCODE_CAR=jmotacek/fabric-baseos:armv7l-0.3.2
-      - CORE_CHAINCODE_JAVA=jmotacek/fabric-javaenv:armv7l-1.0.7
+      - CORE_CHAINCODE_BUILDER=ptunstad/fabric-ccenv:arm64-1.4.1
+      - CORE_CHAINCODE_GOLANG=ptunstad/fabric-baseos:arm64-0.4.15
+      - CORE_CHAINCODE_CAR=ptunstad/fabric-baseos:arm64-0.4.15
+      - CORE_CHAINCODE_JAVA=ptunstad/fabric-javaenv:arm64-1.4.1
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     command: /bin/bash -c 'sleep 30; ./scripts/script_ds.sh; while true; do sleep 20170504; done'
     volumes:
       - /var/run/:/host/var/run/
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/chaincode:/opt/gopath/src/github.com/hyperledger/fabric/examples/chaincode/go
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
-      - /home/pi/hlf_multihost/hyperledger-pi-composer/channel-artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+      - /data/hyperledger-pi-composer/chaincode:/opt/gopath/src/github.com/hyperledger/fabric/examples/chaincode/go
+      - /data/hyperledger-pi-composer/crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+      - /data/hyperledger-pi-composer/scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
+      - /data/hyperledger-pi-composer/channel-artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
     depends_on:
       - orderer
       - peer0_org1
@@ -250,7 +261,7 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == hlf_node_3
+          - node.hostname == rpi3-node1
     networks:
       hyperledger-fabric:
         aliases:
