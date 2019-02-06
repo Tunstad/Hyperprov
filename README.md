@@ -1,59 +1,61 @@
 # Technical guidelines
-The docker compose setup for Raspberry Pi is based on the [repository](https://github.com/Cleanshooter/hyperledger-pi-composer) and [guide](https://www.joemotacek.com/hyperledger-fabric-v1-0-on-a-raspberry-pi-docker-swarm-part-1/) by Joe Motacek. The chaincode, client and CA-server implementation is built on top of examples from the official hyperledger [fabric samples](https://github.com/hyperledger/fabric-samples). The guidelines assumes you have access to multiple devices, in our case we used four Raspberry Pi 3 B+.
+The docker compose setup for Raspberry Pi is based on the [repository](https://github.com/Cleanshooter/hyperledger-pi-composer) and [guide](https://www.joemotacek.com/hyperledger-fabric-v1-0-on-a-raspberry-pi-docker-swarm-part-1/) by Joe Motacek. The chaincode, client and CA-server implementation is built on top of examples from the official hyperledger [fabric samples](https://github.com/hyperledger/fabric-samples). The guidelines assumes you have access to multiple devices, in our case we used four Raspberry Pi 3 B+ and four desktop devices running ubuntu 16.04.
 
 ## Quick install
+Start by running `apt-get update && apt-get install curl wget` if not already present.
 ### Operating System
-The experiments were run on Raspberry Pi 3 using the Raspbian 3 Stretch OS which you can download from [here](https://www.raspberrypi.org/downloads/raspbian/).
+The experiments were run on Raspberry Pi 3 using the Raspbian 3 Debian Buster 64-bit OS which you can download from [here](https://wiki.debian.org/RaspberryPi3). 64-bit OS will only run on Raspberry Pi 3.
 
 ### Installing Go
-The version of Go used for this project was Go 1.7.5, installing it on RPI can be done by
+The version of Go used for this project was Go  1.11.1, installing it on RPI can be done by
 
 ```
-wget https://dl.google.com/go/go1.7.5.linux-armv6l.tar.gz
-sudo tar -C /usr/local -xzf go1.7.5.linux-armv6l.tar.gz
-sudo echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.profile 
-sudo echo 'export GOPATH=$HOME/go' >> ~/.profile
+wget https://dl.google.com/go/go1.11.1.linux-arm64.tar.gz
+tar -C /usr/local -xzf go1.11.1.linux-arm64.tar.gz
+echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.profile 
+echo 'export GOPATH=$HOME/go' >> ~/.profile
 ```
 To verify run `go version ` and `echo $GOPATH` to verify its /home/pi/go.
 ### Install Docker and Docker Compose
 ```
 curl -sSL https://get.docker.com | sh
-curl -s https://packagecloud.io/install/repositories/Hypriot/Schatzkiste/script.deb.sh | sudo bash
+curl -s https://packagecloud.io/install/repositories/Hypriot/Schatzkiste/script.deb.sh | bash
+apt-get install docker-compose
 ```
+If e.g `docker ps` does not work after installing docker, a reboot will usually solve this problem.
 #### If you get a problem with docker compose
 Run next step first then run `sudo pip install --trusted-host pypi.org docker-compose`
 
 ### Other/python libraries
 ```
-sudo apt-get install git python-pip python-dev docker-compose build-essential libtool libltdl-dev libssl-dev libevent-dev libffi-dev
-sudo pip install --upgrade pip
-sudo pip install --upgrade setuptools
-sudo pip install behave nose docker-compose
-sudo pip install -I flask==0.10.1 python-dateutil==2.2 pytz==2014.3 pyyaml==3.10 couchdb==1.0 flask-cors==2.0.1 requests==2.4.3 pyOpenSSL==16.2.0 pysha3==1.0b1 grpcio==1.0.4
+apt-get install git python-pip python-dev docker-compose build-essential libtool libltdl-dev libssl-dev libevent-dev libffi-dev
+pip install --upgrade pip
+pip install --upgrade setuptools
+pip install behave nose docker-compose
+pip install -I flask==0.10.1 python-dateutil==2.2 pytz==2014.3 pyyaml==3.10 couchdb==1.0 flask-cors==2.0.1 requests==2.4.3 pyOpenSSL==16.2.0 pysha3==1.0b1 grpcio==1.0.4
 ```
 After installing dependencies it may be neccesary to do a reboot for changes to take into effect.
 ### Install NodeJS
 ```
-curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+curl -sL https://deb.nodesource.com/setup_8.x | -E bash -
 sudo apt-get install -y nodejs
 ```
 ### Pull Pre-Built docker images
-You can compile your own images, but to pull the pre-built HLF V1 images by Joe Motacek run:
+You can compile your own images, see compile.md, but to pull the [pre-built HLF V1.4](https://hub.docker.com/r/ptunstad/) images run:
 
 ```
-docker pull jmotacek/fabric-baseos:armv7l-0.3.2 &&
-docker pull jmotacek/fabric-basejvm:armv7l-0.3.2 &&
-docker pull jmotacek/fabric-baseimage:armv7l-0.3.2 &&
-docker pull jmotacek/fabric-ccenv:armv7l-1.0.7 &&
-docker pull jmotacek/fabric-javaenv:armv7l-1.0.7 &&
-docker pull jmotacek/fabric-peer:armv7l-1.0.7 &&
-docker pull jmotacek/fabric-orderer:armv7l-1.0.7 &&
-docker pull jmotacek/fabric-buildenv:armv7l-1.0.7 &&
-docker pull jmotacek/fabric-testenv:armv7l-1.0.7 &&
-docker pull jmotacek/fabric-zookeeper:armv7l-1.0.7 &&
-docker pull jmotacek/fabric-kafka:armv7l-1.0.7 &&
-docker pull jmotacek/fabric-couchdb:armv7l-1.0.7 &&
-docker pull jmotacek/fabric-tools:armv7l-1.0.7
+docker pull ptunstad/fabric-baseos:arm64-0.4.15 &&
+docker pull ptunstad/fabric-basejvm:arm64-0.4.15 &&
+docker pull ptunstad/fabric-baseimage:arm64-0.4.15 &&
+docker pull ptunstad/fabric-ccenv:arm64-1.4.1 &&
+docker pull ptunstad/fabric-peer:arm64-1.4.1 &&
+docker pull ptunstad/fabric-orderer:arm64-1.4.1 &&
+docker pull ptunstad/fabric-buildenv:arm64-1.4.1 &&
+docker pull ptunstad/fabric-testenv:arm64-1.4.1 &&
+docker pull ptunstad/fabric-zookeeper:arm64-1.4.1 &&
+docker pull ptunstad/fabric-kafka:arm64-1.4.1 &&
+docker pull ptunstad/fabric-couchdb:arm64-1.4.1 &&
+docker pull ptunstad/fabric-tools:arm64-1.4.1
 ```
 This will take a while to complete as the images are quite large.
 
@@ -222,5 +224,5 @@ This will take a while to complete as the images are quite large.
 ### Clone repository to /data folder
 ```
 sudo mkdir /data && sudo chmod -R ugo+rw /data
-git clone -b "desktop" https://github.com/Tunstad/hyperledger-pi-composer.git
+git clone -b "desktop" https://github.com/Tunstad/Hyperprov.git
 ```
