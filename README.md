@@ -1,8 +1,8 @@
 # Technical guidelines
-The docker compose setup for Raspberry Pi is based on the [repository](https://github.com/Cleanshooter/hyperledger-pi-composer) and [guide](https://www.joemotacek.com/hyperledger-fabric-v1-0-on-a-raspberry-pi-docker-swarm-part-1/) by Joe Motacek. The chaincode, client and CA-server implementation is built on top of examples from the official hyperledger [fabric samples](https://github.com/hyperledger/fabric-samples). The guidelines assumes you have access to multiple devices, in our case we used four Raspberry Pi 3 B+ and four desktop devices running ubuntu 16.04.
+The original HLFv1.0 docker compose setup for Raspberry Pi is based on the [repository](https://github.com/Cleanshooter/hyperledger-pi-composer) and [guide](https://www.joemotacek.com/hyperledger-fabric-v1-0-on-a-raspberry-pi-docker-swarm-part-1/) by Joe Motacek. The chaincode, client and CA-server implementation is built on top of examples from the official hyperledger [fabric samples](https://github.com/hyperledger/fabric-samples). The guidelines assumes you have access to multiple devices, in our case we used four Raspberry Pi 3 B+ and also four desktop devices running ubuntu 16.04.
 
 ## Quick install
-Start by running `apt-get update && apt-get install curl wget` if not already present.
+Start by running `apt-get update && apt-get install curl wget sudo` if not already present.
 ### Operating System
 The experiments were run on Raspberry Pi 3 using the Raspbian 3 Debian Buster 64-bit OS which you can download from [here](https://wiki.debian.org/RaspberryPi3). 64-bit OS will only run on Raspberry Pi 3.
 
@@ -35,13 +35,13 @@ pip install behave nose docker-compose
 pip install -I flask==0.10.1 python-dateutil==2.2 pytz==2014.3 pyyaml==3.10 couchdb==1.0 flask-cors==2.0.1 requests==2.4.3 pyOpenSSL==16.2.0 pysha3==1.0b1 grpcio==1.0.4
 ```
 After installing dependencies it may be neccesary to do a reboot for changes to take into effect.
-### Install NodeJS
+### Install NodeJS (Only required to run client on devices)
 ```
 curl -sL https://deb.nodesource.com/setup_8.x | -E bash -
 sudo apt-get install -y nodejs
 ```
 ### Pull Pre-Built docker images
-You can compile your own images, see compile.md, but to pull the [pre-built HLF V1.4](https://hub.docker.com/r/ptunstad/) images run:
+You can compile your own images, see [compiling.md](https://github.com/Tunstad/Hyperprov/blob/master/compiling.md), but to pull the [pre-built HLF V1.4](https://hub.docker.com/r/ptunstad/) images run:
 
 ```
 docker pull ptunstad/fabric-baseos:arm64-0.4.15 &&
@@ -50,14 +50,32 @@ docker pull ptunstad/fabric-baseimage:arm64-0.4.15 &&
 docker pull ptunstad/fabric-ccenv:arm64-1.4.1 &&
 docker pull ptunstad/fabric-peer:arm64-1.4.1 &&
 docker pull ptunstad/fabric-orderer:arm64-1.4.1 &&
-docker pull ptunstad/fabric-buildenv:arm64-1.4.1 &&
-docker pull ptunstad/fabric-testenv:arm64-1.4.1 &&
 docker pull ptunstad/fabric-zookeeper:arm64-1.4.1 &&
 docker pull ptunstad/fabric-kafka:arm64-1.4.1 &&
 docker pull ptunstad/fabric-couchdb:arm64-1.4.1 &&
 docker pull ptunstad/fabric-tools:arm64-1.4.1
 ```
 This will take a while to complete as the images are quite large.
+
+### Clone repository to /data folder
+```
+sudo mkdir /data && sudo chmod -R ugo+rw /data
+git clone -b "rpi" https://github.com/Tunstad/Hyperprov.git
+```
+
+### Swap Partition
+The Raspberry Pi devices may run out of memory during execution or start up, which will cause a crash. To avoid this i suggest setting up a swap partition if not already present. You can check for existing swap either with `top` or `swapon --show`. 
+1GB of swap should be more than enough, to create perform the following actions:
+
+```
+sudo fallocate -l 1G /swapfile
+sudo dd if=/dev/zero of=/swapfile bs=1024 count=1048576
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+sudo echo '/swapfile swap swap defaults 0 0' >> /etc/fstab
+```
+
 
 ## Quick start
 ### Setup Docker Swarm
@@ -72,6 +90,7 @@ Check that hostnames and volume paths to git directory is correct in `docker-com
 To run do `docker stack deploy --compose-file docker-compose-cli.yaml HLFv1_RPiDS && docker ps` on master to start up the nodes. 
 
 Then to follow BYFN-print output, get the id of CLI-container from `docker ps` that uses fabric-tools and run `docker logs -f 6e4c43c974e7` where `6e4c43c974e7` is the Container ID. You can also follow on peer nodes with `tail ./hyperledger-pi-composer/logs/peer1org2log.txt -f` and so on.
+tail ./logs/peer3org1log.txt -f
 
 If you encounter any problems run `docker stack ps HLFv1_RPiDS --no-trunc` on master to see useful error messages.  
 
