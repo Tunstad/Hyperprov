@@ -30,7 +30,7 @@ services:
       - CORE_CHAINCODE_BUILDER=ptunstad/fabric-ccenv:arm64-1.4.1
       - CORE_CHAINCODE_GOLANG_RUNTIME=ptunstad/fabric-baseos:arm64-0.4.15
       - CORE_CHAINCODE_CAR_RUNTIME=ptunstad/fabric-baseos:arm64-0.4.15
-      - CORE_CHAINCODE_JAVA=ptunstad/fabric-javaenv:arm64-1.4.1
+      - CORE_CHAINCODE_JAVA=pesicsasa/fabric-javaenv:aarch64-1.1.0
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric
     hostname: orderer.ptunstad.no
     networks:
@@ -70,7 +70,7 @@ services:
       - CORE_CHAINCODE_BUILDER=ptunstad/fabric-ccenv:arm64-1.4.1
       - CORE_CHAINCODE_GOLANG_RUNTIME=ptunstad/fabric-baseos:arm64-0.4.15
       - CORE_CHAINCODE_CAR_RUNTIME=ptunstad/fabric-baseos:arm64-0.4.15
-      - CORE_CHAINCODE_JAVA=ptunstad/fabric-javaenv:arm64-1.4.1
+      - CORE_CHAINCODE_JAVA=pesicsasa/fabric-javaenv:aarch64-1.1.0
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     hostname: peer0.org1.ptunstad.no
     networks:
@@ -114,7 +114,7 @@ services:
       - CORE_CHAINCODE_BUILDER=ptunstad/fabric-ccenv:arm64-1.4.1
       - CORE_CHAINCODE_GOLANG_RUNTIME=ptunstad/fabric-baseos:arm64-0.4.15
       - CORE_CHAINCODE_CAR_RUNTIME=ptunstad/fabric-baseos:arm64-0.4.15
-      - CORE_CHAINCODE_JAVA=ptunstad/fabric-javaenv:arm64-1.4.1
+      - CORE_CHAINCODE_JAVA=pesicsasa/fabric-javaenv:aarch64-1.1.0
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     hostname: peer1.org1.ptunstad.no
     networks:
@@ -158,7 +158,7 @@ services:
       - CORE_CHAINCODE_BUILDER=ptunstad/fabric-ccenv:arm64-1.4.1
       - CORE_CHAINCODE_GOLANG_RUNTIME=ptunstad/fabric-baseos:arm64-0.4.15
       - CORE_CHAINCODE_CAR_RUNTIME=ptunstad/fabric-baseos:arm64-0.4.15
-      - CORE_CHAINCODE_JAVA=ptunstad/fabric-javaenv:arm64-1.4.1
+      - CORE_CHAINCODE_JAVA=pesicsasa/fabric-javaenv:aarch64-1.1.0
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     hostname: peer2.org1.ptunstad.no
     networks:
@@ -202,7 +202,7 @@ services:
       - CORE_CHAINCODE_BUILDER=ptunstad/fabric-ccenv:arm64-1.4.1
       - CORE_CHAINCODE_GOLANG_RUNTIME=ptunstad/fabric-baseos:arm64-0.4.15
       - CORE_CHAINCODE_CAR_RUNTIME=ptunstad/fabric-baseos:arm64-0.4.15
-      - CORE_CHAINCODE_JAVA=ptunstad/fabric-javaenv:arm64-1.4.1
+      - CORE_CHAINCODE_JAVA=pesicsasa/fabric-javaenv:aarch64-1.1.0
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     hostname: peer3.org1.ptunstad.no
     networks:
@@ -243,7 +243,7 @@ services:
       - CORE_CHAINCODE_BUILDER=ptunstad/fabric-ccenv:arm64-1.4.1
       - CORE_CHAINCODE_GOLANG=ptunstad/fabric-baseos:arm64-0.4.15
       - CORE_CHAINCODE_CAR=ptunstad/fabric-baseos:arm64-0.4.15
-      - CORE_CHAINCODE_JAVA=ptunstad/fabric-javaenv:arm64-1.4.1
+      - CORE_CHAINCODE_JAVA=pesicsasa/fabric-javaenv:aarch64-1.1.0
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     command: /bin/bash -c 'sleep 30; ./scripts/script_ds.sh; while true; do sleep 20170504; done'
     volumes:

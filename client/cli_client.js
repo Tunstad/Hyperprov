@@ -50,7 +50,7 @@ var store_path = path.join(__dirname, 'hfc-key-store');
 var channel = fabric_client.newChannel('mychannel');
 
 //Set the peer to recieve operations and add it to the channel object
-var peer = fabric_client.newPeer('grpc://mc.ptunstad.no:7051');
+var peer = fabric_client.newPeer('grpc://node3.ptunstad.no:7051');
 channel.addPeer(peer);
 
 //Set the orderer to be used by the set-functionality in the blockchain.
