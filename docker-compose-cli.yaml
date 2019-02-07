@@ -38,9 +38,9 @@ services:
         aliases:
           - orderer.ptunstad.no
     volumes:
-      - /data/hyperprov/channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
-      - /data/hyperprov/crypto-config/ordererOrganizations/ptunstad.no/orderers/orderer.ptunstad.no/msp:/var/hyperledger/orderer/msp
-      - /data/hyperprov/crypto-config/ordererOrganizations/ptunstad.no/orderers/orderer.ptunstad.no/tls/:/var/hyperledger/orderer/tls
+      - /data/Hyperprov/channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+      - /data/Hyperprov/crypto-config/ordererOrganizations/ptunstad.no/orderers/orderer.ptunstad.no/msp:/var/hyperledger/orderer/msp
+      - /data/Hyperprov/crypto-config/ordererOrganizations/ptunstad.no/orderers/orderer.ptunstad.no/tls/:/var/hyperledger/orderer/tls
     ports:
       - 7050:7050
     deploy:
@@ -79,9 +79,9 @@ services:
           - peer0.org1.ptunstad.no
     volumes:
       - /var/run/:/host/var/run/
-      - /data/hyperprov/logs:/home/logs
-      - /data/hyperprov/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/msp:/etc/hyperledger/fabric/msp
-      - /data/hyperprov/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/tls:/etc/hyperledger/fabric/tls
+      - /data/Hyperprov/logs:/home/logs
+      - /data/Hyperprov/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/msp:/etc/hyperledger/fabric/msp
+      - /data/Hyperprov/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/tls:/etc/hyperledger/fabric/tls
       ##- peer0_org1:/var/hyperledger/production
     ports:
       - 7051:7051
@@ -123,9 +123,9 @@ services:
           - peer1.org1.ptunstad.no
     volumes:
       - /var/run/:/host/var/run/
-      - /data/hyperprov/logs:/home/logs
-      - /data/hyperprov/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer1.org1.ptunstad.no/msp:/etc/hyperledger/fabric/msp
-      - /data/hyperprov/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer1.org1.ptunstad.no/tls:/etc/hyperledger/fabric/tls
+      - /data/Hyperprov/logs:/home/logs
+      - /data/Hyperprov/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer1.org1.ptunstad.no/msp:/etc/hyperledger/fabric/msp
+      - /data/Hyperprov/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer1.org1.ptunstad.no/tls:/etc/hyperledger/fabric/tls
       ##- peer1_org1:/var/hyperledger/production
     ports:
       - 8051:7051
@@ -167,9 +167,9 @@ services:
           - peer2.org1.ptunstad.no
     volumes:
       - /var/run/:/host/var/run/
-      - /data/hyperprov/logs:/home/logs
-      - /data/hyperprov/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer2.org1.ptunstad.no/msp:/etc/hyperledger/fabric/msp
-      - /data/hyperprov/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer2.org1.ptunstad.no/tls:/etc/hyperledger/fabric/tls
+      - /data/Hyperprov/logs:/home/logs
+      - /data/Hyperprov/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer2.org1.ptunstad.no/msp:/etc/hyperledger/fabric/msp
+      - /data/Hyperprov/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer2.org1.ptunstad.no/tls:/etc/hyperledger/fabric/tls
       ##- peer2_org1:/var/hyperledger/production
     ports:
       - 9051:7051
@@ -211,9 +211,9 @@ services:
           - peer3.org1.ptunstad.no
     volumes:
       - /var/run/:/host/var/run/
-      - /data/hyperprov/logs:/home/logs
-      - /data/hyperprov/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer3.org1.ptunstad.no/msp:/etc/hyperledger/fabric/msp
-      - /data/hyperprov/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer3.org1.ptunstad.no/tls:/etc/hyperledger/fabric/tls
+      - /data/Hyperprov/logs:/home/logs
+      - /data/Hyperprov/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer3.org1.ptunstad.no/msp:/etc/hyperledger/fabric/msp
+      - /data/Hyperprov/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer3.org1.ptunstad.no/tls:/etc/hyperledger/fabric/tls
       ##- peer3_org1:/var/hyperledger/production
     ports:
       - 10051:7051
@@ -248,10 +248,10 @@ services:
     command: /bin/bash -c 'sleep 30; ./scripts/script_ds.sh; while true; do sleep 20170504; done'
     volumes:
       - /var/run/:/host/var/run/
-      - /data/hyperprov/chaincode:/opt/gopath/src/github.com/hyperledger/fabric/examples/chaincode/go
-      - /data/hyperprov/crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
-      - /data/hyperprov/scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
-      - /data/hyperprov/channel-artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+      - /data/Hyperprov/chaincode:/opt/gopath/src/github.com/hyperledger/fabric/examples/chaincode/go
+      - /data/Hyperprov/crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+      - /data/Hyperprov/scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
+      - /data/Hyperprov/channel-artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
     depends_on:
       - orderer
       - peer0_org1
