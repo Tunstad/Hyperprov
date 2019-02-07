@@ -54,7 +54,7 @@ var peer = fabric_client.newPeer('grpc://node3.ptunstad.no:7051');
 channel.addPeer(peer);
 
 //Set the orderer to be used by the set-functionality in the blockchain.
-var order = fabric_client.newOrderer('grpc://agc.ptunstad.no:7050')
+var order = fabric_client.newOrderer('grpc://node1.ptunstad.no:7050')
 channel.addOrderer(order);
 
 //REST-api functionality to interact with client application from external device.
