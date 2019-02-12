@@ -7,7 +7,8 @@ import (
 	"time"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-	
+	"github.com/hyperledger/fabric/core/chaincode/shim/ext/cid"
+	"github.com/hyperledger/fabric/core/chaincode/lib/cid"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	
 )
@@ -109,12 +110,12 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	// 	// The client identity does not possess the attribute
 	// }
 	// Do something with the value of 'val'
-/*
+
 	id, err := cid.GetID(stub)
 	if err != nil {
 		return "", fmt.Errorf("Failed to get ID. %s", string(args[0]))
 	}
-	
+	/*
 	mspid, err := cid.GetMSPID(stub)
 	if err != nil {
 		return "", fmt.Errorf("Failed to get MSPID. %s", string(args[0]))
@@ -140,7 +141,7 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	}
 
 	// Set up any variables or assets here by calling stub.PutState()
-	operation := &operation{args[1], string(usercert), "Modify", 0, "", "id", "mspid", "attr"}
+	operation := &operation{args[1], string(usercert), "Modify", 0, "", id, "mspid", "attr"}
 	operationJSONasBytes, err := json.Marshal(operation)
 	if err != nil {
 		return "", fmt.Errorf("Failed to marshal JSON. %s", string(args[0]))
