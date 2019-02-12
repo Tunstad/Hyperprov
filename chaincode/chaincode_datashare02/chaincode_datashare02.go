@@ -8,7 +8,6 @@ import (
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/core/chaincode/shim/ext/cid"
-	"github.com/hyperledger/fabric/core/chaincode/lib/cid"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	
 )
