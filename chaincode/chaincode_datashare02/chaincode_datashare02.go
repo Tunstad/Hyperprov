@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-	"github.com/hyperledger/fabric/examples/chaincode/go/lib/cid"
+	"github.com/hyperledger/fabric/core/chaincode//lib/cid"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	
 )
