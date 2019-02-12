@@ -18,10 +18,10 @@ package cid_test
 import (
 	"testing"
 
-	"vendor/github.com/golang/protobuf/proto"
-	"vendor/github.com/hyperledger/fabric/core/chaincode/lib/cid"
-	"vendor/github.com/hyperledger/fabric/protos/msp"
-	"vendor/github.com/stretchr/testify/assert"
+	"github.com/golang/protobuf/proto"
+	"github.com/hyperledger/fabric/core/chaincode/lib/cid"
+	"github.com/hyperledger/fabric/protos/msp"
+	"github.com/stretchr/testify/assert"
 )
 
 const certWithOutAttrs = `-----BEGIN CERTIFICATE-----
