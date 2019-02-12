@@ -25,10 +25,10 @@ import (
 	"encoding/pem"
 	"fmt"
 
-	"github.com/golang/protobuf/proto"
-	"github.com/hyperledger/fabric/common/attrmgr"
-	"github.com/hyperledger/fabric/protos/msp"
-	"github.com/pkg/errors"
+	"vendor/github.com/golang/protobuf/proto"
+	"vendor/github.com/hyperledger/fabric/common/attrmgr"
+	"vendor/github.com/hyperledger/fabric/protos/msp"
+	"vendor/github.com/pkg/errors"
 )
 
 // GetID returns the ID associated with the invoking identity.  This ID
