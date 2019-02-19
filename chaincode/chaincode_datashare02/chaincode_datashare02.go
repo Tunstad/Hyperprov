@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-	"github.com/hyperledger/fabric/core/chaincode//lib/cid"
+	//"github.com/hyperledger/fabric/core/chaincode//lib/cid"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	
 )
@@ -22,9 +22,9 @@ type operation struct {
 	Type      string `json:"type"`
 	Numreads       int    `json:"reads"`
 	Description      string `json:"desc"`
-	ID string `json:"id"` 
-	MSPID string `json:"mspid"` 
-	IDAttr string `json:"idattr"` 
+	//ID string `json:"id"` 
+	//MSPID string `json:"mspid"` 
+	//IDAttr string `json:"idattr"` 
 }
 func (t *SimpleAsset) Init(stub shim.ChaincodeStubInterface) pb.Response {
 
@@ -110,10 +110,10 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	// }
 	// Do something with the value of 'val'
 
-	id, err := cid.GetID(stub)
+	/*id, err := cid.GetID(stub)
 	if err != nil {
 		return "", fmt.Errorf("Failed to get ID. %s", string(args[0]))
-	}
+	}*/
 	/*
 	mspid, err := cid.GetMSPID(stub)
 	if err != nil {
