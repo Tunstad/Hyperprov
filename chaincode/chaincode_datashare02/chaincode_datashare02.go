@@ -35,7 +35,7 @@ func (t *SimpleAsset) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	}
 
 	// Set up any variables or assets here by calling stub.PutState()
-	operation := &operation{args[1], "null", "Create", 0, "Init operation", "", "", ""}
+	operation := &operation{args[1], "null", "Create", 0, "Init operation"}
 	operationJSONasBytes, err := json.Marshal(operation)
 	if err != nil {
 		return shim.Error(fmt.Sprintf("Failed to marshal JSON: %s", string(operationJSONasBytes)))
@@ -84,7 +84,7 @@ func (t *SimpleAsset) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 // will be parsed away for all other operations than getkeyhistory which
 // returns this certificate to indicate who performed the change.
 func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
-	if len(args) != 2 {
+	if ((len(args) != 2) && (len(args) != 3)){
 		return "", fmt.Errorf("Incorrect arguments. Expecting a key and a value")
 	}
 
@@ -139,8 +139,13 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 		return "", fmt.Errorf("Failed to get creator of asset: %s", args[0])
 	}
 
+	desc := ""
+	if len(args) == 3 {
+		desc = args[2]
+	}
+
 	// Set up any variables or assets here by calling stub.PutState()
-	operation := &operation{args[1], string(usercert), "Modify", 0, "", id, "mspid", "attr"}
+	operation := &operation{args[1], string(usercert), "Modify", 0, desc}
 	operationJSONasBytes, err := json.Marshal(operation)
 	if err != nil {
 		return "", fmt.Errorf("Failed to marshal JSON. %s", string(args[0]))
@@ -255,7 +260,7 @@ func getkeyhistory(stub shim.ChaincodeStubInterface, args []string) (string, err
 		buffer.WriteString("\"")
 		buffer.WriteString(valueJSON.Certificate)
 		buffer.WriteString("\"")
-
+/*
 		buffer.WriteString(", \"ID\":")
 		buffer.WriteString("\"")
 		buffer.WriteString(valueJSON.ID)
@@ -270,7 +275,7 @@ func getkeyhistory(stub shim.ChaincodeStubInterface, args []string) (string, err
 		buffer.WriteString("\"")
 		buffer.WriteString(valueJSON.IDAttr)
 		buffer.WriteString("\"")
-
+*/
 		buffer.WriteString("}")
 		bArrayMemberAlreadyWritten = true
 	}
