@@ -20,9 +20,7 @@ var totaltime_seconds = 1;        //3600 = 1h, 600 = 10m
 
 //var bm_datalength = 1000000; // MAX == 1398101 characters/bytes
 
-//The user to interact with blockchain as, theese are found in hfc-key-store and generated 
-//by having enrollAdmin.js and registerUser.js interact with a fabric CA server
-var currentUser = ''
+
 
 //The global variables for number of benchmarks to be run, and the 
 //current number of benchmarks that have been run. Numbenchmarks is 
@@ -30,32 +28,23 @@ var currentUser = ''
 var numbenchmarks = 0;
 var currentbenchmarks = 0;
 
-var fabric_client = new Fabric_Client();
-
-//User variables stored here if needed, but getUserContext is sufficient to set user for fabric_client
-var admin_user = null;
-var member_user = null;
-
+//The user to interact with blockchain as, theese are found in hfc-key-store and generated 
+//by having enrollAdmin.js and registerUser.js interact with a fabric CA server
+var member_user = null
 var tx_id = null;
-var store_path = ''
+var fabric_client = new Fabric_Client();
+var currentUser, store_path, channelname, chaincodeId, channel, peer, orderer
 
-// setup the fabric network mychannel
-var channel
-
-//Set the peer to recieve operations and add it to the channel object
-var peer
-
-//Set the orderer to be used by the set-functionality in the blockchain.
-var order
-
-exports.ccInit = function (cccurrentUser, ccpath, ccchannel, ccpeer, ccorderer){
-    store_path = ccpath;
-    currentUser = cccurrentUser
-    channel = fabric_client.newChannel(ccchannel);
-    peer = fabric_client.newPeer('grpc://'+ccpeer);
+exports.ccInit = function (setcurrentUser, setpath, setchannel, setchaincodeID, setpeer, setorderer){
+    store_path = setpath;
+    currentUser = setcurrentUser
+    channelname = setchannel
+    chaincodeId = setchaincodeID
+    channel = fabric_client.newChannel(setchannel);
+    peer = fabric_client.newPeer('grpc://'+setpeer);
     channel.addPeer(peer);
-    order = fabric_client.newOrderer('grpc://'+ccorderer)
-    channel.addOrderer(order);
+    orderer = fabric_client.newOrderer('grpc://'+setorderer)
+    channel.addOrderer(orderer);
 }
 
 //Function to set chaincode based on arguments. For myccds it expects argument to be of type
@@ -93,10 +82,10 @@ exports.ccSet = function(ccargs, callback, callback2, resp){
         // must send the proposal to endorsing peers
         var request = {
             //targets: let default to the peer assigned to the client
-            chaincodeId: 'myccds',
+            chaincodeId: chaincodeId,
             fcn: 'set',
             args: ccargs,
-            chainId: 'mychannel',
+            chainId: channelname,
             txId: tx_id
         };
     
@@ -254,7 +243,7 @@ exports.ccFunc = function(ccfunc, ccargs, callback, resp){
     
         const request = {
             //targets : --- letting this default to the peers assigned to the channel
-            chaincodeId: 'myccds',
+            chaincodeId: chaincodeId,
             fcn: ccfunc,
             args: ccargs
         };
