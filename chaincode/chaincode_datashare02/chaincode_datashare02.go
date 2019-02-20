@@ -241,12 +241,12 @@ func getkeyhistory(stub shim.ChaincodeStubInterface, args []string) (string, err
 		buffer.WriteString(valueJSON.Type)
 		buffer.WriteString("\"")
 
-		buffer.WriteString("{\"Hash\":")
+		buffer.WriteString(", \"Hash\":")
 		buffer.WriteString("\"")
 		buffer.WriteString(valueJSON.Hash)
 		buffer.WriteString("\"")
 
-		buffer.WriteString("{\"Description\":")
+		buffer.WriteString(", \"Description\":")
 		buffer.WriteString("\"")
 		buffer.WriteString(valueJSON.Description)
 		buffer.WriteString("\"")

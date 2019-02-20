@@ -2,13 +2,11 @@
 
 
 /*
+* Based on code with 
 * Copyright IBM Corp All Rights Reserved
-*
 * SPDX-License-Identifier: Apache-2.0
 */
-/*
- * Chaincode query
- */
+
 
 var Fabric_Client = require('fabric-client');
 //var Fabric_CA_Client = require('fabric-ca-client');
@@ -16,14 +14,6 @@ var path = require('path');
 var util = require('util');
 //var os = require('os');
 var fs = require("fs")
-//Inquirer used to supply the CLI
-const inquirer = require('inquirer')
-
-//Switch to enable REST-api access or disable for CLI
-var RESTAPI = true;
-
-//Answer only local or external accesses to REST api
-var localONLY = true;
 
 //The time a benchmark is set to run
 var totaltime_seconds = 1;        //3600 = 1h, 600 = 10m
@@ -32,7 +22,7 @@ var totaltime_seconds = 1;        //3600 = 1h, 600 = 10m
 
 //The user to interact with blockchain as, theese are found in hfc-key-store and generated 
 //by having enrollAdmin.js and registerUser.js interact with a fabric CA server
-var currentUser = 'Peer2'
+var currentUser = ''
 
 //The global variables for number of benchmarks to be run, and the 
 //current number of benchmarks that have been run. Numbenchmarks is 
@@ -47,108 +37,30 @@ var admin_user = null;
 var member_user = null;
 
 var tx_id = null;
-var store_path = path.join(__dirname, 'hfc-key-store');
+var store_path = ''
 
 // setup the fabric network mychannel
-var channel = fabric_client.newChannel('mychannel');
+var channel
 
 //Set the peer to recieve operations and add it to the channel object
-var peer = fabric_client.newPeer('grpc://mc.ptunstad.no:7051');
-channel.addPeer(peer);
+var peer
 
 //Set the orderer to be used by the set-functionality in the blockchain.
-var order = fabric_client.newOrderer('grpc://agc.ptunstad.no:7050')
-channel.addOrderer(order);
+var order
 
-//REST-api functionality to interact with client application from external device.
-if(RESTAPI){
-    console.log("Starting in REST-api mode..")
-    var express = require('express');
-    var bodyParser = require('body-parser');
-    var app = express();
-    var fs = require("fs");
-    var listenaddress = '0.0.0.0'
-    if (localONLY == true){
-        listenaddress = '127.0.0.1'
-    }
-
-    app.use(bodyParser.urlencoded({ extended: true }));
-
-    app.post('/set', function (req, res) {
-        var requestarguments = req.get('arguments').toString().split(", ")
-        ccSet(requestarguments, SetCallback, null, res)
-    })
-    app.get('/get', function (req, res) {
-        console.log("Request GET")
-        var requestarguments = req.get('arguments').toString()
-        ccFunc('get', requestarguments, getCallback, res)
-    })
-    app.get('/getkeyhistory', function (req, res) {
-        console.log("Request GET")
-        var requestarguments = req.get('arguments').toString()
-        ccFunc('getkeyhistory', requestarguments, getCallback, res)
-    })
-    app.get('/getbyrange', function (req, res) {
-        console.log("Request GET")
-        var requestarguments = req.get('arguments').toString().split(", ")
-        ccFunc('getbyrange', requestarguments, getCallback, res)
-    })
-    app.post('/sendfile', function (req, res) {
-        var requestarguments = req.get('arguments').toString()
-        storeFile(requestarguments, res, req.body)
-    })
-    app.get('/getfile', function (req, res) {
-        var requestarguments = req.get('arguments').toString()
-        retrieveFile(requestarguments, res)
-    })
-
-    var server = app.listen(8080, listenaddress, function () {
-    var host = server.address().address
-    var port = server.address().port
-    console.log("Example app listening at http://%s:%s", host, port)
-    })
-
-}else{
-    console.log("Starting in CLI input mode..")
-    //Begin CLI to retrieve user input of application. This could for other use-cases be
-    //changed to something more along the lines of a REST API if outside access is needed or
-    //a local API available only to another application for our use case.
-    var myfunction = ""
-    var myarguments = ""
-    var questions = [{
-        type: 'input',
-        name: 'inputfunc',
-        message: "What function do you want to invoke? (Example: 'getbyrange')",
-    },{
-        type: 'input',
-        name: 'inputargs',
-        message: "List you arguments. (Example:'a, d')",
-    }]
-
-    //Select the command specified and call the correct subfunction with the 
-    //appropriate arguments.
-    inquirer.prompt(questions).then(answers => {
-        myfunction = answers['inputfunc']
-        myarguments = answers['inputargs']
-        var myargumentslist = myarguments.split(", ")
-        console.log(myargumentslist)
-        if(myfunction == "set"){
-            ccSet(myargumentslist);
-        }else if(myfunction == "bms"){
-            numbenchmarks = parseInt(myargumentslist[1])
-            benchmarkSet(numbenchmarks, parseInt(myargumentslist[0]))
-        }else if(myfunction == "sendfile"){
-            storeFile(myargumentslist)
-        }else if(myfunction == "getfile"){
-            retrieveFile(myargumentslist)
-        }else{
-            ccFunc(myfunction, myargumentslist, getCallback);
-        }
-    })
+exports.ccInit = function (cccurrentUser, ccpath, ccchannel, ccpeer, ccorderer){
+    store_path = ccpath;
+    currentUser = cccurrentUser
+    channel = fabric_client.newChannel(ccchannel);
+    peer = fabric_client.newPeer('grpc://'+ccpeer);
+    channel.addPeer(peer);
+    order = fabric_client.newOrderer('grpc://'+ccorderer)
+    channel.addOrderer(order);
 }
+
 //Function to set chaincode based on arguments. For myccds it expects argument to be of type
 //key, value. This is the only way to change values.
-function ccSet(ccargs, callback, callback2, resp){
+exports.ccSet = function(ccargs, callback, callback2, resp){
     Fabric_Client.newDefaultKeyValueStore({ path: store_path
     }).then((state_store) => {
         // assign the store to the fabric client
@@ -163,9 +75,6 @@ function ccSet(ccargs, callback, callback2, resp){
             trustedRoots: [],
             verify: false
         };
-        //Be sure to change the http to https when the CA is running TLS enabled
-        //Not neccesary.
-        //fabric_ca_client = new Fabric_CA_Client('http://agc.ptunstad.no:7054', null , '', crypto_suite);
     
         // first check to see if the admin is already enrolled
         return fabric_client.getUserContext(currentUser, true);
@@ -232,7 +141,6 @@ function ccSet(ccargs, callback, callback2, resp){
             // get an eventhub once the fabric client has a user assigned. The user
             // is required bacause the event registration must be signed
             // let event_hub = fabric_client.newEventHub();
-            // event_hub.setPeerAddr('grpc://mc.ptunstad.no:7053');
             let event_hub = channel.newChannelEventHub(peer);
 
             // using resolve the promise so that result status may be processed
@@ -318,7 +226,7 @@ function getCallback(result, resp){
 //Functionality to call chaincode to retrieve some sort of data from the blockchain.
 //Some supported ccfuncs are 'get', 'getkeyhistory' and 'getbyrange'.
 //Takes in as aruments as a key string and callback-function only prints result to console.
-function ccFunc(ccfunc, ccargs, callback, resp){
+exports.ccFunc = function(ccfunc, ccargs, callback, resp){
     Fabric_Client.newDefaultKeyValueStore({ path: store_path
     }).then((state_store) => {
         // assign the store to the fabric client
@@ -333,8 +241,6 @@ function ccFunc(ccfunc, ccargs, callback, resp){
             trustedRoots: [],
             verify: false
         };
-        // be sure to change the http to https when the CA is running TLS enabled
-        //fabric_ca_client = new Fabric_CA_Client('http://agc.ptunstad.no:7054', null , '', crypto_suite);
     
         // first check to see if the admin is already enrolled
         return fabric_client.getUserContext(currentUser, true);
@@ -408,7 +314,7 @@ function proposalOkCallback(){
 //certain datalength. Based on the totaltime_seconds variable set sleep for some 
 //amount of time between transactions. The key is just incremented on count and 
 //the value stored is a randomly generated string of the specified lenght.
-async function benchmarkSet(numitems, datalength){
+exports.benchmarkSet = function(numitems, datalength){
     console.time('benchmarkset');
     console.time("proposalok")
     for(var i=0; i < numitems; i++){    
@@ -420,7 +326,7 @@ async function benchmarkSet(numitems, datalength){
         
         console.log("Sending transaction " + String(i))
         ccSet(args, SetCallback, proposalOkCallback)
-        await sleep((totaltime_seconds/numbenchmarks)*1000)
+        //await sleep((totaltime_seconds/numbenchmarks)*1000)
     }
     console.log("Done sending operations!")
 }
@@ -433,7 +339,7 @@ function sleep(ms){
 }
 
 //Functionality for storing a file as a key,value entry in the blockchain.
-function storeFile(arglist, resp, body){
+exports.storeFile= function(arglist, resp, body){
     if(resp){
         var key = arglist[0]
         var args = [key, body]
@@ -451,7 +357,7 @@ function storeFile(arglist, resp, body){
 }
 
 //Functionality for storing a file as a base64 encoded key,value entry in the blockchain.
-function retrieveFile(arglist, resp){
+exports.retrieveFile = function(arglist, resp){
     if(resp){
         var key = arglist[0]
         ccFunc('get', key, getCallback, resp)
