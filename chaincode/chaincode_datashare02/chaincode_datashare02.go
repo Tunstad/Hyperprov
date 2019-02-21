@@ -208,23 +208,26 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 }
 
 // Get returns the current value of the specified asset key.
-func get(stub shim.ChaincodeStubInterface, args []string) (string, error) {
+func get(stub shim.ChaincodeStubInterface, arg string) (string, error) {
 	var valueJSON operation
-	if len(args) != 1 {
+	/*if len(args) != 1 {
 		return "", fmt.Errorf("Incorrect arguments. Expecting a key")
+	}*/
+	if arg == "" {
+		return "", fmt.Errorf("Incorrect arguments. Expecting a txid")
 	}
 
-	value, err := stub.GetState(args[0])
+	value, err := stub.GetState(arg)
 	if err != nil {
-		return "", fmt.Errorf("Failed to get asset: %s with error: %s", args[0], err)
+		return "", fmt.Errorf("Failed to get asset: %s with error: %s", arg, err)
 	}
 	if value == nil {
-		return "", fmt.Errorf("Asset not found: %s", args[0])
+		return "", fmt.Errorf("Asset not found: %s", arg)
 	}
 
 	err = json.Unmarshal([]byte(value), &valueJSON)
 	if err != nil {
-		jsonResp := "{\"Error\":\"Failed to decode JSON of: " + args[0] + "\"}"
+		jsonResp := "{\"Error\":\"Failed to decode JSON of: " + arg + "\"}"
 		return "", fmt.Errorf(jsonResp)
 	}
 
@@ -244,35 +247,36 @@ func get(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 }
 
 // Get returns the current value of the specified asset key.
-func getWithID(stub shim.ChaincodeStubInterface, args []string) (string, error) {
+func getWithID(stub shim.ChaincodeStubInterface, arg string) (string, error) {
 	var valueJSON operation
-	if len(args) != 1 {
-		return "", fmt.Errorf("Incorrect arguments. Expecting a key")
+
+	if arg == "" {
+		return "", fmt.Errorf("Incorrect arguments. Expecting a txid")
 	}
 
-	value, err := stub.GetState(args[0])
+	value, err := stub.GetState(arg)
 	if err != nil {
-		return "", fmt.Errorf("Failed to get asset: %s with error: %s", args[0], err)
+		return "", fmt.Errorf("Failed to get asset: %s with error: %s", arg, err)
 	}
 	if value == nil {
-		return "", fmt.Errorf("Asset not found: %s", args[0])
+		return "", fmt.Errorf("Asset not found: %s", arg)
 	}
 
 	err = json.Unmarshal([]byte(value), &valueJSON)
 	if err != nil {
-		jsonResp := "{\"Error\":\"Failed to decode JSON of: " + args[0] + "\"}"
+		jsonResp := "{\"Error\":\"Failed to decode JSON of: " + arg + "\"}"
 		return "", fmt.Errorf(jsonResp)
 	}
 
 	return string(valueJSON.TxID) + " ||| " + string(valueJSON.Hash), nil
 }
-func getFromID(stub shim.ChaincodeStubInterface, args []string) (string, error){
+func getFromID(stub shim.ChaincodeStubInterface, arg string) (string, error){
 	indexName := "txID~key"
 	var valueJSON operation
-	if len(args) != 1 {
+	if arg == "" {
 		return "", fmt.Errorf("Incorrect arguments. Expecting a txid")
 	}
-	txID := args[0]
+	txID := arg
 
 	it, _ := stub.GetStateByPartialCompositeKey(indexName, []string{txID})
 	count := 0
@@ -289,7 +293,7 @@ func getFromID(stub shim.ChaincodeStubInterface, args []string) (string, error){
 
 		err = json.Unmarshal([]byte(txIDValue), &valueJSON)
 		if err != nil {
-			jsonResp := "{\"Error\":\"Failed to decode JSON of: " + args[0] + "\"}"
+			jsonResp := "{\"Error\":\"Failed to decode JSON of: " + arg + "\"}"
 			return "", fmt.Errorf(jsonResp)
 		}
 /*
@@ -320,18 +324,18 @@ func getFromID(stub shim.ChaincodeStubInterface, args []string) (string, error){
 // The certificates used are stored unencrypted in the value variable but are only acccessable trough this function.
 // This is a potential security issue and may later require this function to be role-gated, certificates to be encrypted or used for encrypting a shared variable as proof.
 // Example format of returned value is [ timestamp: 12341251234: value: firstvalue certificate: A4FC32XyCdfEa... , timestamp: 12341251239: value: secondvalue certificate: B4fVyC32XyCdfEa... ]
-func getkeyhistory(stub shim.ChaincodeStubInterface, args []string) (string, error) {
+func getkeyhistory(stub shim.ChaincodeStubInterface, arg string) (string, error) {
 	var valueJSON operation
-	if len(args) != 1 {
-		return "", fmt.Errorf("Incorrect arguments. Expecting a key")
+	if arg == "" {
+		return "", fmt.Errorf("Incorrect arguments. Expecting a txid")
 	}
 
-	iterator, err := stub.GetHistoryForKey(args[0])
+	iterator, err := stub.GetHistoryForKey(arg)
 	if err != nil {
-		return "", fmt.Errorf("Failed to get asset: %s with error: %s", args[0], err)
+		return "", fmt.Errorf("Failed to get asset: %s with error: %s", arg, err)
 	}
 	if iterator == nil {
-		return "", fmt.Errorf("Asset not found: %s", args[0])
+		return "", fmt.Errorf("Asset not found: %s", arg)
 	}
 	defer iterator.Close()
 
@@ -352,7 +356,7 @@ func getkeyhistory(stub shim.ChaincodeStubInterface, args []string) (string, err
 
 		err = json.Unmarshal(response.Value, &valueJSON)
 		if err != nil {
-			jsonResp := "{\"Error\":\"Failed to decode JSON of: " + args[0] + "\"}"
+			jsonResp := "{\"Error\":\"Failed to decode JSON of: " + arg + "\"}"
 			return "", fmt.Errorf(jsonResp)
 		}
 
