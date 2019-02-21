@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"bytes"
 	"time"
-	"string"
+	"strings"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	//"github.com/hyperledger/fabric/core/chaincode//lib/cid"
