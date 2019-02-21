@@ -18,16 +18,31 @@ type SimpleAsset struct {
 
 type operation struct {
 	Hash string `json:"hash"` 
+	TxID string `json:"txid"` 
 	Certificate       string `json:"cert"`    
 	Type      string `json:"type"`
-	Numreads       int    `json:"reads"`
+	//Numreads       int    `json:"reads"`
 	Description      string `json:"desc"`
 	//ID string `json:"id"` 
 	//MSPID string `json:"mspid"` 
 	//IDAttr string `json:"idattr"` 
 }
-func (t *SimpleAsset) Init(stub shim.ChaincodeStubInterface) pb.Response {
+type transformation struct {
+	Hash string `json:"hash"` 
+	Certificate       string `json:"cert"`    
+	Type      string `json:"type"`
+	//Numreads       int    `json:"reads"`
+	Description      string `json:"desc"`
+	Dependencies []string `json:"depends"`
+	//ID string `json:"id"` 
+	//MSPID string `json:"mspid"` 
+	//IDAttr string `json:"idattr"` 
+}
 
+
+
+func (t *SimpleAsset) Init(stub shim.ChaincodeStubInterface) pb.Response {
+	indexName := "txID~key"
 	// Get the args from the transaction proposal
 	args := stub.GetStringArgs()
 	if len(args) != 2 {
@@ -35,17 +50,29 @@ func (t *SimpleAsset) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	}
 
 	// Set up any variables or assets here by calling stub.PutState()
-	operation := &operation{args[1], "null", "Create", 0, "Init operation"}
+	txid := stub.GetTxID()
+	operation := &operation{args[1], txid, "null", "Create", "Init operation"}
 	operationJSONasBytes, err := json.Marshal(operation)
 	if err != nil {
 		return shim.Error(fmt.Sprintf("Failed to marshal JSON: %s", string(operationJSONasBytes)))
 	}
 		
 
-	// We store the creator data, key and the value on the ledger
+	keyTxIDKey, err := stub.CreateCompositeKey(indexName, []string{stub.GetTxID(), args[0]})
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	//creator, _ := stub.GetCreator()
+
+	// Add key and value to the state
 	err = stub.PutState(args[0], operationJSONasBytes)
 	if err != nil {
-		return shim.Error(fmt.Sprintf("Failed to create asset: %s", args[0]))
+		return shim.Error(fmt.Sprintf("Failed to set asset: %s", args[0]))
+	}
+	err = stub.PutState(keyTxIDKey, operationJSONasBytes)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Failed to set TXasset: %s", args[0]))
 	}
 	return shim.Success(nil)
 }
@@ -61,7 +88,11 @@ func (t *SimpleAsset) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		result, err = set(stub, args)
 	} else if fn == "get" {
 		result, err = get(stub, args)
-	} else if fn == "getkeyhistory" {
+	} else if fn == "getwithid" {
+		result, err = getWithID(stub, args)
+	}else if fn == "getfromid" {
+		result, err = getFromID(stub, args)
+	}else if fn == "getkeyhistory" {
 		result, err = getkeyhistory(stub, args)
 	} else if fn == "getbyrange" {
 		result, err = getbyrange(stub, args)
@@ -84,6 +115,8 @@ func (t *SimpleAsset) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 // will be parsed away for all other operations than getkeyhistory which
 // returns this certificate to indicate who performed the change.
 func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
+	indexName := "txID~key"
+
 	if ((len(args) != 2) && (len(args) != 3)){
 		return "", fmt.Errorf("Incorrect arguments. Expecting a key and a value")
 	}
@@ -134,6 +167,8 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	// Do something with the value of 'val'
 	*/
 
+
+
 	usercert, cerr := stub.GetCreator()
 	if cerr != nil {
 		return "", fmt.Errorf("Failed to get creator of asset: %s", args[0])
@@ -145,16 +180,29 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	}
 
 	// Set up any variables or assets here by calling stub.PutState()
-	operation := &operation{args[1], string(usercert), "Modify", 0, desc}
+	txid := stub.GetTxID()
+	operation := &operation{args[1], txid, string(usercert), "Modify", desc}
 	operationJSONasBytes, err := json.Marshal(operation)
 	if err != nil {
 		return "", fmt.Errorf("Failed to marshal JSON. %s", string(args[0]))
 	}
 		
 
+	keyTxIDKey, err := stub.CreateCompositeKey(indexName, []string{stub.GetTxID(), args[0]})
+	if err != nil {
+		return "", fmt.Errorf(err.Error())
+	}
+
+	//creator, _ := stub.GetCreator()
+
+	// Add key and value to the state
 	err = stub.PutState(args[0], operationJSONasBytes)
 	if err != nil {
 		return "", fmt.Errorf("Failed to set asset: %s", args[0])
+	}
+	err = stub.PutState(keyTxIDKey, operationJSONasBytes)
+	if err != nil {
+		return "", fmt.Errorf("Failed to set TXasset: %s", args[0])
 	}
 	return args[1], nil
 }
@@ -194,6 +242,78 @@ func get(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 
 	return string(valueJSON.Hash), nil
 }
+
+// Get returns the current value of the specified asset key.
+func getWithID(stub shim.ChaincodeStubInterface, args []string) (string, error) {
+	var valueJSON operation
+	if len(args) != 1 {
+		return "", fmt.Errorf("Incorrect arguments. Expecting a key")
+	}
+
+	value, err := stub.GetState(args[0])
+	if err != nil {
+		return "", fmt.Errorf("Failed to get asset: %s with error: %s", args[0], err)
+	}
+	if value == nil {
+		return "", fmt.Errorf("Asset not found: %s", args[0])
+	}
+
+	err = json.Unmarshal([]byte(value), &valueJSON)
+	if err != nil {
+		jsonResp := "{\"Error\":\"Failed to decode JSON of: " + args[0] + "\"}"
+		return "", fmt.Errorf(jsonResp)
+	}
+
+	return string(valueJSON.TxID) + " ||| " + string(valueJSON.Hash), nil
+}
+func getFromID(stub shim.ChaincodeStubInterface, args []string) (string, error){
+	indexName := "txID~key"
+	var valueJSON operation
+	if len(args) != 1 {
+		return "", fmt.Errorf("Incorrect arguments. Expecting a txid")
+	}
+	txID := args[0]
+
+	it, _ := stub.GetStateByPartialCompositeKey(indexName, []string{txID})
+	count := 0
+	for it.HasNext() {
+		keyTxIDRange, err := it.Next()
+		if err != nil {
+			return "", fmt.Errorf(err.Error())
+		}
+
+		_, keyParts, _ := stub.SplitCompositeKey(keyTxIDRange.Key)
+		key := keyParts[1]
+		fmt.Printf("key affected by txID %s is %s\n", txID, key)
+		txIDValue := keyTxIDRange.Value
+
+		err = json.Unmarshal([]byte(txIDValue), &valueJSON)
+		if err != nil {
+			jsonResp := "{\"Error\":\"Failed to decode JSON of: " + args[0] + "\"}"
+			return "", fmt.Errorf(jsonResp)
+		}
+/*
+		sId := &msp.SerializedIdentity{}
+		err = proto.Unmarshal(txIDCreator, sId)
+		if err != nil {
+			return "", fmt.Errorf("Could not deserialize a SerializedIdentity, err %s", err)
+		}
+
+		bl, _ := pem.Decode(sId.IdBytes)
+		if bl == nil {
+			return shim.Error(fmt.Sprintf("Could not decode the PEM structure"))
+		}
+		cert, err := x509.ParseCertificate(bl.Bytes)
+		if err != nil {
+			return shim.Error(fmt.Sprintf("ParseCertificate failed %s", err))
+		}
+
+		fmt.Printf("Certificate of txID %s creator is %s", txID, cert)*/
+		count++
+	}
+	return string(count) + string(valueJSON.Hash), nil
+}
+
 
 // Gets the full history of a key, The historic values are coupled with the timestamp of change.
 // This function includes a timestamp, the new changed value and the certficiates used to perform the change.
