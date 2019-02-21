@@ -25,7 +25,7 @@ MAX_RETRY=5
 ORDERER_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/ptunstad.no/orderers/orderer.ptunstad.no/msp/tlscacerts/tlsca.ptunstad.no-cert.pem
 PEER0_ORG1_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/tls/ca.crt
 
-CC_SRC_PATH="github.com/hyperledger/fabric/examples/chaincode/go/chaincode_datashare02"
+CC_SRC_PATH="github.com/hyperledger/fabric/core/chaincode//chaincode_datashare02"
 if [ "$LANGUAGE" = "node" ]; then
 	CC_SRC_PATH="/opt/gopath/src/github.com/chaincode/chaincode_example02/node/"
 fi
@@ -172,7 +172,7 @@ joinChannel () {
 # installChaincode () {
 # 	PEER=$1
 # 	setGlobals $PEER
-# 	peer chaincode install -n myccds -v 1.2 -p github.com/hyperledger/fabric/examples/chaincode/go/chaincode_datashare02 >&log.txt
+# 	peer chaincode install -n myccds -v 1.2 -p github.com/hyperledger/fabric/core/chaincode//chaincode_datashare02 >&log.txt
 # 	res=$?
 # 	cat log.txt
 #         verifyResult $res "Chaincode2 installation on remote peer PEER$PEER has Failed"

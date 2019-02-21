@@ -1,0 +1,51 @@
+version: '3'
+
+services:
+  peer4_org1:
+    image: hyperledger/fabric-peer:amd64-1.4.0
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=hyperledger-fabric
+      - FABRIC_LOGGING_SPEC=DEBUG
+      - CORE_PEER_TLS_ENABLED=false
+      - CORE_PEER_GOSSIP_USELEADERELECTION=true
+      - CORE_PEER_GOSSIP_ORGLEADER=false
+      - CORE_PEER_PROFILE_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      - CORE_PEER_ID=peer4.org1.ptunstad.no
+      - CORE_PEER_ADDRESS=peer4.org1.ptunstad.no:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer4.org1.ptunstad.no:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer4.org1.ptunstad.no:7051
+      - CORE_PEER_LOCALMSPID=Org1MSP
+      - CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
+      - CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv:amd64-1.4.0
+      - CORE_CHAINCODE_GOLANG_RUNTIME=hyperledger/fabric-baseos:amd64-0.4.14
+      - CORE_CHAINCODE_CAR_RUNTIME=hyperledger/fabric-baseos:amd64-0.4.14
+      - CORE_CHAINCODE_JAVA=hyperledger/fabric-javaenv:amd64-1.4.0
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    hostname: peer4.org1.ptunstad.no
+    networks:
+      hyperledger-fabric:
+        aliases:
+          - peer4.org1.ptunstad.no
+    volumes:
+      - /var/run/:/host/var/run/
+      - /data/Hyperprov/logs:/home/logs
+      - /data/Hyperprov/chaincode/:/opt/gopath/src/github.com/hyperledger/fabric/core/chaincode/
+      - /data/Hyperprov/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer4.org1.ptunstad.no/msp:/etc/hyperledger/fabric/msp
+      - /data/Hyperprov/crypto-config/peerOrganizations/org1.ptunstad.no/peers/peer4.org1.ptunstad.no/tls:/etc/hyperledger/fabric/tls
+      ##- peer4_org1:/var/hyperledger/production
+    ports:
+      - 11051:7051
+      - 11053:7053
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == linuxkit-025000000001
+    command: bash -c "peer node start > /home/logs/peer1org1log.txt 2>&1"
+
+networks:
+  hyperledger-fabric:
+    external: true
