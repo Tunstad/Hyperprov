@@ -87,13 +87,13 @@ func (t *SimpleAsset) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	if fn == "set" {
 		result, err = set(stub, args)
 	} else if fn == "get" {
-		result, err = get(stub, args)
+		result, err = get(stub, args[0])
 	} else if fn == "getwithid" {
-		result, err = getWithID(stub, args)
+		result, err = getWithID(stub, args[0])
 	}else if fn == "getfromid" {
-		result, err = getFromID(stub, args)
+		result, err = getFromID(stub, args[0])
 	}else if fn == "getkeyhistory" {
-		result, err = getkeyhistory(stub, args)
+		result, err = getkeyhistory(stub, args[0])
 	} else if fn == "getbyrange" {
 		result, err = getbyrange(stub, args)
 	}
@@ -208,7 +208,7 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 }
 
 // Get returns the current value of the specified asset key.
-func get(stub shim.ChaincodeStubInterface, arg []string) (string, error) {
+func get(stub shim.ChaincodeStubInterface, arg string) (string, error) {
 	var valueJSON operation
 	/*if len(args) != 1 {
 		return "", fmt.Errorf("Incorrect arguments. Expecting a key")
@@ -247,7 +247,7 @@ func get(stub shim.ChaincodeStubInterface, arg []string) (string, error) {
 }
 
 // Get returns the current value of the specified asset key.
-func getWithID(stub shim.ChaincodeStubInterface, arg []string) (string, error) {
+func getWithID(stub shim.ChaincodeStubInterface, arg string) (string, error) {
 	var valueJSON operation
 
 	if arg == "" {
@@ -270,7 +270,7 @@ func getWithID(stub shim.ChaincodeStubInterface, arg []string) (string, error) {
 
 	return string(valueJSON.TxID) + " ||| " + string(valueJSON.Hash), nil
 }
-func getFromID(stub shim.ChaincodeStubInterface, arg []string) (string, error){
+func getFromID(stub shim.ChaincodeStubInterface, arg string) (string, error){
 	indexName := "txID~key"
 	var valueJSON operation
 	if arg == "" {
@@ -291,7 +291,7 @@ func getFromID(stub shim.ChaincodeStubInterface, arg []string) (string, error){
 		fmt.Printf("key affected by txID %s is %s\n", txID, key)
 		txIDValue := keyTxIDRange.Value
 
-		err = json.Unmarshal([]byte(txIDValue), &valueJSON)
+		err = json.Unmarshal(txIDValue, &valueJSON)
 		if err != nil {
 			jsonResp := "{\"Error\":\"Failed to decode JSON of: " + arg + "\"}"
 			return "", fmt.Errorf(jsonResp)
@@ -324,7 +324,7 @@ func getFromID(stub shim.ChaincodeStubInterface, arg []string) (string, error){
 // The certificates used are stored unencrypted in the value variable but are only acccessable trough this function.
 // This is a potential security issue and may later require this function to be role-gated, certificates to be encrypted or used for encrypting a shared variable as proof.
 // Example format of returned value is [ timestamp: 12341251234: value: firstvalue certificate: A4FC32XyCdfEa... , timestamp: 12341251239: value: secondvalue certificate: B4fVyC32XyCdfEa... ]
-func getkeyhistory(stub shim.ChaincodeStubInterface, arg []string) (string, error) {
+func getkeyhistory(stub shim.ChaincodeStubInterface, arg string) (string, error) {
 	var valueJSON operation
 	if arg == "" {
 		return "", fmt.Errorf("Incorrect arguments. Expecting a txid")
