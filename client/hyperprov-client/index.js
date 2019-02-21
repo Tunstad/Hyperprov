@@ -14,7 +14,11 @@ var path = require('path');
 var util = require('util');
 //var os = require('os');
 var fs = require("fs")
+//var joiner = require('./lib/join-channel.js');
 
+
+var helper = require('./lib/helper.js');
+var logger = helper.getLogger('Join-Channel');
 //The time a benchmark is set to run
 var totaltime_seconds = 1;        //3600 = 1h, 600 = 10m
 
@@ -45,6 +49,43 @@ exports.ccInit = function (setcurrentUser, setpath, setchannel, setchaincodeID, 
     channel.addPeer(peer);
     orderer = fabric_client.newOrderer('grpc://'+setorderer)
     channel.addOrderer(orderer);
+}
+
+exports.ccJoin = function (){
+  /*  // Retrieve genesis block from orderer
+    tx_id = client.newTransactionID();
+    let g_request = {
+    txId :     tx_id
+    };
+    channel.getGenesisBlock(g_request).then((block) =>{
+        genesis_block = block;
+        tx_id = client.newTransactionID();
+        let j_request = {
+          //targets : targets,
+          block : genesis_block,
+          txId :     tx_id
+        };
+
+
+  return channel.joinChannel(j_request);
+    }).then((results) =>{
+    if(results && results.response && results.response.status == 200) {
+    console.log("Join successful!")
+    } else {
+    console.log("Something went wrong with join: " + results.response)
+    }*/
+    //let message =  await joiner.joinChannel('mychannel', peer, "admin", "ptunstad.no");
+    //console.log(message.message)
+    var addedpeer = "peer0.org1.ptunstad.no:7051"
+
+    //peer = fabric_client.newPeer('grpc://'+'peer4.ptunstad.no:7051')
+    peer = fabric_client.newPeer('grpc://'+addedpeer);
+    channel.addPeer(peer);
+    joinChannel('mychannel', [addedpeer], "admin", "org1", fabric_client).then((result) =>{
+        console.log(result.success)
+        console.log("Message:" + result.message)
+    })
+
 }
 
 //Function to set chaincode based on arguments. For myccds it expects argument to be of type
@@ -373,3 +414,118 @@ function filefromBase64(inputstring, outputfile){
     var decoded = new Buffer(inputstring, 'base64')
     fs.writeFileSync(outputfile, decoded)
 }
+
+/*
+ * Have an organization join a channel
+ */
+var joinChannel = async function(channel_name, peers, username, org_name) {
+	logger.debug('\n\n============ Join Channel start ============\n')
+	var error_message = null;
+	var all_eventhubs = [];
+	try {
+		logger.info('Calling peers in organization "%s" to join the channel', org_name);
+
+		// first setup the client for this org
+		//var client = await helper.getClientForOrg(org_name, username);
+		//logger.debug('Successfully got the fabric client for the organization "%s"', org_name);
+		//var channel = client.getChannel(channel_name);
+		if(!channel) {
+			let message = util.format('Channel %s was not defined in the connection profile', channel_name);
+			logger.error(message);
+			throw new Error(message);
+		}
+
+	let state_store = await Fabric_Client.newDefaultKeyValueStore({path: store_path})
+        // assign the store to the fabric client
+        fabric_client.setStateStore(state_store);
+        var crypto_suite = Fabric_Client.newCryptoSuite();
+        // use the same location for the state store (where the users' certificate are kept)
+        // and the crypto store (where the users' keys are kept)
+        var crypto_store = Fabric_Client.newCryptoKeyStore({path: store_path});
+        crypto_suite.setCryptoKeyStore(crypto_store);
+        fabric_client.setCryptoSuite(crypto_suite);
+        var	tlsOptions = {
+            trustedRoots: [],
+            verify: false
+        };
+    
+        // first check to see if the admin is already enrolled
+        let user_from_store = await fabric_client.getUserContext(currentUser, true);
+        if (user_from_store && user_from_store.isEnrolled()) {
+            console.log('Successfully loaded user from persistence');
+            member_user = user_from_store;
+        } else {
+            throw new Error('Failed to get user.... run enrollAdmin.js (and maybe RegisterUser)');
+        }
+    		// next step is to get the genesis_block from the orderer,
+		// the starting point for the channel that we want to join
+		let request = {
+			txId : 	fabric_client.newTransactionID(true) //get an admin based transactionID
+		};
+
+		let genesis_block = await channel.getGenesisBlock(request);
+
+		// tell each peer to join and wait 10 seconds
+		// for the channel to be created on each peer
+		var promises = [];
+		promises.push(new Promise(resolve => setTimeout(resolve, 10000)));
+
+		let join_request = {
+			targets: peers, //using the peer names which only is allowed when a connection profile is loaded
+			txId: fabric_client.newTransactionID(true), //get an admin based transactionID
+			block: genesis_block
+		};
+		let join_promise = channel.joinChannel(join_request);
+		promises.push(join_promise);
+		let results = await Promise.all(promises);
+		logger.debug(util.format('Join Channel R E S P O N S E : %j', results));
+
+		// lets check the results of sending to the peers which is
+		// last in the results array
+		let peers_results = results.pop();
+		// then each peer results
+		for(let i in peers_results) {
+			let peer_result = peers_results[i];
+			if (peer_result instanceof Error) {
+				error_message = util.format('Failed to join peer to the channel with error :: %s', peer_result.toString());
+				logger.error(error_message);
+			} else if(peer_result.response && peer_result.response.status == 200) {
+				logger.info('Successfully joined peer to the channel %s',channel_name);
+			} else {
+				error_message = util.format('Failed to join peer to the channel %s',channel_name);
+				logger.error(error_message);
+			}
+		}
+	} catch(error) {
+		logger.error('Failed to join channel due to error: ' + error.stack ? error.stack : error);
+		error_message = error.toString();
+	}
+
+	// need to shutdown open event streams
+	all_eventhubs.forEach((eh) => {
+		eh.disconnect();
+	});
+
+	if (!error_message) {
+		let message = util.format(
+			'Successfully joined peers in organization %s to the channel:%s',
+			org_name, channel_name);
+		logger.info(message);
+		// build a response to send back to the REST caller
+		const response = {
+			success: true,
+			message: message
+		};
+		return response;
+	} else {
+		let message = util.format('Failed to join all peers to channel. cause:%s',error_message);
+		logger.error(message);
+		// build a response to send back to the REST caller
+		const response = {
+			success: false,
+			message: message
+		};
+		return response;
+	}
+};
+exports.joinChannel = joinChannel;

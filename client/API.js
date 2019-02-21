@@ -8,6 +8,7 @@ var RESTAPI = true;
 var localONLY = true;
 var keypath = path.join(__dirname, 'hfc-key-store')
 hyperprovclient.ccInit('Peer2', keypath, 'mychannel', 'myccds', 'mc.ptunstad.no:7051', 'agc.ptunstad.no:7050');
+hyperprovclient.ccJoin();
 
 console.log("Starting in REST-api mode..")
 var express = require('express');

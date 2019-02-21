@@ -43,7 +43,7 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == agc-lab2
+          - node.hostname == linuxkit-025000000001
     command: bash -c "peer node start > /home/logs/peer1org1log.txt 2>&1"
 
 networks:
