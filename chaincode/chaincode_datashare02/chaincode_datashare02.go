@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"bytes"
 	"time"
+	"string"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	//"github.com/hyperledger/fabric/core/chaincode//lib/cid"
@@ -87,13 +88,17 @@ func (t *SimpleAsset) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	if fn == "set" {
 		result, err = set(stub, args)
 	} else if fn == "get" {
-		result, err = get(stub, args[0])
+		arg := strings.Join(args,"")
+		result, err = get(stub, arg)
 	} else if fn == "getwithid" {
-		result, err = getWithID(stub, args[0])
+		arg := strings.Join(args,"")
+		result, err = getWithID(stub, arg)
 	}else if fn == "getfromid" {
-		result, err = getFromID(stub, args[0])
+		arg := strings.Join(args,"")
+		result, err = getFromID(stub, arg)
 	}else if fn == "getkeyhistory" {
-		result, err = getkeyhistory(stub, args[0])
+		arg := strings.Join(args,"")
+		result, err = getkeyhistory(stub, arg)
 	} else if fn == "getbyrange" {
 		result, err = getbyrange(stub, args)
 	}
