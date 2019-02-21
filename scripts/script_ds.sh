@@ -17,7 +17,7 @@ VERBOSE="$5"
 : ${CHANNEL_NAME:="mychannel"}
 : ${DELAY:="3"}
 : ${LANGUAGE:="golang"}
-: ${TIMEOUT:="120"}
+: ${TIMEOUT:="1500"}
 : ${VERBOSE:="false"}
 LANGUAGE=`echo "$LANGUAGE" | tr [:upper:] [:lower:]`
 COUNTER=1
@@ -40,10 +40,10 @@ echo "Channel name : "$CHANNEL_NAME
 #Prevents "Minimum memory limit allowed is 4MB" error on low RAM devices (like RasPi)
 CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
 # Sets the default images to use my build for the ARM architecture
-CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv:amd64-1.4.0 
-CORE_CHAINCODE_GOLANG=hyperledger/fabric-baseos:amd64-0.4.14 
-CORE_CHAINCODE_CAR=hyperledger/fabric-baseos:amd64-0.4.14 
-#CORE_CHAINCODE_JAVA=hyperledger/fabric-javaenv::amd64-1.4.0 
+CORE_CHAINCODE_BUILDER=ptunstad/fabric-ccenv:arm64-1.4.1 
+CORE_CHAINCODE_GOLANG=ptunstad/fabric-baseos:arm64-0.4.15 
+CORE_CHAINCODE_CAR=ptunstad/fabric-baseos:arm64-0.4.15 
+#CORE_CHAINCODE_JAVA=ptunstad/fabric-javaenv::arm64-1.4.1 
 
 echo "Channel name : "$CHANNEL_NAME
 
