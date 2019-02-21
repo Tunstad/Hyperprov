@@ -29,8 +29,8 @@ var joinChannel = async function(channel_name, peers, username, org_name) {
 		logger.info('Calling peers in organization "%s" to join the channel', org_name);
 
 		// first setup the client for this org
-		var client = await helper.getClientForOrg(org_name, username);
-		logger.debug('Successfully got the fabric client for the organization "%s"', org_name);
+		//var client = await helper.getClientForOrg(org_name, username);
+		//logger.debug('Successfully got the fabric client for the organization "%s"', org_name);
 		var channel = client.getChannel(channel_name);
 		if(!channel) {
 			let message = util.format('Channel %s was not defined in the connection profile', channel_name);
@@ -38,6 +38,30 @@ var joinChannel = async function(channel_name, peers, username, org_name) {
 			throw new Error(message);
 		}
 
+		Fabric_Client.newDefaultKeyValueStore({ path: store_path
+    }).then((state_store) => {
+        // assign the store to the fabric client
+        fabric_client.setStateStore(state_store);
+        var crypto_suite = Fabric_Client.newCryptoSuite();
+        // use the same location for the state store (where the users' certificate are kept)
+        // and the crypto store (where the users' keys are kept)
+        var crypto_store = Fabric_Client.newCryptoKeyStore({path: store_path});
+        crypto_suite.setCryptoKeyStore(crypto_store);
+        fabric_client.setCryptoSuite(crypto_suite);
+        var	tlsOptions = {
+            trustedRoots: [],
+            verify: false
+        };
+    
+        // first check to see if the admin is already enrolled
+        return fabric_client.getUserContext(currentUser, true);
+    }).then((user_from_store) => {
+        if (user_from_store && user_from_store.isEnrolled()) {
+            console.log('Successfully loaded user from persistence');
+            member_user = user_from_store;
+        } else {
+            throw new Error('Failed to get user.... run enrollAdmin.js (and maybe RegisterUser)');
+        }
 		// next step is to get the genesis_block from the orderer,
 		// the starting point for the channel that we want to join
 		let request = {
@@ -76,7 +100,7 @@ var joinChannel = async function(channel_name, peers, username, org_name) {
 				logger.error(error_message);
 			}
 		}
-	} catch(error) {
+	})} catch(error) {
 		logger.error('Failed to join channel due to error: ' + error.stack ? error.stack : error);
 		error_message = error.toString();
 	}
