@@ -169,19 +169,19 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 		return "", fmt.Errorf("Failed to get creator of asset: %s", args[0])
 	}
 
+	desc := ""
+	if len(args) == 3 {
+		desc = args[2]
+	}
+
 	dependecies := ""
 	optype := "Record"
 	if len(args) == 4 {
-	//creator, _ := stub.GetCreator()
-	dependecies = args[2]
-	optype = "Transformation"
+		//creator, _ := stub.GetCreator()
+		dependecies = args[3]
+		optype = "Transformation"
 	}
 	
-	desc := ""
-	if len(args) == 4 {
-		desc = args[3]
-	}
-
 	// Set up any variables or assets here by calling stub.PutState()
 	txid := stub.GetTxID()
 	operation := &operation{args[1], txid, string(usercert), optype, desc, dependecies}
@@ -196,7 +196,6 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 		return "", fmt.Errorf(err.Error())
 	}
 
-	
 
 	// Add key and value to the state
 	err = stub.PutState(args[0], operationJSONasBytes)
@@ -286,7 +285,7 @@ func getFromID(stub shim.ChaincodeStubInterface, arg string) (string, error){
 	keyTxIDRange, err := it.Next()
 	if err != nil {
 		return "", fmt.Errorf(err.Error())
-	}
+	}	
 
 	_, keyParts, _ := stub.SplitCompositeKey(keyTxIDRange.Key)
 	key := keyParts[1]
