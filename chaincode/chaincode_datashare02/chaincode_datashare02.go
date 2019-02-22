@@ -112,7 +112,7 @@ func (t *SimpleAsset) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	indexName := "txID~key"
 
-	if ((len(args) != 3) && (len(args) != 4)){
+	if ((len(args) != 2) && (len(args) != 3) && (len(args) != 4)){
 		return "", fmt.Errorf("Incorrect arguments. Expecting a key and a value")
 	}
 
