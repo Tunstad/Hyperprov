@@ -119,6 +119,8 @@ exports.ccSet = function(ccargs, callback, callback2, resp){
         // get a transaction id object based on the current user assigned to fabric client
         tx_id = fabric_client.newTransactionID();
         console.log("Assigning transaction_id: ", tx_id._transaction_id);
+
+        console.log(ccargs)
     
         // must send the proposal to endorsing peers
         var request = {

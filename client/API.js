@@ -8,7 +8,7 @@ var RESTAPI = true;
 var localONLY = true;
 var keypath = path.join(__dirname, 'hfc-key-store')
 hyperprovclient.ccInit('Peer2', keypath, 'mychannel', 'myccds', 'mc.ptunstad.no:7051', 'agc.ptunstad.no:7050');
-hyperprovclient.ccJoin();
+//hyperprovclient.ccJoin();
 
 console.log("Starting in REST-api mode..")
 var express = require('express');
@@ -24,6 +24,30 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.post('/set', function (req, res) {
     var requestarguments = req.get('arguments').toString().split(", ")
+    if (requestarguments.length < 2){
+        res.end("Too few arguments, requres a Key and Value")
+    }
+    if (requestarguments.length < 3){
+        //No argument for description, put ""
+        requestarguments[2] = ""
+    }
+
+
+    var dependencies = req.get('dependencies').toString().split(", ")
+    if(dependencies.length > 0){
+        var concated = ""
+        for (var d = 0; d < dependencies.length; d++) {
+            console.log(dependencies[d])
+            if (d != 0) {
+                concated = concated.concat(":");
+            }
+            concated = concated.concat(dependencies[d]);
+        }
+        console.log(concated)
+        requestarguments[3] = concated
+        console.log(requestarguments)
+    }
+    
     hyperprovclient.ccSet(requestarguments, restCallback, null, res)
 })
 app.get('/get', function (req, res) {
@@ -31,10 +55,25 @@ app.get('/get', function (req, res) {
     var requestarguments = req.get('arguments').toString()
     hyperprovclient.ccFunc('get', requestarguments, restCallback, res)
 })
+app.get('/getwithid', function (req, res) {
+    console.log("Request GET")
+    var requestarguments = req.get('arguments').toString()
+    hyperprovclient.ccFunc('getwithid', requestarguments, restCallback, res)
+})
+app.get('/getfromid', function (req, res) {
+    console.log("Request GET")
+    var requestarguments = req.get('arguments').toString()
+    hyperprovclient.ccFunc('getfromid', requestarguments, restCallback, res)
+})
 app.get('/getkeyhistory', function (req, res) {
     console.log("Request GET")
     var requestarguments = req.get('arguments').toString()
     hyperprovclient.ccFunc('getkeyhistory', requestarguments, restCallback, res)
+})
+app.get('/getdependencies', function (req, res) {
+    console.log("Request GET")
+    var requestarguments = req.get('arguments').toString()
+    hyperprovclient.ccFunc('getdependencies', requestarguments, restCallback, res)
 })
 app.get('/getbyrange', function (req, res) {
     console.log("Request GET")
