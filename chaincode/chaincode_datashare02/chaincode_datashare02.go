@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"time"
 	"strings"
+	"strconv"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	//"github.com/hyperledger/fabric/core/chaincode//lib/cid"
@@ -18,7 +19,9 @@ type SimpleAsset struct {
 }
 
 type operation struct {
-	Hash string `json:"hash"` 
+	Hash string `json:"hash"`
+	//Path string `json:"path"` 
+	//Pointer string `json:"pointer"`  
 	TxID string `json:"txid"` 
 	Certificate       string `json:"cert"`    
 	Type      string `json:"type"`
@@ -86,6 +89,8 @@ func (t *SimpleAsset) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	}else if fn == "getfromid" {
 		arg := strings.Join(args,"")
 		result, err = getFromID(stub, arg)
+	}else if fn == "getdependencies" {
+		result, err = recursivedependencies(stub, args)
 	}else if fn == "getkeyhistory" {
 		arg := strings.Join(args,"")
 		result, err = getkeyhistory(stub, arg)
@@ -362,6 +367,87 @@ func getFromID(stub shim.ChaincodeStubInterface, arg string) (string, error){
 		fmt.Printf("Certificate of txID %s creator is %s", txID, cert)*/
 	//}
 	return key + " |-|-| " + string(buffer.Bytes()) , nil
+}
+
+func recursivedependencies(stub shim.ChaincodeStubInterface, args []string) (string, error) {
+	indexName := "txID~key"
+	var valueJSON operation
+	if len(args) != 2 {
+		return "", fmt.Errorf("Incorrect arguments. Expecting a txid and number of steps")
+	}
+	txID := args[0]
+	count, err := strconv.Atoi(args[1])
+	args[1] = strconv.Itoa(count-1)
+
+	it, _ := stub.GetStateByPartialCompositeKey(indexName, []string{txID})
+	//for it.HasNext() {
+	keyTxIDRange, err := it.Next()
+	if err != nil {
+		return "", fmt.Errorf(err.Error())
+	}	
+
+	_, keyParts, _ := stub.SplitCompositeKey(keyTxIDRange.Key)
+	key := keyParts[1]
+	fmt.Printf("key affected by txID %s is %s\n", txID, key)
+	txIDValue := keyTxIDRange.Value
+
+		err = json.Unmarshal(txIDValue, &valueJSON)
+		if err != nil {
+			jsonResp := "{\"Error\":\"Failed to decode JSON of: " + txID + "\"}"
+			return "", fmt.Errorf(jsonResp)
+		}
+
+	// buffer is a JSON array containing historic values
+	var buffer bytes.Buffer
+	buffer.WriteString("{")
+
+	bArrayMemberAlreadyWritten := false
+	if err != nil {
+		return "", fmt.Errorf(err.Error())
+	}
+	// Add a comma before array members, suppress it for the first array member
+	if bArrayMemberAlreadyWritten == true {
+		buffer.WriteString(",")
+	}
+
+	if(valueJSON.Dependencies != ""){
+		i := strings.Split(valueJSON.Dependencies, ":")
+		for _, element := range i { 
+			buffer.WriteString("{\"" +element+ "\":")
+			buffer.WriteString("\"")
+
+			retstring, reterror := recursivedependencies(stub, args)
+			if reterror != nil{
+				return "", fmt.Errorf(err.Error())
+			}
+			buffer.WriteString(retstring)
+			buffer.WriteString("\"")
+			buffer.WriteString("}")
+		}
+	}
+
+/*
+		buffer.WriteString(", \"ID\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(valueJSON.ID)
+		buffer.WriteString("\"")
+
+		buffer.WriteString(", \"MSPID\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(valueJSON.MSPID)
+		buffer.WriteString("\"")
+
+		buffer.WriteString(", \"Attribute\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(valueJSON.IDAttr)
+		buffer.WriteString("\"")
+*/
+		
+	bArrayMemberAlreadyWritten = true
+	buffer.WriteString("}")
+
+
+	return string(buffer.Bytes()), nil
 }
 
 
