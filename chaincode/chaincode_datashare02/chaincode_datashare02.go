@@ -372,9 +372,9 @@ func getFromID(stub shim.ChaincodeStubInterface, arg string) (string, error){
 func recursivedependencies(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	indexName := "txID~key"
 	var valueJSON operation
-	if len(args) != 2 {
+	/*if len(args) != 2 {
 		return "", fmt.Errorf("Incorrect arguments. Expecting a txid and number of steps")
-	}
+	}*/
 	txID := args[0]
 	count, err := strconv.Atoi(args[1])
 	args[1] = strconv.Itoa(count-1)
