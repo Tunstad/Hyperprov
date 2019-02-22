@@ -13,7 +13,7 @@ import (
 	
 )
 //"github.com/hyperledger/fabric/core/chaincode/shim/ext/cid"
-
+ 
 type SimpleAsset struct {
 }
 
@@ -24,17 +24,7 @@ type operation struct {
 	Type      string `json:"type"`
 	//Numreads       int    `json:"reads"`
 	Description      string `json:"desc"`
-	//ID string `json:"id"` 
-	//MSPID string `json:"mspid"` 
-	//IDAttr string `json:"idattr"` 
-}
-type transformation struct {
-	Hash string `json:"hash"` 
-	Certificate       string `json:"cert"`    
-	Type      string `json:"type"`
-	//Numreads       int    `json:"reads"`
-	Description      string `json:"desc"`
-	Dependencies []string `json:"depends"`
+	Dependencies string `json:"depends"`
 	//ID string `json:"id"` 
 	//MSPID string `json:"mspid"` 
 	//IDAttr string `json:"idattr"` 
@@ -52,7 +42,7 @@ func (t *SimpleAsset) Init(stub shim.ChaincodeStubInterface) pb.Response {
 
 	// Set up any variables or assets here by calling stub.PutState()
 	txid := stub.GetTxID()
-	operation := &operation{args[1], txid, "null", "Create", "Init operation"}
+	operation := &operation{args[1], txid, "null", "Init", "Init operation", ""}
 	operationJSONasBytes, err := json.Marshal(operation)
 	if err != nil {
 		return shim.Error(fmt.Sprintf("Failed to marshal JSON: %s", string(operationJSONasBytes)))
@@ -122,7 +112,7 @@ func (t *SimpleAsset) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	indexName := "txID~key"
 
-	if ((len(args) != 2) && (len(args) != 3)){
+	if ((len(args) != 3) && (len(args) != 4)){
 		return "", fmt.Errorf("Incorrect arguments. Expecting a key and a value")
 	}
 
@@ -179,14 +169,22 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 		return "", fmt.Errorf("Failed to get creator of asset: %s", args[0])
 	}
 
+	dependecies := ""
+	optype := "Record"
+	if len(args) == 4 {
+	//creator, _ := stub.GetCreator()
+	dependecies = args[2]
+	optype = "Transformation"
+	}
+	
 	desc := ""
-	if len(args) == 3 {
-		desc = args[2]
+	if len(args) == 4 {
+		desc = args[3]
 	}
 
 	// Set up any variables or assets here by calling stub.PutState()
 	txid := stub.GetTxID()
-	operation := &operation{args[1], txid, string(usercert), "Modify", desc}
+	operation := &operation{args[1], txid, string(usercert), optype, desc, dependecies}
 	operationJSONasBytes, err := json.Marshal(operation)
 	if err != nil {
 		return "", fmt.Errorf("Failed to marshal JSON. %s", string(args[0]))
@@ -198,7 +196,7 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 		return "", fmt.Errorf(err.Error())
 	}
 
-	//creator, _ := stub.GetCreator()
+	
 
 	// Add key and value to the state
 	err = stub.PutState(args[0], operationJSONasBytes)
@@ -273,7 +271,7 @@ func getWithID(stub shim.ChaincodeStubInterface, arg string) (string, error) {
 		return "", fmt.Errorf(jsonResp)
 	}
 
-	return string(valueJSON.TxID) + " ||| " + string(valueJSON.Hash), nil
+	return string(valueJSON.TxID) + " |-|-| " + string(valueJSON.Hash), nil
 }
 func getFromID(stub shim.ChaincodeStubInterface, arg string) (string, error){
 	indexName := "txID~key"
@@ -284,23 +282,68 @@ func getFromID(stub shim.ChaincodeStubInterface, arg string) (string, error){
 	txID := arg
 
 	it, _ := stub.GetStateByPartialCompositeKey(indexName, []string{txID})
-	count := 0
-	for it.HasNext() {
-		keyTxIDRange, err := it.Next()
-		if err != nil {
-			return "", fmt.Errorf(err.Error())
-		}
+	//for it.HasNext() {
+	keyTxIDRange, err := it.Next()
+	if err != nil {
+		return "", fmt.Errorf(err.Error())
+	}
 
-		_, keyParts, _ := stub.SplitCompositeKey(keyTxIDRange.Key)
-		key := keyParts[1]
-		fmt.Printf("key affected by txID %s is %s\n", txID, key)
-		txIDValue := keyTxIDRange.Value
+	_, keyParts, _ := stub.SplitCompositeKey(keyTxIDRange.Key)
+	key := keyParts[1]
+	fmt.Printf("key affected by txID %s is %s\n", txID, key)
+	txIDValue := keyTxIDRange.Value
 
 		err = json.Unmarshal(txIDValue, &valueJSON)
 		if err != nil {
 			jsonResp := "{\"Error\":\"Failed to decode JSON of: " + arg + "\"}"
 			return "", fmt.Errorf(jsonResp)
 		}
+		
+		// buffer is a JSON array containing historic values
+		var buffer bytes.Buffer
+		buffer.WriteString("[")
+		bArrayMemberAlreadyWritten := false
+		if err != nil {
+			return "", fmt.Errorf(err.Error())
+		}
+		// Add a comma before array members, suppress it for the first array member
+		if bArrayMemberAlreadyWritten == true {
+			buffer.WriteString(",")
+		}
+
+		buffer.WriteString("{\"Type\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(valueJSON.Type)
+		buffer.WriteString("\"")
+
+		buffer.WriteString(", \"Hash\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(valueJSON.Hash)
+		buffer.WriteString("\"")
+
+		buffer.WriteString(", \"Description\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(valueJSON.Description)
+		buffer.WriteString("\"")
+/*
+		buffer.WriteString(", \"Timestamp\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(time.Unix(keyTxIDRange.Timestamp.Seconds, int64(keyTxIDRange.Timestamp.Nanos)).String())
+		buffer.WriteString("\"")*/
+
+		buffer.WriteString(", \"Certificate\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(valueJSON.Certificate)
+		buffer.WriteString("\"")
+
+		buffer.WriteString(", \"Dependencies\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(valueJSON.Dependencies)
+		buffer.WriteString("\"")
+
+		buffer.WriteString("}")
+		bArrayMemberAlreadyWritten = true
+	buffer.WriteString("]")
 /*
 		sId := &msp.SerializedIdentity{}
 		err = proto.Unmarshal(txIDCreator, sId)
@@ -318,9 +361,8 @@ func getFromID(stub shim.ChaincodeStubInterface, arg string) (string, error){
 		}
 
 		fmt.Printf("Certificate of txID %s creator is %s", txID, cert)*/
-		count++
-	}
-	return string(count) + string(valueJSON.Hash), nil
+	//}
+	return key + " |-|-| " + string(buffer.Bytes()) , nil
 }
 
 
@@ -388,6 +430,11 @@ func getkeyhistory(stub shim.ChaincodeStubInterface, arg string) (string, error)
 		buffer.WriteString(", \"Certificate\":")
 		buffer.WriteString("\"")
 		buffer.WriteString(valueJSON.Certificate)
+		buffer.WriteString("\"")
+
+		buffer.WriteString(", \"Dependencies\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(valueJSON.Dependencies)
 		buffer.WriteString("\"")
 /*
 		buffer.WriteString(", \"ID\":")
