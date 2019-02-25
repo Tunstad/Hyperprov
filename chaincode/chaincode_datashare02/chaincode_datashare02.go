@@ -480,7 +480,6 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count
 		buffer.WriteString("\"")
 */
 		
-	bArrayMemberAlreadyWritten = true
 	buffer.WriteString("}")
 
 	fmt.Printf("End of recursive")
