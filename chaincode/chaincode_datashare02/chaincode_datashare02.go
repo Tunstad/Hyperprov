@@ -90,7 +90,7 @@ func (t *SimpleAsset) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		arg := strings.Join(args,"")
 		result, err = getFromID(stub, arg)
 	}else if fn == "getdependencies" {
-		result, err = recursivedependencies(stub, args)
+		result, err = getdependencies(stub, args)
 	}else if fn == "getkeyhistory" {
 		arg := strings.Join(args,"")
 		result, err = getkeyhistory(stub, arg)
@@ -120,6 +120,9 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	if ((len(args) != 2) && (len(args) != 3) && (len(args) != 4)){
 		return "", fmt.Errorf("Incorrect arguments. Expecting a key and a value")
 	}
+
+
+	//return string(len(args)), nil
 
 	// Potential code for additional identity functionality added in HLF v1.1
 	//id, err := cid.GetID(stub)
@@ -211,7 +214,7 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Failed to set TXasset: %s", args[0])
 	}
-	return args[1], nil
+	return txid, nil
 }
 
 // Get returns the current value of the specified asset key.
@@ -278,6 +281,7 @@ func getWithID(stub shim.ChaincodeStubInterface, arg string) (string, error) {
 	return string(valueJSON.TxID) + " |-|-| " + string(valueJSON.Hash), nil
 }
 func getFromID(stub shim.ChaincodeStubInterface, arg string) (string, error){
+	return string(len(arg)), nil
 	indexName := "txID~key"
 	var valueJSON operation
 	if arg == "" {
@@ -369,34 +373,60 @@ func getFromID(stub shim.ChaincodeStubInterface, arg string) (string, error){
 	return key + " |-|-| " + string(buffer.Bytes()) , nil
 }
 
-func recursivedependencies(stub shim.ChaincodeStubInterface, args []string) (string, error) {
+func getdependencies(stub shim.ChaincodeStubInterface, args []string) (string, error) {
+	fmt.Printf("Start of getdependencies")
+
+	count := 3
+	if(len(args) == 2){
+		count, err := strconv.Atoi(args[1])
+		if err != nil {
+			errorResp := "{\"Error\":\"Failed to retrieve recursive count}"
+			return "", fmt.Errorf(errorResp)
+		}
+		fmt.Printf("Set count from input to: " + string(count) )
+	}
+	fmt.Printf("Getdepend recursive call")
+	retval, err := recursivedependencies(stub, args[0], count)
+	if err != nil {
+		errorResp := "{\"Error\":\"Failed to recursively get dependencies}: " + err.Error()
+		return "", fmt.Errorf(errorResp)
+	}
+
+	return retval, nil
+}
+
+func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count int ) (string, error) {
+	fmt.Printf("Start of recursive")
+
+	if(count == 0){
+		return "count 0", nil
+	}
+	//return args[0] + string(len(args)), nil
 	indexName := "txID~key"
 	var valueJSON operation
-	/*if len(args) != 2 {
-		return "", fmt.Errorf("Incorrect arguments. Expecting a txid and number of steps")
-	}*/
-	txID := args[0]
-	count, err := strconv.Atoi(args[1])
-	args[1] = strconv.Itoa(count-1)
+	txID := txid
 
+	fmt.Printf("Before Getstate")
 	it, _ := stub.GetStateByPartialCompositeKey(indexName, []string{txID})
+	fmt.Printf("After Getstate")
 	//for it.HasNext() {
 	keyTxIDRange, err := it.Next()
 	if err != nil {
 		return "", fmt.Errorf(err.Error())
-	}	
-
+	}
+	fmt.Printf("After next before split")	
+		
 	_, keyParts, _ := stub.SplitCompositeKey(keyTxIDRange.Key)
 	key := keyParts[1]
 	fmt.Printf("key affected by txID %s is %s\n", txID, key)
 	txIDValue := keyTxIDRange.Value
 
-		err = json.Unmarshal(txIDValue, &valueJSON)
-		if err != nil {
-			jsonResp := "{\"Error\":\"Failed to decode JSON of: " + txID + "\"}"
-			return "", fmt.Errorf(jsonResp)
-		}
-
+	err = json.Unmarshal(txIDValue, &valueJSON)
+	if err != nil {
+		jsonResp := "{\"Error\":\"Failed to decode JSON of: " + txID + "\"}"
+		return "", fmt.Errorf(jsonResp)
+	}
+	fmt.Printf("After Unmarshal recursive")
 	// buffer is a JSON array containing historic values
 	var buffer bytes.Buffer
 	buffer.WriteString("{")
@@ -411,16 +441,22 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, args []string) (str
 	}
 
 	if(valueJSON.Dependencies != ""){
+		fmt.Printf("Before split recursive")
 		i := strings.Split(valueJSON.Dependencies, ":")
 		for _, element := range i { 
+			fmt.Printf("New elem recursive " + element)
 			buffer.WriteString("{\"" +element+ "\":")
 			buffer.WriteString("\"")
 
-			retstring, reterror := recursivedependencies(stub, args)
+			fmt.Printf("Getting to before recursive call")
+			retstring, reterror := recursivedependencies(stub, element, count-1)
 			if reterror != nil{
-				return "", fmt.Errorf(err.Error())
+				buffer.WriteString(reterror.Error())
+				//return "", fmt.Errorf(reterror.Error())
+			}else{
+				buffer.WriteString(retstring)
 			}
-			buffer.WriteString(retstring)
+			
 			buffer.WriteString("\"")
 			buffer.WriteString("}")
 		}
@@ -446,7 +482,7 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, args []string) (str
 	bArrayMemberAlreadyWritten = true
 	buffer.WriteString("}")
 
-
+	fmt.Printf("End of recursive")
 	return string(buffer.Bytes()), nil
 }
 
