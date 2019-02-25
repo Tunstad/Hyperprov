@@ -281,7 +281,6 @@ func getWithID(stub shim.ChaincodeStubInterface, arg string) (string, error) {
 	return string(valueJSON.TxID) + " |-|-| " + string(valueJSON.Hash), nil
 }
 func getFromID(stub shim.ChaincodeStubInterface, arg string) (string, error){
-	return string(len(arg)), nil
 	indexName := "txID~key"
 	var valueJSON operation
 	if arg == "" {
@@ -412,7 +411,7 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count
 	//for it.HasNext() {
 	keyTxIDRange, err := it.Next()
 	if err != nil {
-		return "", fmt.Errorf(err.Error())
+		return "", fmt.Errorf(err.Error() + ":-:" + txid)
 	}
 	fmt.Printf("After next before split")	
 		
