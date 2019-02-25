@@ -406,7 +406,10 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count
 	txID := txid
 
 	fmt.Printf("Before Getstate")
-	it, _ := stub.GetStateByPartialCompositeKey(indexName, []string{txID})
+	it, err:= stub.GetStateByPartialCompositeKey(indexName, []string{txID})
+	if err != nil {
+		return "", fmt.Errorf(err.Error())
+	}
 	fmt.Printf("After Getstate")
 	//for it.HasNext() {
 	keyTxIDRange, err := it.Next()
@@ -430,23 +433,22 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count
 	var buffer bytes.Buffer
 	buffer.WriteString("{")
 
-	bArrayMemberAlreadyWritten := false
-	if err != nil {
-		return "", fmt.Errorf(err.Error())
-	}
-	// Add a comma before array members, suppress it for the first array member
-	if bArrayMemberAlreadyWritten == true {
-		buffer.WriteString(",")
-	}
+	
+
 
 	if(valueJSON.Dependencies != ""){
-		fmt.Printf("Before split recursive")
+		fmt.Printf("txid")
 		i := strings.Split(valueJSON.Dependencies, ":")
 		for _, element := range i { 
 			fmt.Printf("New elem recursive " + element)
-			buffer.WriteString("{\"" +element+ "\":")
+
+			buffer.WriteString("{\"txid\":")
+			buffer.WriteString("\"")
+			buffer.WriteString(element)
 			buffer.WriteString("\"")
 
+			buffer.WriteString("\"from\":")
+			buffer.WriteString("\"")
 			fmt.Printf("Getting to before recursive call")
 			retstring, reterror := recursivedependencies(stub, element, count-1)
 			if reterror != nil{
@@ -455,8 +457,8 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count
 			}else{
 				buffer.WriteString(retstring)
 			}
-			
 			buffer.WriteString("\"")
+
 			buffer.WriteString("}")
 		}
 	}
