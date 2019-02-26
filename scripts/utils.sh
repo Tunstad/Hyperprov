@@ -172,7 +172,7 @@ instantiateChaincode () {
 	# lets supply it directly as we know it using the "-o" option
 	if [ -z "$CORE_PEER_TLS_ENABLED" -o "$CORE_PEER_TLS_ENABLED" = "false" ]; then
                 set -x
-		peer chaincode instantiate -o orderer.ptunstad.no:7050 -C $CHANNEL_NAME -n myccds -l ${LANGUAGE} -v ${VERSION} -c '{"Args":["c","51"]}' -P "OR('Org1MSP.member','Org1MSP.member')" >&log.txt ## '{"Args":["c","asdf"]}'
+		peer chaincode instantiate -o orderer.ptunstad.no:7050 -C $CHANNEL_NAME -n myccds -l ${LANGUAGE} -v ${VERSION} -c '{"Args":["c","51", "file://mnt/hyperprov", "cdata"]}' -P "OR('Org1MSP.member','Org1MSP.member')" >&log.txt ## '{"Args":["c","asdf"]}'
 		res=$?
                 set +x
 	else
@@ -340,7 +340,7 @@ chaincodeInvoke () {
 	# it using the "-o" option
 	if [ -z "$CORE_PEER_TLS_ENABLED" -o "$CORE_PEER_TLS_ENABLED" = "false" ]; then
 		set -x
-		peer chaincode invoke -o orderer.ptunstad.no:7050 -C $CHANNEL_NAME -n myccds $PEER_CONN_PARMS -c '{"Args":["set","c","77"]}' >&log.txt
+		peer chaincode invoke -o orderer.ptunstad.no:7050 -C $CHANNEL_NAME -n myccds $PEER_CONN_PARMS -c '{"Args":["set","c","77", "file://mnt/hyperprov", "cdata"]}' >&log.txt
 		res=$?
 		set +x
 	else

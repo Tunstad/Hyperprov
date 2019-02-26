@@ -20,8 +20,8 @@ type SimpleAsset struct {
 
 type operation struct {
 	Hash string `json:"hash"`
-	//Path string `json:"path"` 
-	//Pointer string `json:"pointer"`  
+	Location string `json:"location"` 
+	Pointer string `json:"pointer"`  
 	TxID string `json:"txid"` 
 	Certificate       string `json:"cert"`    
 	Type      string `json:"type"`
@@ -31,6 +31,11 @@ type operation struct {
 	//ID string `json:"id"` 
 	//MSPID string `json:"mspid"` 
 	//IDAttr string `json:"idattr"` 
+}
+type GetObject struct {
+	Hash string `json:"hash"`
+	Location string `json:"location"` 
+	Pointer string `json:"pointer"`  
 }
 
 
@@ -45,7 +50,7 @@ func (t *SimpleAsset) Init(stub shim.ChaincodeStubInterface) pb.Response {
 
 	// Set up any variables or assets here by calling stub.PutState()
 	txid := stub.GetTxID()
-	operation := &operation{args[1], txid, "null", "Init", "Init operation", ""}
+	operation := &operation{args[1], args[2], args[3], txid, "null", "Init", "Init operation", ""}
 	operationJSONasBytes, err := json.Marshal(operation)
 	if err != nil {
 		return shim.Error(fmt.Sprintf("Failed to marshal JSON: %s", string(operationJSONasBytes)))
@@ -117,8 +122,8 @@ func (t *SimpleAsset) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	indexName := "txID~key"
 
-	if ((len(args) != 2) && (len(args) != 3) && (len(args) != 4)){
-		return "", fmt.Errorf("Incorrect arguments. Expecting a key and a value")
+	if ((len(args) != 4) && (len(args) != 5) && (len(args) != 6)){
+		return "", fmt.Errorf("Incorrect arguments. Expecting a key, value, pointer, location, and potendially description and dependencies")
 	}
 
 
@@ -178,21 +183,21 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	}
 
 	desc := ""
-	if len(args) == 3 {
-		desc = args[2]
+	if len(args) == 5 {
+		desc = args[4]
 	}
 
 	dependecies := ""
 	optype := "Record"
-	if len(args) == 4 {
+	if len(args) == 6 {
 		//creator, _ := stub.GetCreator()
-		dependecies = args[3]
+		dependecies = args[5]
 		optype = "Transformation"
 	}
 	
 	// Set up any variables or assets here by calling stub.PutState()
 	txid := stub.GetTxID()
-	operation := &operation{args[1], txid, string(usercert), optype, desc, dependecies}
+	operation := &operation{args[1], args[2], args[3], txid, string(usercert), optype, desc, dependecies}
 	operationJSONasBytes, err := json.Marshal(operation)
 	if err != nil {
 		return "", fmt.Errorf("Failed to marshal JSON. %s", string(args[0]))
@@ -252,8 +257,10 @@ func get(stub shim.ChaincodeStubInterface, arg string) (string, error) {
 	} else {
 		retval = string(value)
 	}*/
+	retobj := GetObject{valueJSON.Hash, valueJSON.Location, valueJSON.Pointer}
+	jsonobj, err := json.Marshal(retobj)
 
-	return string(valueJSON.Hash), nil
+	return string(jsonobj), nil
 }
 
 // Get returns the current value of the specified asset key.
@@ -328,6 +335,16 @@ func getFromID(stub shim.ChaincodeStubInterface, arg string) (string, error){
 		buffer.WriteString(valueJSON.Hash)
 		buffer.WriteString("\"")
 
+		buffer.WriteString(", \"Location\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(valueJSON.Location)
+		buffer.WriteString("\"")
+
+		buffer.WriteString(", \"Pointer\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(valueJSON.Pointer)
+		buffer.WriteString("\"")
+
 		buffer.WriteString(", \"Description\":")
 		buffer.WriteString("\"")
 		buffer.WriteString(valueJSON.Description)
@@ -346,6 +363,11 @@ func getFromID(stub shim.ChaincodeStubInterface, arg string) (string, error){
 		buffer.WriteString(", \"Dependencies\":")
 		buffer.WriteString("\"")
 		buffer.WriteString(valueJSON.Dependencies)
+		buffer.WriteString("\"")
+
+		buffer.WriteString(", \"Key\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(key)
 		buffer.WriteString("\"")
 
 		buffer.WriteString("}")
@@ -369,7 +391,7 @@ func getFromID(stub shim.ChaincodeStubInterface, arg string) (string, error){
 
 		fmt.Printf("Certificate of txID %s creator is %s", txID, cert)*/
 	//}
-	return key + " |-|-| " + string(buffer.Bytes()) , nil
+	return string(buffer.Bytes()) , nil
 }
 
 func getdependencies(stub shim.ChaincodeStubInterface, args []string) (string, error) {
@@ -431,7 +453,7 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count
 	fmt.Printf("After Unmarshal recursive")
 	// buffer is a JSON array containing historic values
 	var buffer bytes.Buffer
-	buffer.WriteString("{")
+	buffer.WriteString("[")
 
 	
 
@@ -442,12 +464,12 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count
 		for _, element := range i { 
 			fmt.Printf("New elem recursive " + element)
 
-			buffer.WriteString("{\"txid\":")
+			buffer.WriteString("{\"TxID\":")
 			buffer.WriteString("\"")
 			buffer.WriteString(element)
 			buffer.WriteString("\"")
 
-			buffer.WriteString("\"from\":")
+			buffer.WriteString(" \"Depending\":")
 			buffer.WriteString("\"")
 			fmt.Printf("Getting to before recursive call")
 			retstring, reterror := recursivedependencies(stub, element, count-1)
@@ -480,7 +502,7 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count
 		buffer.WriteString("\"")
 */
 		
-	buffer.WriteString("}")
+	buffer.WriteString("]")
 
 	fmt.Printf("End of recursive")
 	return string(buffer.Bytes()), nil
@@ -536,6 +558,16 @@ func getkeyhistory(stub shim.ChaincodeStubInterface, arg string) (string, error)
 		buffer.WriteString(", \"Hash\":")
 		buffer.WriteString("\"")
 		buffer.WriteString(valueJSON.Hash)
+		buffer.WriteString("\"")
+
+		buffer.WriteString(", \"Location\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(valueJSON.Location)
+		buffer.WriteString("\"")
+
+		buffer.WriteString(", \"Pointer\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(valueJSON.Pointer)
 		buffer.WriteString("\"")
 
 		buffer.WriteString(", \"Description\":")
@@ -664,6 +696,16 @@ func getbyrange(stub shim.ChaincodeStubInterface, args []string) (string, error)
 		buffer.WriteString("\"Hash\":")
 		buffer.WriteString("\"")
 		buffer.WriteString(valueJSON.Hash)
+		buffer.WriteString("\"")
+
+		buffer.WriteString("\"Location\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(valueJSON.Location)
+		buffer.WriteString("\"")
+
+		buffer.WriteString("\"Pointer\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(valueJSON.Pointer)
 		buffer.WriteString("\"")
 
 		buffer.WriteString("{\"Description\":")
