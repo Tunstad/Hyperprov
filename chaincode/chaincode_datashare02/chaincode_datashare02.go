@@ -44,8 +44,8 @@ func (t *SimpleAsset) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	indexName := "txID~key"
 	// Get the args from the transaction proposal
 	args := stub.GetStringArgs()
-	if len(args) != 2 {
-		return shim.Error("Incorrect arguments. Expecting a key and a value")
+	if len(args) != 4 {
+		return shim.Error("Incorrect arguments. Expecting a key, value, location and pointer")
 	}
 
 	// Set up any variables or assets here by calling stub.PutState()
