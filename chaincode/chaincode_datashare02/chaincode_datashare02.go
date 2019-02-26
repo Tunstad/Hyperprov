@@ -88,7 +88,10 @@ func (t *SimpleAsset) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	} else if fn == "get" {
 		arg := strings.Join(args,"")
 		result, err = get(stub, arg)
-	} else if fn == "getwithid" {
+	}else if fn == "checkhash" {
+		arg := strings.Join(args,"")
+		result, err = checkhash(stub, arg)
+	}else if fn == "getwithid" {
 		arg := strings.Join(args,"")
 		result, err = getWithID(stub, arg)
 	}else if fn == "getfromid" {
@@ -229,7 +232,7 @@ func get(stub shim.ChaincodeStubInterface, arg string) (string, error) {
 		return "", fmt.Errorf("Incorrect arguments. Expecting a key")
 	}*/
 	if arg == "" {
-		return "", fmt.Errorf("Incorrect arguments. Expecting a txid")
+		return "", fmt.Errorf("Incorrect arguments. Expecting a key")
 	}
 
 	value, err := stub.GetState(arg)
@@ -261,6 +264,29 @@ func get(stub shim.ChaincodeStubInterface, arg string) (string, error) {
 	jsonobj, err := json.Marshal(retobj)
 
 	return string(jsonobj), nil
+}
+
+// Get returns the current value of the specified asset key.
+func checkhash(stub shim.ChaincodeStubInterface, arg string) (string, error) {
+	var valueJSON operation
+	if arg == "" {
+		return "", fmt.Errorf("Incorrect arguments. Expecting a key")
+	}
+
+	value, err := stub.GetState(arg)
+	if err != nil {
+		return "", fmt.Errorf("Failed to get asset: %s with error: %s", arg, err)
+	}
+	if value == nil {
+		return "", fmt.Errorf("Asset not found: %s", arg)
+	}
+
+	err = json.Unmarshal([]byte(value), &valueJSON)
+	if err != nil {
+		jsonResp := "{\"Error\":\"Failed to decode JSON of: " + arg + "\"}"
+		return "", fmt.Errorf(jsonResp)
+	}
+	return string(valueJSON.Hash), nil
 }
 
 // Get returns the current value of the specified asset key.
