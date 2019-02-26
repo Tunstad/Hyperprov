@@ -275,7 +275,7 @@ instantiateChaincode 2 1 1.2
 #Query on chaincode on Peer0/Org1
 echo "Querying chaincode on org1/peer0..."
 sleep 10
-chaincodeQuery 0 1 {"Hash":"51","Location":"file://mnt/hyperprov","Pointer":"cdata"}
+chaincodeQuery 0 1 {"hash":"51","location":"file://mnt/hyperprov","pointer":"cdata"}
 
 #Invoke on chaincode on Peer0/Org1
 echo "Sending invoke transaction on org1/peer0..."
@@ -290,7 +290,7 @@ installChaincode 3 1 1.2
 #Query on chaincode on Peer3/org1, check if the result is 90
 echo "Querying chaincode on org1/peer3..."
 sleep 10
-chaincodeQuery 3 1 {"Hash":"77","Location":"file://mnt/hyperprov","Pointer":"cdata"}
+chaincodeQuery 3 1 {"hash":"77","location":"file://mnt/hyperprov","pointer":"cdata"}
 
 echo
 echo "========= All GOOD, BYFN execution completed =========== "
