@@ -172,12 +172,12 @@ instantiateChaincode () {
 	# lets supply it directly as we know it using the "-o" option
 	if [ -z "$CORE_PEER_TLS_ENABLED" -o "$CORE_PEER_TLS_ENABLED" = "false" ]; then
                 set -x
-		peer chaincode instantiate -o orderer.ptunstad.no:7050 -C $CHANNEL_NAME -n myccds -l ${LANGUAGE} -v ${VERSION} -c '{"Args":["c","51", "file://mnt/hyperprov", "cdata"]}' -P "OR('Org1MSP.member','Org1MSP.member')" >&log.txt ## '{"Args":["c","asdf"]}'
+		peer chaincode instantiate -o orderer.ptunstad.no:7050 -C $CHANNEL_NAME -n myccds -l ${LANGUAGE} -v ${VERSION} -c '{"Args":["c","51","path","pointer"]}' -P "OR('Org1MSP.member','Org1MSP.member')" >&log.txt ## '{"Args":["c","asdf"]}'
 		res=$?
                 set +x
 	else
                 set -x
-		peer chaincode instantiate -o orderer.ptunstad.no:7050 --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA -C $CHANNEL_NAME -n myccds -l ${LANGUAGE} -v ${VERSION} -c '{"Args":["init","a","100","b","200"]}' -P "OR	('Org1MSP.peer','Org2MSP.peer')" >&log.txt
+		peer chaincode instantiate -o orderer.ptunstad.no:7050 --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA -C $CHANNEL_NAME -n myccds -l ${LANGUAGE} -v ${VERSION} -c '{"Args":["c","51","path","pointer"]}' -P "OR	('Org1MSP.peer','Org2MSP.peer')" >&log.txt
 		res=$?
                 set +x
 	fi
@@ -340,12 +340,12 @@ chaincodeInvoke () {
 	# it using the "-o" option
 	if [ -z "$CORE_PEER_TLS_ENABLED" -o "$CORE_PEER_TLS_ENABLED" = "false" ]; then
 		set -x
-		peer chaincode invoke -o orderer.ptunstad.no:7050 -C $CHANNEL_NAME -n myccds $PEER_CONN_PARMS -c '{"Args":["set","c","77", "file://mnt/hyperprov", "cdata"]}' >&log.txt
+		peer chaincode invoke -o orderer.ptunstad.no:7050 -C $CHANNEL_NAME -n myccds $PEER_CONN_PARMS -c '{"Args":["set","c","77","path","pointer"]}' >&log.txt
 		res=$?
 		set +x
 	else
 		set -x
-		peer chaincode invoke -o orderer.ptunstad.no:7050 --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA -C $CHANNEL_NAME -n myccds $PEER_CONN_PARMS -c '{"Args":["set","c","77"]}' >&log.txt
+		peer chaincode invoke -o orderer.ptunstad.no:7050 --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA -C $CHANNEL_NAME -n myccds $PEER_CONN_PARMS -c '{"Args":["set","c","77","paths","pointers"]}' >&log.txt
 		res=$?
 		set +x
 	fi
