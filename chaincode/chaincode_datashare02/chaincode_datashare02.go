@@ -126,7 +126,7 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	indexName := "txID~key"
 
 	if ((len(args) != 4) && (len(args) != 5) && (len(args) != 6)){
-		return "", fmt.Errorf("Incorrect arguments. Expecting a key, value, pointer, location, and potendially description and dependencies")
+		return "", fmt.Errorf("Incorrect arguments. Expecting a key, value, pointer, location, and potentially description and dependencies. Args=  " + strconv.Itoa(len(args)))
 	}
 
 
