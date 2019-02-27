@@ -14,6 +14,7 @@ var path = require('path');
 var util = require('util');
 //var os = require('os');
 var fs = require("fs")
+var crypto = require("crypto");
 //var joiner = require('./lib/join-channel.js');
 
 
@@ -37,7 +38,7 @@ var currentbenchmarks = 0;
 var member_user = null
 var tx_id = null;
 var fabric_client = new Fabric_Client();
-var currentUser, store_path, channelname, chaincodeId, channel, peer, orderer
+var currentUser, store_path, channelname, chaincodeId, channel, peer, orderer, file_store_path
 
 exports.ccInit = function (setcurrentUser, setpath, setchannel, setchaincodeID, setpeer, setorderer){
     store_path = setpath;
@@ -531,3 +532,61 @@ var joinChannel = async function(channel_name, peers, username, org_name) {
 	}
 };
 exports.joinChannel = joinChannel;
+
+
+
+exports.InitFileStore= function(){
+    file_store_path = "file:///mnt/hlfshared"
+}
+
+exports.StoreDataFS= function(file, key, description="", dependecies=""){
+    var fileobj = fs.readFileSync(file)
+    
+    var pointer = crypto.randomBytes(20).toString('hex');
+
+    path = file_store_path
+    if (file_store_path.indexOf('file://') !== -1){
+        path = file_store_path.replace("file://", "");
+    }
+
+    //Regenerate pointer if file exists
+    while (fs.existsSync(path+ "/" +  pointer)){
+        var pointer = crypto.randomBytes(20).toString('hex');
+    }
+    console.log(path+ "/" +  pointer)
+
+    fs.writeFileSync(path+ "/" +  pointer, fileobj)
+
+    console.log("File written" + key)
+
+
+
+    var checksum = getchecksum(fileobj) // e53815e8c095e270c6560be1bb76a65d
+    var args = [key, checksum, file_store_path, pointer, description, dependecies]
+    return args
+    // //Create md5 checksum of file
+    // var hash = crypto.createHash('md5'),
+    // stream = fs.createReadStream(file)
+
+    // stream.on('data', function(data) {
+    //     hash.update(data, 'utf8')
+    // })
+
+    // stream.on('end', function() {
+    //     var checksum = hash.digest('hex')
+    //     args = [key, checksum, file_store_path, pointer, description, dependecies]
+    //     return args
+    // })
+}
+
+function getchecksum(str, algorithm, encoding) {
+    return crypto
+      .createHash(algorithm || 'md5')
+      .update(str, 'utf8')
+      .digest(encoding || 'hex')
+}
+exports.GetDataFS= function(file, key){
+
+
+    fs.writeFileSync(outputfile, decoded)
+}

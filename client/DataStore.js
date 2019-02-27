@@ -8,7 +8,13 @@ var RESTAPI = true;
 var localONLY = true;
 var keypath = path.join(__dirname, 'hfc-key-store')
 hyperprovclient.ccInit('Peer2', keypath, 'mychannel', 'myccds', 'mc.ptunstad.no:7051', 'agc.ptunstad.no:7050');
-//hyperprovclient.ccJoin();
+
+
+
+hyperprovclient.InitFileStore()
+dataargs = hyperprovclient.StoreDataFS("car.jpg", "carimage")
+console.log(dataargs)
+hyperprovclient.ccSet(dataargs, fsCallback, null, null)
 
 console.log("Starting in REST-api mode..")
 var express = require('express');
@@ -24,12 +30,12 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.post('/set', function (req, res) {
     var requestarguments = req.get('arguments').toString().split(", ")
-    if (requestarguments.length < 4){
-        res.end("Too few arguments, requres a Key, value, path and pointer. Can also include desc and dependencies.")
+    if (requestarguments.length < 2){
+        res.end("Too few arguments, requres a Key and Value")
     }
     if (requestarguments.length < 3){
         //No argument for description, put ""
-        requestarguments[4] = ""
+        requestarguments[2] = ""
     }
 
 
@@ -44,7 +50,7 @@ app.post('/set', function (req, res) {
             concated = concated.concat(dependencies[d]);
         }
         console.log(concated)
-        requestarguments[5] = concated
+        requestarguments[3] = concated
         console.log(requestarguments)
     }
     
@@ -103,3 +109,6 @@ function restCallback(result, res){
     }
 }
 
+function fsCallback(result, res){
+    console.log("Result is : " + result)
+}
