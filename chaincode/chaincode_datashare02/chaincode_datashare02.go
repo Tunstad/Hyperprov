@@ -154,8 +154,8 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	// 	// The client identity does not possess the attribute
 	// }
 	// Do something with the value of 'val'
-	
-	id, ok, err := cid.GetAttributeValue(stub, "EnrollmentID")
+
+	id, ok, err := cid.GetAttributeValue(stub, "hf.EnrollmentID")
 	if err != nil {
 		return "", fmt.Errorf("Failed to get ID. %s", string(args[0]))
 	}
