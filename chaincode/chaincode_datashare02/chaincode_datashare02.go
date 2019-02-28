@@ -186,13 +186,13 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	}
 
 	desc := ""
-	if len(args) == 5 {
+	if len(args) >= 5 {
 		desc = args[4]
 	}
 
 	dependecies := ""
 	optype := "Record"
-	if len(args) == 6 {
+	if len(args) >= 6 {
 		//creator, _ := stub.GetCreator()
 		dependecies = args[5]
 		optype = "Transformation"
