@@ -10,6 +10,7 @@ import (
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/core/chaincode/shim/ext/cid"
+	//"github.com/hyperledger/fabric/core/chaincode/vendor/github.com/hyperledger/fabric/core/chaincode/shim/ext/cid"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	
 )
@@ -182,11 +183,11 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	
 
 
-
+/*
 	usercert, cerr := stub.GetCreator()
 	if cerr != nil {
 		return "", fmt.Errorf("Failed to get creator of asset: %s", args[0])
-	}
+	}*/
 
 	desc := ""
 	if len(args) >= 5 {
@@ -203,7 +204,7 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	
 	// Set up any variables or assets here by calling stub.PutState()
 	txid := stub.GetTxID()
-	operation := &operation{args[1], args[2], args[3], txid, string(usercert), optype, desc, dependecies}
+	operation := &operation{args[1], args[2], args[3], txid, id, optype, desc, dependecies}
 	operationJSONasBytes, err := json.Marshal(operation)
 	if err != nil {
 		return "", fmt.Errorf("Failed to marshal JSON. %s", string(args[0]))
