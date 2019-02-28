@@ -341,7 +341,7 @@ func getFromID(stub shim.ChaincodeStubInterface, arg string) (string, error){
 		
 		// buffer is a JSON array containing historic values
 		var buffer bytes.Buffer
-		buffer.WriteString("[")
+		//buffer.WriteString("[")
 		bArrayMemberAlreadyWritten := false
 		if err != nil {
 			return "", fmt.Errorf(err.Error())
@@ -380,11 +380,11 @@ func getFromID(stub shim.ChaincodeStubInterface, arg string) (string, error){
 		buffer.WriteString("\"")
 		buffer.WriteString(time.Unix(keyTxIDRange.Timestamp.Seconds, int64(keyTxIDRange.Timestamp.Nanos)).String())
 		buffer.WriteString("\"")*/
-
+		/*
 		buffer.WriteString(", \"Certificate\":")
 		buffer.WriteString("\"")
 		buffer.WriteString(valueJSON.Certificate)
-		buffer.WriteString("\"")
+		buffer.WriteString("\"")*/
 
 		buffer.WriteString(", \"Dependencies\":")
 		buffer.WriteString("\"")
@@ -398,7 +398,7 @@ func getFromID(stub shim.ChaincodeStubInterface, arg string) (string, error){
 
 		buffer.WriteString("}")
 		bArrayMemberAlreadyWritten = true
-	buffer.WriteString("]")
+	//buffer.WriteString("]")
 /*
 		sId := &msp.SerializedIdentity{}
 		err = proto.Unmarshal(txIDCreator, sId)
