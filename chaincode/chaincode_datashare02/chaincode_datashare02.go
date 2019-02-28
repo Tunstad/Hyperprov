@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"bytes"
 	"time"
+	"strings"
+	"strconv"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	//"github.com/hyperledger/fabric/core/chaincode//lib/cid"
@@ -12,40 +14,64 @@ import (
 	
 )
 //"github.com/hyperledger/fabric/core/chaincode/shim/ext/cid"
-
+ 
 type SimpleAsset struct {
 }
 
 type operation struct {
-	Hash string `json:"hash"` 
+	Hash string `json:"hash"`
+	Location string `json:"location"` 
+	Pointer string `json:"pointer"`  
+	TxID string `json:"txid"` 
 	Certificate       string `json:"cert"`    
 	Type      string `json:"type"`
-	Numreads       int    `json:"reads"`
+	//Numreads       int    `json:"reads"`
 	Description      string `json:"desc"`
+	Dependencies string `json:"depends"`
 	//ID string `json:"id"` 
 	//MSPID string `json:"mspid"` 
 	//IDAttr string `json:"idattr"` 
 }
-func (t *SimpleAsset) Init(stub shim.ChaincodeStubInterface) pb.Response {
+type GetObject struct {
+	Hash string `json:"hash"`
+	Location string `json:"location"` 
+	Pointer string `json:"pointer"`  
+}
 
+
+
+func (t *SimpleAsset) Init(stub shim.ChaincodeStubInterface) pb.Response {
+	indexName := "txID~key"
 	// Get the args from the transaction proposal
 	args := stub.GetStringArgs()
-	if len(args) != 2 {
-		return shim.Error("Incorrect arguments. Expecting a key and a value")
+	if len(args) != 4 {
+		return shim.Error("Incorrect arguments. Expecting a key, value, location and pointer")
 	}
 
 	// Set up any variables or assets here by calling stub.PutState()
-	operation := &operation{args[1], "null", "Create", 0, "Init operation"}
+	txid := stub.GetTxID()
+	operation := &operation{args[1], args[2], args[3], txid, "null", "Init", "Init operation", ""}
 	operationJSONasBytes, err := json.Marshal(operation)
 	if err != nil {
 		return shim.Error(fmt.Sprintf("Failed to marshal JSON: %s", string(operationJSONasBytes)))
 	}
 		
 
-	// We store the creator data, key and the value on the ledger
+	keyTxIDKey, err := stub.CreateCompositeKey(indexName, []string{stub.GetTxID(), args[0]})
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	//creator, _ := stub.GetCreator()
+
+	// Add key and value to the state
 	err = stub.PutState(args[0], operationJSONasBytes)
 	if err != nil {
-		return shim.Error(fmt.Sprintf("Failed to create asset: %s", args[0]))
+		return shim.Error(fmt.Sprintf("Failed to set asset: %s", args[0]))
+	}
+	err = stub.PutState(keyTxIDKey, operationJSONasBytes)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Failed to set TXasset: %s", args[0]))
 	}
 	return shim.Success(nil)
 }
@@ -60,9 +86,22 @@ func (t *SimpleAsset) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	if fn == "set" {
 		result, err = set(stub, args)
 	} else if fn == "get" {
-		result, err = get(stub, args)
-	} else if fn == "getkeyhistory" {
-		result, err = getkeyhistory(stub, args)
+		arg := strings.Join(args,"")
+		result, err = get(stub, arg)
+	}else if fn == "checkhash" {
+		arg := strings.Join(args,"")
+		result, err = checkhash(stub, arg)
+	}else if fn == "getwithid" {
+		arg := strings.Join(args,"")
+		result, err = getWithID(stub, arg)
+	}else if fn == "getfromid" {
+		arg := strings.Join(args,"")
+		result, err = getFromID(stub, arg)
+	}else if fn == "getdependencies" {
+		result, err = getdependencies(stub, args)
+	}else if fn == "getkeyhistory" {
+		arg := strings.Join(args,"")
+		result, err = getkeyhistory(stub, arg)
 	} else if fn == "getbyrange" {
 		result, err = getbyrange(stub, args)
 	}
@@ -84,9 +123,14 @@ func (t *SimpleAsset) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 // will be parsed away for all other operations than getkeyhistory which
 // returns this certificate to indicate who performed the change.
 func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
-	if ((len(args) != 2) && (len(args) != 3)){
-		return "", fmt.Errorf("Incorrect arguments. Expecting a key and a value")
+	indexName := "txID~key"
+
+	if ((len(args) != 4) && (len(args) != 5) && (len(args) != 6)){
+		return "", fmt.Errorf("Incorrect arguments. Expecting a key, value, pointer, location, and potentially description and dependencies. Args=  " + strconv.Itoa(len(args)))
 	}
+
+
+	//return string(len(args)), nil
 
 	// Potential code for additional identity functionality added in HLF v1.1
 	//id, err := cid.GetID(stub)
@@ -134,49 +178,74 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	// Do something with the value of 'val'
 	*/
 
+
+
 	usercert, cerr := stub.GetCreator()
 	if cerr != nil {
 		return "", fmt.Errorf("Failed to get creator of asset: %s", args[0])
 	}
 
 	desc := ""
-	if len(args) == 3 {
-		desc = args[2]
+	if len(args) == 5 {
+		desc = args[4]
 	}
 
+	dependecies := ""
+	optype := "Record"
+	if len(args) == 6 {
+		//creator, _ := stub.GetCreator()
+		dependecies = args[5]
+		optype = "Transformation"
+	}
+	
 	// Set up any variables or assets here by calling stub.PutState()
-	operation := &operation{args[1], string(usercert), "Modify", 0, desc}
+	txid := stub.GetTxID()
+	operation := &operation{args[1], args[2], args[3], txid, string(usercert), optype, desc, dependecies}
 	operationJSONasBytes, err := json.Marshal(operation)
 	if err != nil {
 		return "", fmt.Errorf("Failed to marshal JSON. %s", string(args[0]))
 	}
 		
 
+	keyTxIDKey, err := stub.CreateCompositeKey(indexName, []string{stub.GetTxID(), args[0]})
+	if err != nil {
+		return "", fmt.Errorf(err.Error())
+	}
+
+
+	// Add key and value to the state
 	err = stub.PutState(args[0], operationJSONasBytes)
 	if err != nil {
 		return "", fmt.Errorf("Failed to set asset: %s", args[0])
 	}
-	return args[1], nil
+	err = stub.PutState(keyTxIDKey, operationJSONasBytes)
+	if err != nil {
+		return "", fmt.Errorf("Failed to set TXasset: %s", args[0])
+	}
+	return txid, nil
 }
 
 // Get returns the current value of the specified asset key.
-func get(stub shim.ChaincodeStubInterface, args []string) (string, error) {
+func get(stub shim.ChaincodeStubInterface, arg string) (string, error) {
 	var valueJSON operation
-	if len(args) != 1 {
+	/*if len(args) != 1 {
+		return "", fmt.Errorf("Incorrect arguments. Expecting a key")
+	}*/
+	if arg == "" {
 		return "", fmt.Errorf("Incorrect arguments. Expecting a key")
 	}
 
-	value, err := stub.GetState(args[0])
+	value, err := stub.GetState(arg)
 	if err != nil {
-		return "", fmt.Errorf("Failed to get asset: %s with error: %s", args[0], err)
+		return "", fmt.Errorf("Failed to get asset: %s with error: %s", arg, err)
 	}
 	if value == nil {
-		return "", fmt.Errorf("Asset not found: %s", args[0])
+		return "", fmt.Errorf("Asset not found: %s", arg)
 	}
 
 	err = json.Unmarshal([]byte(value), &valueJSON)
 	if err != nil {
-		jsonResp := "{\"Error\":\"Failed to decode JSON of: " + args[0] + "\"}"
+		jsonResp := "{\"Error\":\"Failed to decode JSON of: " + arg + "\"}"
 		return "", fmt.Errorf(jsonResp)
 	}
 
@@ -191,27 +260,298 @@ func get(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	} else {
 		retval = string(value)
 	}*/
+	retobj := GetObject{valueJSON.Hash, valueJSON.Location, valueJSON.Pointer}
+	jsonobj, err := json.Marshal(retobj)
 
+	return string(jsonobj), nil
+}
+
+// Get returns the current value of the specified asset key.
+func checkhash(stub shim.ChaincodeStubInterface, arg string) (string, error) {
+	var valueJSON operation
+	if arg == "" {
+		return "", fmt.Errorf("Incorrect arguments. Expecting a key")
+	}
+
+	value, err := stub.GetState(arg)
+	if err != nil {
+		return "", fmt.Errorf("Failed to get asset: %s with error: %s", arg, err)
+	}
+	if value == nil {
+		return "", fmt.Errorf("Asset not found: %s", arg)
+	}
+
+	err = json.Unmarshal([]byte(value), &valueJSON)
+	if err != nil {
+		jsonResp := "{\"Error\":\"Failed to decode JSON of: " + arg + "\"}"
+		return "", fmt.Errorf(jsonResp)
+	}
 	return string(valueJSON.Hash), nil
 }
+
+// Get returns the current value of the specified asset key.
+func getWithID(stub shim.ChaincodeStubInterface, arg string) (string, error) {
+	var valueJSON operation
+
+	if arg == "" {
+		return "", fmt.Errorf("Incorrect arguments. Expecting a txid")
+	}
+
+	value, err := stub.GetState(arg)
+	if err != nil {
+		return "", fmt.Errorf("Failed to get asset: %s with error: %s", arg, err)
+	}
+	if value == nil {
+		return "", fmt.Errorf("Asset not found: %s", arg)
+	}
+
+	err = json.Unmarshal([]byte(value), &valueJSON)
+	if err != nil {
+		jsonResp := "{\"Error\":\"Failed to decode JSON of: " + arg + "\"}"
+		return "", fmt.Errorf(jsonResp)
+	}
+
+	return string(valueJSON.TxID) + " |-|-| " + string(valueJSON.Hash), nil
+}
+func getFromID(stub shim.ChaincodeStubInterface, arg string) (string, error){
+	indexName := "txID~key"
+	var valueJSON operation
+	if arg == "" {
+		return "", fmt.Errorf("Incorrect arguments. Expecting a txid")
+	}
+	txID := arg
+
+	it, _ := stub.GetStateByPartialCompositeKey(indexName, []string{txID})
+	//for it.HasNext() {
+	keyTxIDRange, err := it.Next()
+	if err != nil {
+		return "", fmt.Errorf(err.Error())
+	}	
+
+	_, keyParts, _ := stub.SplitCompositeKey(keyTxIDRange.Key)
+	key := keyParts[1]
+	fmt.Printf("key affected by txID %s is %s\n", txID, key)
+	txIDValue := keyTxIDRange.Value
+
+		err = json.Unmarshal(txIDValue, &valueJSON)
+		if err != nil {
+			jsonResp := "{\"Error\":\"Failed to decode JSON of: " + arg + "\"}"
+			return "", fmt.Errorf(jsonResp)
+		}
+		
+		// buffer is a JSON array containing historic values
+		var buffer bytes.Buffer
+		buffer.WriteString("[")
+		bArrayMemberAlreadyWritten := false
+		if err != nil {
+			return "", fmt.Errorf(err.Error())
+		}
+		// Add a comma before array members, suppress it for the first array member
+		if bArrayMemberAlreadyWritten == true {
+			buffer.WriteString(",")
+		}
+
+		buffer.WriteString("{\"Type\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(valueJSON.Type)
+		buffer.WriteString("\"")
+
+		buffer.WriteString(", \"Hash\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(valueJSON.Hash)
+		buffer.WriteString("\"")
+
+		buffer.WriteString(", \"Location\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(valueJSON.Location)
+		buffer.WriteString("\"")
+
+		buffer.WriteString(", \"Pointer\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(valueJSON.Pointer)
+		buffer.WriteString("\"")
+
+		buffer.WriteString(", \"Description\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(valueJSON.Description)
+		buffer.WriteString("\"")
+/*
+		buffer.WriteString(", \"Timestamp\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(time.Unix(keyTxIDRange.Timestamp.Seconds, int64(keyTxIDRange.Timestamp.Nanos)).String())
+		buffer.WriteString("\"")*/
+
+		buffer.WriteString(", \"Certificate\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(valueJSON.Certificate)
+		buffer.WriteString("\"")
+
+		buffer.WriteString(", \"Dependencies\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(valueJSON.Dependencies)
+		buffer.WriteString("\"")
+
+		buffer.WriteString(", \"Key\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(key)
+		buffer.WriteString("\"")
+
+		buffer.WriteString("}")
+		bArrayMemberAlreadyWritten = true
+	buffer.WriteString("]")
+/*
+		sId := &msp.SerializedIdentity{}
+		err = proto.Unmarshal(txIDCreator, sId)
+		if err != nil {
+			return "", fmt.Errorf("Could not deserialize a SerializedIdentity, err %s", err)
+		}
+
+		bl, _ := pem.Decode(sId.IdBytes)
+		if bl == nil {
+			return shim.Error(fmt.Sprintf("Could not decode the PEM structure"))
+		}
+		cert, err := x509.ParseCertificate(bl.Bytes)
+		if err != nil {
+			return shim.Error(fmt.Sprintf("ParseCertificate failed %s", err))
+		}
+
+		fmt.Printf("Certificate of txID %s creator is %s", txID, cert)*/
+	//}
+	return string(buffer.Bytes()) , nil
+}
+
+func getdependencies(stub shim.ChaincodeStubInterface, args []string) (string, error) {
+	fmt.Printf("Start of getdependencies")
+
+	count := 3
+	if(len(args) == 2){
+		count, err := strconv.Atoi(args[1])
+		if err != nil {
+			errorResp := "{\"Error\":\"Failed to retrieve recursive count}"
+			return "", fmt.Errorf(errorResp)
+		}
+		fmt.Printf("Set count from input to: " + string(count) )
+	}
+	fmt.Printf("Getdepend recursive call")
+	retval, err := recursivedependencies(stub, args[0], count)
+	if err != nil {
+		errorResp := "{\"Error\":\"Failed to recursively get dependencies}: " + err.Error()
+		return "", fmt.Errorf(errorResp)
+	}
+
+	return retval, nil
+}
+
+func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count int ) (string, error) {
+	fmt.Printf("Start of recursive")
+
+	if(count == 0){
+		return "count 0", nil
+	}
+	//return args[0] + string(len(args)), nil
+	indexName := "txID~key"
+	var valueJSON operation
+	txID := txid
+
+	fmt.Printf("Before Getstate")
+	it, err:= stub.GetStateByPartialCompositeKey(indexName, []string{txID})
+	if err != nil {
+		return "", fmt.Errorf(err.Error())
+	}
+	fmt.Printf("After Getstate")
+	//for it.HasNext() {
+	keyTxIDRange, err := it.Next()
+	if err != nil {
+		return "", fmt.Errorf(err.Error() + ":-:" + txid)
+	}
+	fmt.Printf("After next before split")	
+		
+	_, keyParts, _ := stub.SplitCompositeKey(keyTxIDRange.Key)
+	key := keyParts[1]
+	fmt.Printf("key affected by txID %s is %s\n", txID, key)
+	txIDValue := keyTxIDRange.Value
+
+	err = json.Unmarshal(txIDValue, &valueJSON)
+	if err != nil {
+		jsonResp := "{\"Error\":\"Failed to decode JSON of: " + txID + "\"}"
+		return "", fmt.Errorf(jsonResp)
+	}
+	fmt.Printf("After Unmarshal recursive")
+	// buffer is a JSON array containing historic values
+	var buffer bytes.Buffer
+	buffer.WriteString("[")
+
+	
+
+
+	if(valueJSON.Dependencies != ""){
+		fmt.Printf("txid")
+		i := strings.Split(valueJSON.Dependencies, ":")
+		for _, element := range i { 
+			fmt.Printf("New elem recursive " + element)
+
+			buffer.WriteString("{\"TxID\":")
+			buffer.WriteString("\"")
+			buffer.WriteString(element)
+			buffer.WriteString("\"")
+
+			buffer.WriteString(" \"Depending\":")
+			buffer.WriteString("\"")
+			fmt.Printf("Getting to before recursive call")
+			retstring, reterror := recursivedependencies(stub, element, count-1)
+			if reterror != nil{
+				buffer.WriteString(reterror.Error())
+				//return "", fmt.Errorf(reterror.Error())
+			}else{
+				buffer.WriteString(retstring)
+			}
+			buffer.WriteString("\"")
+
+			buffer.WriteString("}")
+		}
+	}
+
+/*
+		buffer.WriteString(", \"ID\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(valueJSON.ID)
+		buffer.WriteString("\"")
+
+		buffer.WriteString(", \"MSPID\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(valueJSON.MSPID)
+		buffer.WriteString("\"")
+
+		buffer.WriteString(", \"Attribute\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(valueJSON.IDAttr)
+		buffer.WriteString("\"")
+*/
+		
+	buffer.WriteString("]")
+
+	fmt.Printf("End of recursive")
+	return string(buffer.Bytes()), nil
+}
+
 
 // Gets the full history of a key, The historic values are coupled with the timestamp of change.
 // This function includes a timestamp, the new changed value and the certficiates used to perform the change.
 // The certificates used are stored unencrypted in the value variable but are only acccessable trough this function.
 // This is a potential security issue and may later require this function to be role-gated, certificates to be encrypted or used for encrypting a shared variable as proof.
 // Example format of returned value is [ timestamp: 12341251234: value: firstvalue certificate: A4FC32XyCdfEa... , timestamp: 12341251239: value: secondvalue certificate: B4fVyC32XyCdfEa... ]
-func getkeyhistory(stub shim.ChaincodeStubInterface, args []string) (string, error) {
+func getkeyhistory(stub shim.ChaincodeStubInterface, arg string) (string, error) {
 	var valueJSON operation
-	if len(args) != 1 {
-		return "", fmt.Errorf("Incorrect arguments. Expecting a key")
+	if arg == "" {
+		return "", fmt.Errorf("Incorrect arguments. Expecting a txid")
 	}
 
-	iterator, err := stub.GetHistoryForKey(args[0])
+	iterator, err := stub.GetHistoryForKey(arg)
 	if err != nil {
-		return "", fmt.Errorf("Failed to get asset: %s with error: %s", args[0], err)
+		return "", fmt.Errorf("Failed to get asset: %s with error: %s", arg, err)
 	}
 	if iterator == nil {
-		return "", fmt.Errorf("Asset not found: %s", args[0])
+		return "", fmt.Errorf("Asset not found: %s", arg)
 	}
 	defer iterator.Close()
 
@@ -232,7 +572,7 @@ func getkeyhistory(stub shim.ChaincodeStubInterface, args []string) (string, err
 
 		err = json.Unmarshal(response.Value, &valueJSON)
 		if err != nil {
-			jsonResp := "{\"Error\":\"Failed to decode JSON of: " + args[0] + "\"}"
+			jsonResp := "{\"Error\":\"Failed to decode JSON of: " + arg + "\"}"
 			return "", fmt.Errorf(jsonResp)
 		}
 
@@ -244,6 +584,16 @@ func getkeyhistory(stub shim.ChaincodeStubInterface, args []string) (string, err
 		buffer.WriteString(", \"Hash\":")
 		buffer.WriteString("\"")
 		buffer.WriteString(valueJSON.Hash)
+		buffer.WriteString("\"")
+
+		buffer.WriteString(", \"Location\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(valueJSON.Location)
+		buffer.WriteString("\"")
+
+		buffer.WriteString(", \"Pointer\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(valueJSON.Pointer)
 		buffer.WriteString("\"")
 
 		buffer.WriteString(", \"Description\":")
@@ -259,6 +609,11 @@ func getkeyhistory(stub shim.ChaincodeStubInterface, args []string) (string, err
 		buffer.WriteString(", \"Certificate\":")
 		buffer.WriteString("\"")
 		buffer.WriteString(valueJSON.Certificate)
+		buffer.WriteString("\"")
+
+		buffer.WriteString(", \"Dependencies\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(valueJSON.Dependencies)
 		buffer.WriteString("\"")
 /*
 		buffer.WriteString(", \"ID\":")
@@ -367,6 +722,16 @@ func getbyrange(stub shim.ChaincodeStubInterface, args []string) (string, error)
 		buffer.WriteString("\"Hash\":")
 		buffer.WriteString("\"")
 		buffer.WriteString(valueJSON.Hash)
+		buffer.WriteString("\"")
+
+		buffer.WriteString("\"Location\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(valueJSON.Location)
+		buffer.WriteString("\"")
+
+		buffer.WriteString("\"Pointer\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(valueJSON.Pointer)
 		buffer.WriteString("\"")
 
 		buffer.WriteString("{\"Description\":")
