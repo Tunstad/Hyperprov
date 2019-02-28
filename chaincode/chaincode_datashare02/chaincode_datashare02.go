@@ -9,7 +9,7 @@ import (
 	"strconv"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-	//"github.com/hyperledger/fabric/core/chaincode//lib/cid"
+	"github.com/hyperledger/fabric/core/chaincode/shim/ext/cid"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	
 )
@@ -154,10 +154,12 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	// }
 	// Do something with the value of 'val'
 
-	/*id, err := cid.GetID(stub)
+	id, err := cid.GetID(stub)
 	if err != nil {
 		return "", fmt.Errorf("Failed to get ID. %s", string(args[0]))
-	}*/
+	}
+	fmt.Printf("My ID is: " + id )
+	
 	/*
 	mspid, err := cid.GetMSPID(stub)
 	if err != nil {
@@ -177,6 +179,7 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	}
 	// Do something with the value of 'val'
 	*/
+	
 
 
 
