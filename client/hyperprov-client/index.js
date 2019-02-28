@@ -91,7 +91,7 @@ exports.ccJoin = function (){
 
 //Function to set chaincode based on arguments. For myccds it expects argument to be of type
 //key, value. This is the only way to change values.
-exports.ccSet = function(ccargs, callback, callback2, resp){
+var ccSet = exports.ccSet = function(ccargs, callback, callback2, resp){
     Fabric_Client.newDefaultKeyValueStore({ path: store_path
     }).then((state_store) => {
         // assign the store to the fabric client
@@ -259,7 +259,7 @@ function getCallback(result, resp){
 //Functionality to call chaincode to retrieve some sort of data from the blockchain.
 //Some supported ccfuncs are 'get', 'getkeyhistory' and 'getbyrange'.
 //Takes in as aruments as a key string and callback-function only prints result to console.
-exports.ccFunc = function(ccfunc, ccargs, callback, resp){
+var ccFunc = exports.ccFunc = function(ccfunc, ccargs, callback, resp){
     Fabric_Client.newDefaultKeyValueStore({ path: store_path
     }).then((state_store) => {
         // assign the store to the fabric client
@@ -539,7 +539,8 @@ exports.InitFileStore= function(){
     file_store_path = "file:///mnt/hlfshared"
 }
 
-exports.StoreDataFS= function(file, key, description="", dependecies=""){
+exports.StoreDataFS= function(file, key, callback, description="", dependecies=""){
+    console.log("Reading file " + file + " from local storage...")
     var fileobj = fs.readFileSync(file)
     
     var pointer = crypto.randomBytes(20).toString('hex');
@@ -551,19 +552,24 @@ exports.StoreDataFS= function(file, key, description="", dependecies=""){
 
     //Regenerate pointer if file exists
     while (fs.existsSync(path+ "/" +  pointer)){
+        console.log("Pointer " + pointer + " already exists, regenerating..")
         var pointer = crypto.randomBytes(20).toString('hex');
     }
-    console.log(path+ "/" +  pointer)
 
     fs.writeFileSync(path+ "/" +  pointer, fileobj)
 
-    console.log("File written" + key)
+    console.log("File written to off-chain storage at: " + path+ "/" +  pointer)
 
 
 
     var checksum = getchecksum(fileobj) // e53815e8c095e270c6560be1bb76a65d
+    console.log("File checksum is : " + checksum)
+
+
     var args = [key, checksum, file_store_path, pointer, description, dependecies]
-    return args
+    ccSet(args, function (result, res) {
+        console.log("Record of file stored in ledger : " + result)
+    }, null, null)
     // //Create md5 checksum of file
     // var hash = crypto.createHash('md5'),
     // stream = fs.createReadStream(file)
@@ -587,6 +593,45 @@ function getchecksum(str, algorithm, encoding) {
 }
 exports.GetDataFS= function(file, key){
 
+    var args = key
 
-    fs.writeFileSync(outputfile, decoded)
+    ccFunc("get", args, function (result, res) {   
+        console.log("Retrieved record from ledger: " + result)
+        var resultobj = JSON.parse(result)
+        var path = resultobj.location
+        var pointer = resultobj.pointer
+
+        //Remove file:// if present
+        if (file_store_path.indexOf('file://') !== -1){
+            path = file_store_path.replace("file://", "");
+        }
+
+        //Check that file exists
+        if (!fs.existsSync(path+ "/" +  pointer)){
+            console.log("File does not exist in off chain storage")
+            return
+        }
+
+        //Read file
+        var fileobj = fs.readFileSync(path+ "/" +  pointer)
+
+        //Verify checksum
+        var checksum = getchecksum(fileobj)
+        if(checksum == resultobj.hash){
+            console.log("Checksum correct!")
+        }else{
+            console.log("Incorrect checksum!")
+            return
+        }
+
+        //Write file to specified local address
+        console.log("File stored locally on address: " + file)
+        fs.writeFileSync(file, fileobj)
+    }, null)
+
+
+    
+}
+function fsCallback(result, res){
+    
 }
