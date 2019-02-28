@@ -11,15 +11,14 @@ hyperprovclient.ccInit('Peer2', keypath, 'mychannel', 'myccds', 'mc.ptunstad.no:
 
 
 
-hyperprovclient.InitFileStore()
+hyperprovclient.InitFileStore("file:///mnt/hlfshared")
 //dataargs = hyperprovclient.StoreDataFS("car.jpg", "carimage2")
 
-dataargs = hyperprovclient.GetDataFS("retrieved2.jpg", "carimage")
-//console.log(dataargs)
-//hyperprovclient.ccSet(dataargs, fsCallback, null, null)
+//dataargs = hyperprovclient.GetDataFS("retrieved2.jpg", "carimage")
 
+return
 
-
+/*
 console.log("Starting in REST-api mode..")
 var express = require('express');
 var bodyParser = require('body-parser');
@@ -111,4 +110,4 @@ function restCallback(result, res){
     if (res){
         res.end(result)
     }
-}
+}*/

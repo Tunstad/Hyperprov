@@ -19,7 +19,7 @@ var crypto = require("crypto");
 
 
 var helper = require('./lib/helper.js');
-var logger = helper.getLogger('Join-Channel');
+var logger = helper.getLogger('Hyperprov');
 //The time a benchmark is set to run
 var totaltime_seconds = 1;        //3600 = 1h, 600 = 10m
 
@@ -535,8 +535,20 @@ exports.joinChannel = joinChannel;
 
 
 
-exports.InitFileStore= function(){
-    file_store_path = "file:///mnt/hlfshared"
+exports.InitFileStore= function(FSpath){
+    file_store_path = FSpath
+    var path
+    if (file_store_path.indexOf('file://') !== -1){
+        path = file_store_path.replace("file://", "");
+    }
+    if (fs.existsSync(path)){
+        logger.info('FileStore present and succesfully init');
+        return
+    }else{
+        var error_message = util.format('Unable to access filestore at path %s', path);
+        logger.error(error_message);
+        throw new Error(error_message);
+    }
 }
 
 exports.StoreDataFS= function(file, key, callback, description="", dependecies=""){
