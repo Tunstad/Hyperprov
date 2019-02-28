@@ -606,12 +606,19 @@ function getchecksum(str, algorithm, encoding) {
 exports.GetDataFS= function(file, key){
 
     var args = key
+    var getfunction = "get"
 
-    ccFunc("get", args, function (result, res) {   
+    //If length is 64(the length of a txid) then use getfromid, not a futureproof soluton, just for testing :)
+    if(key.length == 64){
+        getfunction = "getfromid"
+    }
+    
+
+    ccFunc(getfunction, args, function (result, res) {   
         console.log("Retrieved record from ledger: " + result)
         var resultobj = JSON.parse(result)
-        var path = resultobj.location
-        var pointer = resultobj.pointer
+        var path = resultobj.Location
+        var pointer = resultobj.Pointer
 
         //Remove file:// if present
         if (file_store_path.indexOf('file://') !== -1){
@@ -620,7 +627,7 @@ exports.GetDataFS= function(file, key){
 
         //Check that file exists
         if (!fs.existsSync(path+ "/" +  pointer)){
-            console.log("File does not exist in off chain storage")
+            console.log("File does not exist in off chain storage: " + path+ "/" +  pointer)
             return
         }
 
@@ -633,17 +640,11 @@ exports.GetDataFS= function(file, key){
             console.log("Checksum correct!")
         }else{
             console.log("Incorrect checksum!")
-            return
+            //return
         }
 
         //Write file to specified local address
         console.log("File stored locally on address: " + file)
         fs.writeFileSync(file, fileobj)
     }, null)
-
-
-    
-}
-function fsCallback(result, res){
-    
 }

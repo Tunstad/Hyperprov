@@ -12,9 +12,9 @@ hyperprovclient.ccInit('Peer2', keypath, 'mychannel', 'myccds', 'mc.ptunstad.no:
 
 
 hyperprovclient.InitFileStore("file:///mnt/hlfshared")
-//dataargs = hyperprovclient.StoreDataFS("car.jpg", "carimage2")
+//dataargs = hyperprovclient.StoreDataFS("car.jpg", "mycarimage")
 
-//dataargs = hyperprovclient.GetDataFS("retrieved2.jpg", "carimage")
+dataargs = hyperprovclient.GetDataFS("retrievedimage.jpg", "mycarimage")
 
 return
 
