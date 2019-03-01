@@ -16,5 +16,6 @@ fabric-ca-server:
       - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/fabric-ca-server-config/da428353a207abde2d43317950bd81e87de49ddea30053e42a4bc015222576cd_sk
    volumes:
      - ../crypto-config/peerOrganizations/org1.ptunstad.no/ca/:/etc/hyperledger/fabric-ca-server-config
+     - ./fabric-ca-server:/etc/hyperledger/fabric-ca-server
    command: sh -c 'fabric-ca-server start -b admin:adminpw'
    container_name: ca.ptunstad.no
