@@ -1,0 +1,34 @@
+{
+  "name": "hyperprov-client",
+  "version": "0.0.1",
+  "description": "Client library for interacting with Hyperprov.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "fabric-ca-client": "1.3",
+    "fabric-client": "1.3",
+    "grpc": "^1.18.0",
+    "log4js": "^4.0.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tunstad/hyperprov.git"
+  },
+  "keywords": [
+    "hyperledger",
+    "fabric",
+    "hlf",
+    "blockchain",
+    "ledger",
+    "provenance",
+    "lineage"
+  ],
+  "author": "Petter Tunstad",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Tunstad/hyperprov/issues"
+  },
+  "homepage": "https://github.com/Tunstad/hyperprov#readme"
+}

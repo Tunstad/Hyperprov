@@ -2,13 +2,11 @@
 
 
 /*
+* Based on code with 
 * Copyright IBM Corp All Rights Reserved
-*
 * SPDX-License-Identifier: Apache-2.0
 */
-/*
- * Chaincode query
- */
+
 
 var Fabric_Client = require('fabric-client');
 //var Fabric_CA_Client = require('fabric-ca-client');
@@ -16,23 +14,18 @@ var path = require('path');
 var util = require('util');
 //var os = require('os');
 var fs = require("fs")
-//Inquirer used to supply the CLI
-const inquirer = require('inquirer')
+var crypto = require("crypto");
+//var joiner = require('./lib/join-channel.js');
 
-//Switch to enable REST-api access or disable for CLI
-var RESTAPI = true;
 
-//Answer only local or external accesses to REST api
-var localONLY = true;
-
+var helper = require('./lib/helper.js');
+var logger = helper.getLogger('Hyperprov');
 //The time a benchmark is set to run
 var totaltime_seconds = 1;        //3600 = 1h, 600 = 10m
 
 //var bm_datalength = 1000000; // MAX == 1398101 characters/bytes
 
-//The user to interact with blockchain as, theese are found in hfc-key-store and generated 
-//by having enrollAdmin.js and registerUser.js interact with a fabric CA server
-var currentUser = 'Peer2'
+
 
 //The global variables for number of benchmarks to be run, and the 
 //current number of benchmarks that have been run. Numbenchmarks is 
@@ -40,115 +33,65 @@ var currentUser = 'Peer2'
 var numbenchmarks = 0;
 var currentbenchmarks = 0;
 
-var fabric_client = new Fabric_Client();
-
-//User variables stored here if needed, but getUserContext is sufficient to set user for fabric_client
-var admin_user = null;
-var member_user = null;
-
+//The user to interact with blockchain as, theese are found in hfc-key-store and generated 
+//by having enrollAdmin.js and registerUser.js interact with a fabric CA server
+var member_user = null
 var tx_id = null;
-var store_path = path.join(__dirname, 'hfc-key-store');
+var fabric_client = new Fabric_Client();
+var currentUser, store_path, channelname, chaincodeId, channel, peer, orderer, file_store_path
 
-// setup the fabric network mychannel
-var channel = fabric_client.newChannel('mychannel');
-
-//Set the peer to recieve operations and add it to the channel object
-var peer = fabric_client.newPeer('grpc://node3.ptunstad.no:7051');
-channel.addPeer(peer);
-
-//Set the orderer to be used by the set-functionality in the blockchain.
-var order = fabric_client.newOrderer('grpc://node1.ptunstad.no:7050')
-channel.addOrderer(order);
-
-//REST-api functionality to interact with client application from external device.
-if(RESTAPI){
-    console.log("Starting in REST-api mode..")
-    var express = require('express');
-    var bodyParser = require('body-parser');
-    var app = express();
-    var fs = require("fs");
-    var listenaddress = '0.0.0.0'
-    if (localONLY == true){
-        listenaddress = '127.0.0.1'
-    }
-
-    app.use(bodyParser.urlencoded({ extended: true }));
-
-    app.post('/set', function (req, res) {
-        var requestarguments = req.get('arguments').toString().split(", ")
-        ccSet(requestarguments, SetCallback, null, res)
-    })
-    app.get('/get', function (req, res) {
-        console.log("Request GET")
-        var requestarguments = req.get('arguments').toString()
-        ccFunc('get', requestarguments, getCallback, res)
-    })
-    app.get('/getkeyhistory', function (req, res) {
-        console.log("Request GET")
-        var requestarguments = req.get('arguments').toString()
-        ccFunc('getkeyhistory', requestarguments, getCallback, res)
-    })
-    app.get('/getbyrange', function (req, res) {
-        console.log("Request GET")
-        var requestarguments = req.get('arguments').toString().split(", ")
-        ccFunc('getbyrange', requestarguments, getCallback, res)
-    })
-    app.post('/sendfile', function (req, res) {
-        var requestarguments = req.get('arguments').toString()
-        storeFile(requestarguments, res, req.body)
-    })
-    app.get('/getfile', function (req, res) {
-        var requestarguments = req.get('arguments').toString()
-        retrieveFile(requestarguments, res)
-    })
-
-    var server = app.listen(8080, listenaddress, function () {
-    var host = server.address().address
-    var port = server.address().port
-    console.log("Example app listening at http://%s:%s", host, port)
-    })
-
-}else{
-    console.log("Starting in CLI input mode..")
-    //Begin CLI to retrieve user input of application. This could for other use-cases be
-    //changed to something more along the lines of a REST API if outside access is needed or
-    //a local API available only to another application for our use case.
-    var myfunction = ""
-    var myarguments = ""
-    var questions = [{
-        type: 'input',
-        name: 'inputfunc',
-        message: "What function do you want to invoke? (Example: 'getbyrange')",
-    },{
-        type: 'input',
-        name: 'inputargs',
-        message: "List you arguments. (Example:'a, d')",
-    }]
-
-    //Select the command specified and call the correct subfunction with the 
-    //appropriate arguments.
-    inquirer.prompt(questions).then(answers => {
-        myfunction = answers['inputfunc']
-        myarguments = answers['inputargs']
-        var myargumentslist = myarguments.split(", ")
-        console.log(myargumentslist)
-        if(myfunction == "set"){
-            ccSet(myargumentslist);
-        }else if(myfunction == "bms"){
-            numbenchmarks = parseInt(myargumentslist[1])
-            benchmarkSet(numbenchmarks, parseInt(myargumentslist[0]))
-        }else if(myfunction == "sendfile"){
-            storeFile(myargumentslist)
-        }else if(myfunction == "getfile"){
-            retrieveFile(myargumentslist)
-        }else{
-            ccFunc(myfunction, myargumentslist, getCallback);
-        }
-    })
+exports.ccInit = function (setcurrentUser, setpath, setchannel, setchaincodeID, setpeer, setorderer){
+    store_path = setpath;
+    currentUser = setcurrentUser
+    channelname = setchannel
+    chaincodeId = setchaincodeID
+    channel = fabric_client.newChannel(setchannel);
+    peer = fabric_client.newPeer('grpc://'+setpeer);
+    channel.addPeer(peer);
+    orderer = fabric_client.newOrderer('grpc://'+setorderer)
+    channel.addOrderer(orderer);
 }
+
+exports.ccJoin = function (){
+  /*  // Retrieve genesis block from orderer
+    tx_id = client.newTransactionID();
+    let g_request = {
+    txId :     tx_id
+    };
+    channel.getGenesisBlock(g_request).then((block) =>{
+        genesis_block = block;
+        tx_id = client.newTransactionID();
+        let j_request = {
+          //targets : targets,
+          block : genesis_block,
+          txId :     tx_id
+        };
+
+
+  return channel.joinChannel(j_request);
+    }).then((results) =>{
+    if(results && results.response && results.response.status == 200) {
+    console.log("Join successful!")
+    } else {
+    console.log("Something went wrong with join: " + results.response)
+    }*/
+    //let message =  await joiner.joinChannel('mychannel', peer, "admin", "ptunstad.no");
+    //console.log(message.message)
+    var addedpeer = "peer0.org1.ptunstad.no:7051"
+
+    //peer = fabric_client.newPeer('grpc://'+'peer4.ptunstad.no:7051')
+    peer = fabric_client.newPeer('grpc://'+addedpeer);
+    channel.addPeer(peer);
+    joinChannel('mychannel', [addedpeer], "admin", "org1", fabric_client).then((result) =>{
+        console.log(result.success)
+        console.log("Message:" + result.message)
+    })
+
+}
+
 //Function to set chaincode based on arguments. For myccds it expects argument to be of type
 //key, value. This is the only way to change values.
-function ccSet(ccargs, callback, callback2, resp){
+var ccSet = exports.ccSet = function(ccargs, callback, callback2, resp){
     Fabric_Client.newDefaultKeyValueStore({ path: store_path
     }).then((state_store) => {
         // assign the store to the fabric client
@@ -163,9 +106,6 @@ function ccSet(ccargs, callback, callback2, resp){
             trustedRoots: [],
             verify: false
         };
-        //Be sure to change the http to https when the CA is running TLS enabled
-        //Not neccesary.
-        //fabric_ca_client = new Fabric_CA_Client('http://agc.ptunstad.no:7054', null , '', crypto_suite);
     
         // first check to see if the admin is already enrolled
         return fabric_client.getUserContext(currentUser, true);
@@ -180,14 +120,16 @@ function ccSet(ccargs, callback, callback2, resp){
         // get a transaction id object based on the current user assigned to fabric client
         tx_id = fabric_client.newTransactionID();
         console.log("Assigning transaction_id: ", tx_id._transaction_id);
+
+        console.log(ccargs)
     
         // must send the proposal to endorsing peers
         var request = {
             //targets: let default to the peer assigned to the client
-            chaincodeId: 'myccds',
+            chaincodeId: chaincodeId,
             fcn: 'set',
             args: ccargs,
-            chainId: 'mychannel',
+            chainId: channelname,
             txId: tx_id
         };
     
@@ -232,7 +174,6 @@ function ccSet(ccargs, callback, callback2, resp){
             // get an eventhub once the fabric client has a user assigned. The user
             // is required bacause the event registration must be signed
             // let event_hub = fabric_client.newEventHub();
-            // event_hub.setPeerAddr('grpc://mc.ptunstad.no:7053');
             let event_hub = channel.newChannelEventHub(peer);
 
             // using resolve the promise so that result status may be processed
@@ -318,7 +259,7 @@ function getCallback(result, resp){
 //Functionality to call chaincode to retrieve some sort of data from the blockchain.
 //Some supported ccfuncs are 'get', 'getkeyhistory' and 'getbyrange'.
 //Takes in as aruments as a key string and callback-function only prints result to console.
-function ccFunc(ccfunc, ccargs, callback, resp){
+var ccFunc = exports.ccFunc = function(ccfunc, ccargs, callback, resp){
     Fabric_Client.newDefaultKeyValueStore({ path: store_path
     }).then((state_store) => {
         // assign the store to the fabric client
@@ -333,8 +274,6 @@ function ccFunc(ccfunc, ccargs, callback, resp){
             trustedRoots: [],
             verify: false
         };
-        // be sure to change the http to https when the CA is running TLS enabled
-        //fabric_ca_client = new Fabric_CA_Client('http://agc.ptunstad.no:7054', null , '', crypto_suite);
     
         // first check to see if the admin is already enrolled
         return fabric_client.getUserContext(currentUser, true);
@@ -348,7 +287,7 @@ function ccFunc(ccfunc, ccargs, callback, resp){
     
         const request = {
             //targets : --- letting this default to the peers assigned to the channel
-            chaincodeId: 'myccds',
+            chaincodeId: chaincodeId,
             fcn: ccfunc,
             args: ccargs
         };
@@ -408,7 +347,7 @@ function proposalOkCallback(){
 //certain datalength. Based on the totaltime_seconds variable set sleep for some 
 //amount of time between transactions. The key is just incremented on count and 
 //the value stored is a randomly generated string of the specified lenght.
-async function benchmarkSet(numitems, datalength){
+exports.benchmarkSet = function(numitems, datalength){
     console.time('benchmarkset');
     console.time("proposalok")
     for(var i=0; i < numitems; i++){    
@@ -420,7 +359,7 @@ async function benchmarkSet(numitems, datalength){
         
         console.log("Sending transaction " + String(i))
         ccSet(args, SetCallback, proposalOkCallback)
-        await sleep((totaltime_seconds/numbenchmarks)*1000)
+        //await sleep((totaltime_seconds/numbenchmarks)*1000)
     }
     console.log("Done sending operations!")
 }
@@ -433,7 +372,7 @@ function sleep(ms){
 }
 
 //Functionality for storing a file as a key,value entry in the blockchain.
-function storeFile(arglist, resp, body){
+exports.storeFile= function(arglist, resp, body){
     if(resp){
         var key = arglist[0]
         var args = [key, body]
@@ -451,7 +390,7 @@ function storeFile(arglist, resp, body){
 }
 
 //Functionality for storing a file as a base64 encoded key,value entry in the blockchain.
-function retrieveFile(arglist, resp){
+exports.retrieveFile = function(arglist, resp){
     if(resp){
         var key = arglist[0]
         ccFunc('get', key, getCallback, resp)
@@ -477,4 +416,235 @@ function base64fromFile(inputfile){
 function filefromBase64(inputstring, outputfile){
     var decoded = new Buffer(inputstring, 'base64')
     fs.writeFileSync(outputfile, decoded)
+}
+
+/*
+ * Have an organization join a channel
+ */
+var joinChannel = async function(channel_name, peers, username, org_name) {
+	logger.debug('\n\n============ Join Channel start ============\n')
+	var error_message = null;
+	var all_eventhubs = [];
+	try {
+		logger.info('Calling peers in organization "%s" to join the channel', org_name);
+
+		// first setup the client for this org
+		//var client = await helper.getClientForOrg(org_name, username);
+		//logger.debug('Successfully got the fabric client for the organization "%s"', org_name);
+		//var channel = client.getChannel(channel_name);
+		if(!channel) {
+			let message = util.format('Channel %s was not defined in the connection profile', channel_name);
+			logger.error(message);
+			throw new Error(message);
+		}
+
+	let state_store = await Fabric_Client.newDefaultKeyValueStore({path: store_path})
+        // assign the store to the fabric client
+        fabric_client.setStateStore(state_store);
+        var crypto_suite = Fabric_Client.newCryptoSuite();
+        // use the same location for the state store (where the users' certificate are kept)
+        // and the crypto store (where the users' keys are kept)
+        var crypto_store = Fabric_Client.newCryptoKeyStore({path: store_path});
+        crypto_suite.setCryptoKeyStore(crypto_store);
+        fabric_client.setCryptoSuite(crypto_suite);
+        var	tlsOptions = {
+            trustedRoots: [],
+            verify: false
+        };
+    
+        // first check to see if the admin is already enrolled
+        let user_from_store = await fabric_client.getUserContext(currentUser, true);
+        if (user_from_store && user_from_store.isEnrolled()) {
+            console.log('Successfully loaded user from persistence');
+            member_user = user_from_store;
+        } else {
+            throw new Error('Failed to get user.... run enrollAdmin.js (and maybe RegisterUser)');
+        }
+    		// next step is to get the genesis_block from the orderer,
+		// the starting point for the channel that we want to join
+		let request = {
+			txId : 	fabric_client.newTransactionID(true) //get an admin based transactionID
+		};
+
+		let genesis_block = await channel.getGenesisBlock(request);
+
+		// tell each peer to join and wait 10 seconds
+		// for the channel to be created on each peer
+		var promises = [];
+		promises.push(new Promise(resolve => setTimeout(resolve, 10000)));
+
+		let join_request = {
+			targets: peers, //using the peer names which only is allowed when a connection profile is loaded
+			txId: fabric_client.newTransactionID(true), //get an admin based transactionID
+			block: genesis_block
+		};
+		let join_promise = channel.joinChannel(join_request);
+		promises.push(join_promise);
+		let results = await Promise.all(promises);
+		logger.debug(util.format('Join Channel R E S P O N S E : %j', results));
+
+		// lets check the results of sending to the peers which is
+		// last in the results array
+		let peers_results = results.pop();
+		// then each peer results
+		for(let i in peers_results) {
+			let peer_result = peers_results[i];
+			if (peer_result instanceof Error) {
+				error_message = util.format('Failed to join peer to the channel with error :: %s', peer_result.toString());
+				logger.error(error_message);
+			} else if(peer_result.response && peer_result.response.status == 200) {
+				logger.info('Successfully joined peer to the channel %s',channel_name);
+			} else {
+				error_message = util.format('Failed to join peer to the channel %s',channel_name);
+				logger.error(error_message);
+			}
+		}
+	} catch(error) {
+		logger.error('Failed to join channel due to error: ' + error.stack ? error.stack : error);
+		error_message = error.toString();
+	}
+
+	// need to shutdown open event streams
+	all_eventhubs.forEach((eh) => {
+		eh.disconnect();
+	});
+
+	if (!error_message) {
+		let message = util.format(
+			'Successfully joined peers in organization %s to the channel:%s',
+			org_name, channel_name);
+		logger.info(message);
+		// build a response to send back to the REST caller
+		const response = {
+			success: true,
+			message: message
+		};
+		return response;
+	} else {
+		let message = util.format('Failed to join all peers to channel. cause:%s',error_message);
+		logger.error(message);
+		// build a response to send back to the REST caller
+		const response = {
+			success: false,
+			message: message
+		};
+		return response;
+	}
+};
+exports.joinChannel = joinChannel;
+
+
+
+exports.InitFileStore= function(FSpath){
+    file_store_path = FSpath
+    var path
+    if (file_store_path.indexOf('file://') !== -1){
+        path = file_store_path.replace("file://", "");
+    }
+    if (fs.existsSync(path)){
+        logger.info('FileStore present and succesfully init');
+        return
+    }else{
+        var error_message = util.format('Unable to access filestore at path %s', path);
+        logger.error(error_message);
+        throw new Error(error_message);
+    }
+}
+
+exports.StoreDataFS= function(file, key, callback, description="", dependecies=""){
+    console.log("Reading file " + file + " from local storage...")
+    var fileobj = fs.readFileSync(file)
+    
+    var pointer = crypto.randomBytes(20).toString('hex');
+
+    path = file_store_path
+    if (file_store_path.indexOf('file://') !== -1){
+        path = file_store_path.replace("file://", "");
+    }
+
+    //Regenerate pointer if file exists
+    while (fs.existsSync(path+ "/" +  pointer)){
+        console.log("Pointer " + pointer + " already exists, regenerating..")
+        var pointer = crypto.randomBytes(20).toString('hex');
+    }
+
+    fs.writeFileSync(path+ "/" +  pointer, fileobj)
+
+    console.log("File written to off-chain storage at: " + path+ "/" +  pointer)
+
+
+
+    var checksum = getchecksum(fileobj) // e53815e8c095e270c6560be1bb76a65d
+    console.log("File checksum is : " + checksum)
+
+
+    var args = [key, checksum, file_store_path, pointer, description, dependecies]
+    ccSet(args, function (result, res) {
+        console.log("Record of file stored in ledger : " + result)
+    }, null, null)
+    // //Create md5 checksum of file
+    // var hash = crypto.createHash('md5'),
+    // stream = fs.createReadStream(file)
+
+    // stream.on('data', function(data) {
+    //     hash.update(data, 'utf8')
+    // })
+
+    // stream.on('end', function() {
+    //     var checksum = hash.digest('hex')
+    //     args = [key, checksum, file_store_path, pointer, description, dependecies]
+    //     return args
+    // })
+}
+
+function getchecksum(str, algorithm, encoding) {
+    return crypto
+      .createHash(algorithm || 'md5')
+      .update(str, 'utf8')
+      .digest(encoding || 'hex')
+}
+exports.GetDataFS= function(file, key){
+
+    var args = key
+    var getfunction = "get"
+
+    //If length is 64(the length of a txid) then use getfromid, not a futureproof soluton, just for testing :)
+    if(key.length == 64){
+        getfunction = "getfromid"
+    }
+    
+
+    ccFunc(getfunction, args, function (result, res) {   
+        console.log("Retrieved record from ledger: " + result)
+        var resultobj = JSON.parse(result)
+        var path = resultobj.Location
+        var pointer = resultobj.Pointer
+
+        //Remove file:// if present
+        if (file_store_path.indexOf('file://') !== -1){
+            path = file_store_path.replace("file://", "");
+        }
+
+        //Check that file exists
+        if (!fs.existsSync(path+ "/" +  pointer)){
+            console.log("File does not exist in off chain storage: " + path+ "/" +  pointer)
+            return
+        }
+
+        //Read file
+        var fileobj = fs.readFileSync(path+ "/" +  pointer)
+
+        //Verify checksum
+        var checksum = getchecksum(fileobj)
+        if(checksum == resultobj.hash){
+            console.log("Checksum correct!")
+        }else{
+            console.log("Incorrect checksum!")
+            //return
+        }
+
+        //Write file to specified local address
+        console.log("File stored locally on address: " + file)
+        fs.writeFileSync(file, fileobj)
+    }, null)
 }
