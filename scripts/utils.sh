@@ -37,21 +37,21 @@ setGlobals () {
 			if [ $1 -eq 0 ]; then
 				#CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/tls/server.crt
 				#CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer0.org1.ptunstad.no/tls/server.key
-				CORE_PEER_ADDRESS=peer0.org1.ptunstad.no:7051
+				CORE_PEER_ADDRESS=node1.ptunstad.no:7051
 			else
 				#CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer1.org1.ptunstad.no/tls/server.crt
 				#CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer1.org1.ptunstad.no/tls/server.key
-				CORE_PEER_ADDRESS=peer1.org1.ptunstad.no:7051
+				CORE_PEER_ADDRESS=node2.ptunstad.no:7051
 			fi
 		else
 			if [ $1 -eq 2 ]; then
 				#CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer2.org1.ptunstad.no/tls/server.crt
 				#CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer2.org1.ptunstad.no/tls/server.key
-				CORE_PEER_ADDRESS=peer2.org1.ptunstad.no:7051
+				CORE_PEER_ADDRESS=node3.ptunstad.no:7051
 			else
 				#CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer3.org1.ptunstad.no/tls/server.crt
 				#CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.ptunstad.no/peers/peer3.org1.ptunstad.no/tls/server.key
-				CORE_PEER_ADDRESS=peer3.org1.ptunstad.no:7051
+				CORE_PEER_ADDRESS=node0.ptunstad.no:7051
 			fi
 		fi
 	else
