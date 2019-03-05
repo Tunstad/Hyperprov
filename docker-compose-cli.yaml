@@ -225,7 +225,7 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == rpi3-node2
+          - node.hostname == rpi3-node0
     command: bash -c "peer node start > /home/logs/peer3org1log.txt 2>&1"
 
   cli:
