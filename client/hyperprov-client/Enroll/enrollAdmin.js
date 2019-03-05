@@ -53,7 +53,7 @@ exports.enrollAdmin = function(store_path, caURL, caName, enrollmentID, enrollme
             // need to enroll it with CA server
             return fabric_ca_client.enroll({
             enrollmentID: enrollmentID,//'admin'
-            enrollmentSecret: enrollmentSecret//'admin'
+            enrollmentSecret: enrollmentSecret//'adminpw'
             }).then((enrollment) => {
             console.log('Successfully enrolled admin user "admin"');
             return fabric_client.createUser(

@@ -16,7 +16,7 @@ var path = require('path');
 var util = require('util');
 var os = require('os');
 
-exports.enrollAdmin = function(store_path, username, affiliation, role,  caURL, caName, MSPid) {
+exports.enrollUser = function(store_path, username, affiliation, role,  caURL, caName, MSPid) {
     //var username = 'Peer3'
     //var affiliation = 'org1.department1'
     //var role = 'client'
