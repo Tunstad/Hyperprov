@@ -27,9 +27,9 @@ app.post('/set', function (req, res) {
     if (requestarguments.length < 4){
         res.end("Too few arguments, requres a Key, value, path and pointer. Can also include desc and dependencies.")
     }
-    if (requestarguments.length < 3){
+    if (requestarguments.length < 5){
         //No argument for description, put ""
-        requestarguments[4] = ""
+        requestarguments[4] = "empty"
     }
 
 

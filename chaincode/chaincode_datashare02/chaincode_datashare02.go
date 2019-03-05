@@ -9,7 +9,8 @@ import (
 	"strconv"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-	//"github.com/hyperledger/fabric/core/chaincode//lib/cid"
+	"github.com/hyperledger/fabric/core/chaincode/shim/ext/cid"
+	//"github.com/hyperledger/fabric/core/chaincode/vendor/github.com/hyperledger/fabric/core/chaincode/shim/ext/cid"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	
 )
@@ -154,10 +155,17 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	// }
 	// Do something with the value of 'val'
 
-	/*id, err := cid.GetID(stub)
+	id, ok, err := cid.GetAttributeValue(stub, "hf.EnrollmentID")
 	if err != nil {
 		return "", fmt.Errorf("Failed to get ID. %s", string(args[0]))
-	}*/
+	}
+	if !ok {
+		id = "null"
+	// The client identity does not possess the attribute
+	}
+	// Do something with the value of 'val'
+	
+	
 	/*
 	mspid, err := cid.GetMSPID(stub)
 	if err != nil {
@@ -177,22 +185,23 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	}
 	// Do something with the value of 'val'
 	*/
+	
 
 
-
+/*
 	usercert, cerr := stub.GetCreator()
 	if cerr != nil {
 		return "", fmt.Errorf("Failed to get creator of asset: %s", args[0])
-	}
+	}*/
 
 	desc := ""
-	if len(args) == 5 {
+	if len(args) >= 5 {
 		desc = args[4]
 	}
 
 	dependecies := ""
 	optype := "Record"
-	if len(args) == 6 {
+	if len(args) >= 6 {
 		//creator, _ := stub.GetCreator()
 		dependecies = args[5]
 		optype = "Transformation"
@@ -200,7 +209,7 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	
 	// Set up any variables or assets here by calling stub.PutState()
 	txid := stub.GetTxID()
-	operation := &operation{args[1], args[2], args[3], txid, string(usercert), optype, desc, dependecies}
+	operation := &operation{args[1], args[2], args[3], txid, id, optype, desc, dependecies}
 	operationJSONasBytes, err := json.Marshal(operation)
 	if err != nil {
 		return "", fmt.Errorf("Failed to marshal JSON. %s", string(args[0]))
@@ -341,7 +350,7 @@ func getFromID(stub shim.ChaincodeStubInterface, arg string) (string, error){
 		
 		// buffer is a JSON array containing historic values
 		var buffer bytes.Buffer
-		buffer.WriteString("[")
+		//buffer.WriteString("[")
 		bArrayMemberAlreadyWritten := false
 		if err != nil {
 			return "", fmt.Errorf(err.Error())
@@ -380,11 +389,11 @@ func getFromID(stub shim.ChaincodeStubInterface, arg string) (string, error){
 		buffer.WriteString("\"")
 		buffer.WriteString(time.Unix(keyTxIDRange.Timestamp.Seconds, int64(keyTxIDRange.Timestamp.Nanos)).String())
 		buffer.WriteString("\"")*/
-
+		/*
 		buffer.WriteString(", \"Certificate\":")
 		buffer.WriteString("\"")
 		buffer.WriteString(valueJSON.Certificate)
-		buffer.WriteString("\"")
+		buffer.WriteString("\"")*/
 
 		buffer.WriteString(", \"Dependencies\":")
 		buffer.WriteString("\"")
@@ -398,7 +407,7 @@ func getFromID(stub shim.ChaincodeStubInterface, arg string) (string, error){
 
 		buffer.WriteString("}")
 		bArrayMemberAlreadyWritten = true
-	buffer.WriteString("]")
+	//buffer.WriteString("]")
 /*
 		sId := &msp.SerializedIdentity{}
 		err = proto.Unmarshal(txIDCreator, sId)

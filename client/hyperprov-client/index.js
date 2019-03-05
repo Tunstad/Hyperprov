@@ -19,7 +19,7 @@ var crypto = require("crypto");
 
 
 var helper = require('./lib/helper.js');
-var logger = helper.getLogger('Join-Channel');
+var logger = helper.getLogger('Hyperprov');
 //The time a benchmark is set to run
 var totaltime_seconds = 1;        //3600 = 1h, 600 = 10m
 
@@ -535,8 +535,20 @@ exports.joinChannel = joinChannel;
 
 
 
-exports.InitFileStore= function(){
-    file_store_path = "file:///mnt/hlfshared"
+exports.InitFileStore= function(FSpath){
+    file_store_path = FSpath
+    var path
+    if (file_store_path.indexOf('file://') !== -1){
+        path = file_store_path.replace("file://", "");
+    }
+    if (fs.existsSync(path)){
+        logger.info('FileStore present and succesfully init');
+        return
+    }else{
+        var error_message = util.format('Unable to access filestore at path %s', path);
+        logger.error(error_message);
+        throw new Error(error_message);
+    }
 }
 
 exports.StoreDataFS= function(file, key, callback, description="", dependecies=""){
@@ -594,12 +606,19 @@ function getchecksum(str, algorithm, encoding) {
 exports.GetDataFS= function(file, key){
 
     var args = key
+    var getfunction = "get"
 
-    ccFunc("get", args, function (result, res) {   
+    //If length is 64(the length of a txid) then use getfromid, not a futureproof soluton, just for testing :)
+    if(key.length == 64){
+        getfunction = "getfromid"
+    }
+    
+
+    ccFunc(getfunction, args, function (result, res) {   
         console.log("Retrieved record from ledger: " + result)
         var resultobj = JSON.parse(result)
-        var path = resultobj.location
-        var pointer = resultobj.pointer
+        var path = resultobj.Location
+        var pointer = resultobj.Pointer
 
         //Remove file:// if present
         if (file_store_path.indexOf('file://') !== -1){
@@ -608,7 +627,7 @@ exports.GetDataFS= function(file, key){
 
         //Check that file exists
         if (!fs.existsSync(path+ "/" +  pointer)){
-            console.log("File does not exist in off chain storage")
+            console.log("File does not exist in off chain storage: " + path+ "/" +  pointer)
             return
         }
 
@@ -621,17 +640,11 @@ exports.GetDataFS= function(file, key){
             console.log("Checksum correct!")
         }else{
             console.log("Incorrect checksum!")
-            return
+            //return
         }
 
         //Write file to specified local address
         console.log("File stored locally on address: " + file)
         fs.writeFileSync(file, fileobj)
     }, null)
-
-
-    
-}
-function fsCallback(result, res){
-    
 }
