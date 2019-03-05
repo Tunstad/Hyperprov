@@ -10,11 +10,10 @@ var keypath = path.join(__dirname, 'hfc-key-store')
 hyperprovclient.ccInit('Peer2', keypath, 'mychannel', 'myccds', 'mc.ptunstad.no:7051', 'agc.ptunstad.no:7050');
 
 
-
-hyperprovclient.InitFileStore("file:///mnt/hlfshared")
+//hyperprovclient.InitFileStore("file:///mnt/hlfshared")
 //dataargs = hyperprovclient.StoreDataFS("car.jpg", "mycarimage")
 
-dataargs = hyperprovclient.GetDataFS("retrievedimage.jpg", "mycarimage")
+//dataargs = hyperprovclient.GetDataFS("retrievedimage.jpg", "mycarimage")
 
 return
 
@@ -57,37 +56,37 @@ app.post('/set', function (req, res) {
         console.log(requestarguments)
     }
     
-    hyperprovclient.ccSet(requestarguments, restCallback, null, res)
+    hyperprovclient.ccPost(requestarguments, restCallback, null, res)
 })
 app.get('/get', function (req, res) {
     console.log("Request GET")
     var requestarguments = req.get('arguments').toString()
-    hyperprovclient.ccFunc('get', requestarguments, restCallback, res)
+    hyperprovclient.ccGet('get', requestarguments, restCallback, res)
 })
 app.get('/getwithid', function (req, res) {
     console.log("Request GET")
     var requestarguments = req.get('arguments').toString()
-    hyperprovclient.ccFunc('getwithid', requestarguments, restCallback, res)
+    hyperprovclient.ccGet('getwithid', requestarguments, restCallback, res)
 })
 app.get('/getfromid', function (req, res) {
     console.log("Request GET")
     var requestarguments = req.get('arguments').toString()
-    hyperprovclient.ccFunc('getfromid', requestarguments, restCallback, res)
+    hyperprovclient.ccGet('getfromid', requestarguments, restCallback, res)
 })
 app.get('/getkeyhistory', function (req, res) {
     console.log("Request GET")
     var requestarguments = req.get('arguments').toString()
-    hyperprovclient.ccFunc('getkeyhistory', requestarguments, restCallback, res)
+    hyperprovclient.ccGet('getkeyhistory', requestarguments, restCallback, res)
 })
 app.get('/getdependencies', function (req, res) {
     console.log("Request GET")
     var requestarguments = req.get('arguments').toString().split(", ")
-    hyperprovclient.ccFunc('getdependencies', requestarguments, restCallback, res)
+    hyperprovclient.ccGet('getdependencies', requestarguments, restCallback, res)
 })
 app.get('/getbyrange', function (req, res) {
     console.log("Request GET")
     var requestarguments = req.get('arguments').toString().split(", ")
-    hyperprovclient.ccFunc('getbyrange', requestarguments, restCallback, res)
+    hyperprovclient.ccGet('getbyrange', requestarguments, restCallback, res)
 })
 app.post('/sendfile', function (req, res) {
     var requestarguments = req.get('arguments').toString()

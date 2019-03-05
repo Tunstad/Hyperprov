@@ -1,31 +1,24 @@
 'use strict';
 
-
 /*
-* Based on code with 
+* Includes code from the Hyperledger Project with 
 * Copyright IBM Corp All Rights Reserved
 * SPDX-License-Identifier: Apache-2.0
 */
 
 
 var Fabric_Client = require('fabric-client');
-//var Fabric_CA_Client = require('fabric-ca-client');
 var path = require('path');
 var util = require('util');
-//var os = require('os');
 var fs = require("fs")
 var crypto = require("crypto");
-//var joiner = require('./lib/join-channel.js');
-
-
 var helper = require('./lib/helper.js');
 var logger = helper.getLogger('Hyperprov');
+var enrollRegisterAdmin = require("./Enroll/enrollAdmin")
+var enrollRegisterUser = require("./Enroll/registerUser")
+
 //The time a benchmark is set to run
 var totaltime_seconds = 1;        //3600 = 1h, 600 = 10m
-
-//var bm_datalength = 1000000; // MAX == 1398101 characters/bytes
-
-
 
 //The global variables for number of benchmarks to be run, and the 
 //current number of benchmarks that have been run. Numbenchmarks is 
@@ -53,30 +46,7 @@ exports.ccInit = function (setcurrentUser, setpath, setchannel, setchaincodeID, 
 }
 
 exports.ccJoin = function (){
-  /*  // Retrieve genesis block from orderer
-    tx_id = client.newTransactionID();
-    let g_request = {
-    txId :     tx_id
-    };
-    channel.getGenesisBlock(g_request).then((block) =>{
-        genesis_block = block;
-        tx_id = client.newTransactionID();
-        let j_request = {
-          //targets : targets,
-          block : genesis_block,
-          txId :     tx_id
-        };
 
-
-  return channel.joinChannel(j_request);
-    }).then((results) =>{
-    if(results && results.response && results.response.status == 200) {
-    console.log("Join successful!")
-    } else {
-    console.log("Something went wrong with join: " + results.response)
-    }*/
-    //let message =  await joiner.joinChannel('mychannel', peer, "admin", "ptunstad.no");
-    //console.log(message.message)
     var addedpeer = "peer0.org1.ptunstad.no:7051"
 
     //peer = fabric_client.newPeer('grpc://'+'peer4.ptunstad.no:7051')
@@ -88,10 +58,23 @@ exports.ccJoin = function (){
     })
 
 }
+exports.registerAdmin = function (store_path, caURL, caName, enrollmentID, enrollmentSecret, MSPid){
 
-//Function to set chaincode based on arguments. For myccds it expects argument to be of type
-//key, value. This is the only way to change values.
-var ccSet = exports.ccSet = function(ccargs, callback, callback2, resp){
+    //enrollRegisterAdmin.enrollAdmin("./hfc-key-store3", 'http://agc-lab2.cs.uit.no:7054','ca.ptunstad.no', 'admin', 'adminpw', 'Org1MSP')
+    enrollRegisterAdmin.enrollAdmin(store_path, caURL, caName, enrollmentID, enrollmentSecret, MSPid)
+}
+
+exports.registerUser = function (store_path, username, affiliation, role, caURL, caName, MSPid){
+
+    //enrollRegisterUser.enrollUser("./hfc-key-store3", "peer1", "org1.department1", "client", 'http://agc-lab2.cs.uit.no:7054','ca.ptunstad.no', 'Org1MSP')
+    enrollRegisterUser.enrollUser(store_path, username, affiliation, role, caURL, caName, MSPid)
+}
+
+
+//Function to post data via chaincode based on arguments, typically the set operation. 
+//For myccds it expects argument to be of type key, value. callback/resp used for returning result, 
+// callback 2 for benchamrking speed of first transaction.
+var ccPost = exports.ccPost = function(ccfunc, ccargs, callback, callback2, resp){
     Fabric_Client.newDefaultKeyValueStore({ path: store_path
     }).then((state_store) => {
         // assign the store to the fabric client
@@ -127,7 +110,7 @@ var ccSet = exports.ccSet = function(ccargs, callback, callback2, resp){
         var request = {
             //targets: let default to the peer assigned to the client
             chaincodeId: chaincodeId,
-            fcn: 'set',
+            fcn: ccfunc,
             args: ccargs,
             chainId: channelname,
             txId: tx_id
@@ -259,7 +242,8 @@ function getCallback(result, resp){
 //Functionality to call chaincode to retrieve some sort of data from the blockchain.
 //Some supported ccfuncs are 'get', 'getkeyhistory' and 'getbyrange'.
 //Takes in as aruments as a key string and callback-function only prints result to console.
-var ccFunc = exports.ccFunc = function(ccfunc, ccargs, callback, resp){
+//Callback/resp used to return result back to caller.
+var ccGet = exports.ccGet = function(ccfunc, ccargs, callback, resp){
     Fabric_Client.newDefaultKeyValueStore({ path: store_path
     }).then((state_store) => {
         // assign the store to the fabric client
@@ -358,7 +342,7 @@ exports.benchmarkSet = function(numitems, datalength){
         var args = [key, value]
         
         console.log("Sending transaction " + String(i))
-        ccSet(args, SetCallback, proposalOkCallback)
+        ccPost('set', args, SetCallback, proposalOkCallback)
         //await sleep((totaltime_seconds/numbenchmarks)*1000)
     }
     console.log("Done sending operations!")
@@ -376,7 +360,7 @@ exports.storeFile= function(arglist, resp, body){
     if(resp){
         var key = arglist[0]
         var args = [key, body]
-        ccSet(args, SetCallback, null, resp)
+        ccPost('set', args, SetCallback, null, resp)
 
     }else{
         if(arglist.length < 2){
@@ -385,7 +369,7 @@ exports.storeFile= function(arglist, resp, body){
         var key = arglist[0]
         var value = base64fromFile(arglist[1])
         var args = [key, value]
-        ccSet(args)
+        ccPost('set', args)
     }
 }
 
@@ -393,14 +377,14 @@ exports.storeFile= function(arglist, resp, body){
 exports.retrieveFile = function(arglist, resp){
     if(resp){
         var key = arglist[0]
-        ccFunc('get', key, getCallback, resp)
+        ccGet('get', key, getCallback, resp)
 
     }else{
         if(arglist.length < 2){
             console.log("Need two arguments to retrieve file. Usage: key, newfile.jpg")
         }
         var key = [arglist[0]]
-        ccFunc('get', key, function(result)  {
+        ccGet('get', key, function(result)  {
             filefromBase64(result, arglist[1])
         })
     }
@@ -541,6 +525,8 @@ exports.InitFileStore= function(FSpath){
     if (file_store_path.indexOf('file://') !== -1){
         path = file_store_path.replace("file://", "");
     }
+
+    //Check that we have access to proposed off chain storage path
     if (fs.existsSync(path)){
         logger.info('FileStore present and succesfully init');
         return
@@ -555,6 +541,7 @@ exports.StoreDataFS= function(file, key, callback, description="", dependecies="
     console.log("Reading file " + file + " from local storage...")
     var fileobj = fs.readFileSync(file)
     
+    //Generate random 20 length pointer name
     var pointer = crypto.randomBytes(20).toString('hex');
 
     path = file_store_path
@@ -568,33 +555,22 @@ exports.StoreDataFS= function(file, key, callback, description="", dependecies="
         var pointer = crypto.randomBytes(20).toString('hex');
     }
 
+    //Write file to off chain storage
     fs.writeFileSync(path+ "/" +  pointer, fileobj)
 
     console.log("File written to off-chain storage at: " + path+ "/" +  pointer)
 
 
-
+    //Calculate checksum of file
     var checksum = getchecksum(fileobj) // e53815e8c095e270c6560be1bb76a65d
     console.log("File checksum is : " + checksum)
 
 
+    //Store data in blockchain
     var args = [key, checksum, file_store_path, pointer, description, dependecies]
-    ccSet(args, function (result, res) {
+    ccPost('set', args, function (result, res) {
         console.log("Record of file stored in ledger : " + result)
     }, null, null)
-    // //Create md5 checksum of file
-    // var hash = crypto.createHash('md5'),
-    // stream = fs.createReadStream(file)
-
-    // stream.on('data', function(data) {
-    //     hash.update(data, 'utf8')
-    // })
-
-    // stream.on('end', function() {
-    //     var checksum = hash.digest('hex')
-    //     args = [key, checksum, file_store_path, pointer, description, dependecies]
-    //     return args
-    // })
 }
 
 function getchecksum(str, algorithm, encoding) {
@@ -608,13 +584,13 @@ exports.GetDataFS= function(file, key){
     var args = key
     var getfunction = "get"
 
-    //If length is 64(the length of a txid) then use getfromid, not a futureproof soluton, just for testing :)
+    //If length is 64(the length of a txid) then use getfromid, not a futureproof soluton, this just for testing :)
     if(key.length == 64){
         getfunction = "getfromid"
     }
     
 
-    ccFunc(getfunction, args, function (result, res) {   
+    ccGet(getfunction, args, function (result, res) {   
         console.log("Retrieved record from ledger: " + result)
         var resultobj = JSON.parse(result)
         var path = resultobj.Location
