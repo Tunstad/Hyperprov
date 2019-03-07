@@ -74,7 +74,12 @@ exports.registerUser = function (store_path, username, affiliation, role, caURL,
 //Function to post data via chaincode based on arguments, typically the set operation. 
 //For myccds it expects argument to be of type key, value. callback/resp used for returning result, 
 // callback 2 for benchamrking speed of first transaction.
-var ccPost = exports.ccPost = function(ccfunc, ccargs, callback, callback2, resp){
+var ccPost = exports.ccPost = async function(ccfunc, ccargs, timeout){
+    if (timeout === undefined) {
+        timeout = 120000;
+    }
+
+    var response = null
     Fabric_Client.newDefaultKeyValueStore({ path: store_path
     }).then((state_store) => {
         // assign the store to the fabric client
@@ -136,9 +141,9 @@ var ccPost = exports.ccPost = function(ccfunc, ccargs, callback, callback2, resp
     
             //Callback to print time to proposalresponse. Only neccesary for measurements
             //and can be disabled for runs with more than a sinlge transaction.
-            if (typeof callback2 === "function") {
-                callback2()
-            }
+            // if (typeof callback2 === "function") {
+            //     callback2()
+            // }
             // build up the request for the orderer to have the transaction committed
             var request = {
                 proposalResponses: proposalResponses,
@@ -213,20 +218,38 @@ var ccPost = exports.ccPost = function(ccfunc, ccargs, callback, callback2, resp
             //console.log('Successfully committed the change to the ledger by the peer');
             //Callback function used to measure time-to-commit.
             //This functionality is only used for measurements and can be disabled otherwise.
-            if (typeof callback === "function") {
-                if(resp){
-                    callback('Successfully committed the change to the ledger by the peer', resp)
-                }else{
-                    callback('Successfully committed the change to the ledger by the peer')
-                }
+            response = 'Successfully committed the change to the ledger by the peer'
+            // if (typeof callback === "function") {
+            //     if(resp){
+            //         callback('Successfully committed the change to the ledger by the peer', resp)
+            //     }else{
+            //         callback('Successfully committed the change to the ledger by the peer')
+            //     }
                 
-            }
+            //}
         } else {
             console.log('Transaction failed to be committed to the ledger due to ::'+results[1].event_status);
+            response = 'Transaction failed to be committed to the ledger due to ::'+results[1].event_status
         }
     }).catch((err) => {
         console.error('Failed to invoke successfully :: ' + err);
+        response = 'Failed to invoke successfully :: ' + err
     });
+
+var waitForComplete = timeoutms => new Promise((r, j)=>{
+    var check = () => {
+        if(response != null){
+        r()
+        }else if((timeoutms -= 100) < 0)
+        j('ccGet timed out..')
+        else
+        setTimeout(check, 100)
+    }
+    setTimeout(check, 100)
+    })
+
+    await waitForComplete(timeout)
+    return response
 }
 
 //Callback function used in get-function. 
@@ -243,7 +266,11 @@ function getCallback(result, resp){
 //Some supported ccfuncs are 'get', 'getkeyhistory' and 'getbyrange'.
 //Takes in as aruments as a key string and callback-function only prints result to console.
 //Callback/resp used to return result back to caller.
-var ccGet = exports.ccGet = function(ccfunc, ccargs, callback, resp){
+var ccGet = exports.ccGet =  async function(ccfunc, ccargs, timeout){
+    if (timeout === undefined) {
+        timeout = 120000;
+    }
+    var response = null
     Fabric_Client.newDefaultKeyValueStore({ path: store_path
     }).then((state_store) => {
         // assign the store to the fabric client
@@ -284,24 +311,44 @@ var ccGet = exports.ccGet = function(ccfunc, ccargs, callback, resp){
     if (query_responses && query_responses.length == 1) {
         if (query_responses[0] instanceof Error) {
             console.error("error from query = ", query_responses[0]);
-            if (typeof callback === "function") {
-                callback(query_responses[0].toString(), resp)
-            }
+            response = query_responses[0].toString()
+            // if (typeof callback === "function") {
+            //     callback(query_responses[0].toString(), resp)
+            // }
         } else {
             //Use callback function provided to send result of query to.
             //Currently prints the string to console.
-            if (typeof callback === "function") {
-                callback(query_responses[0].toString(), resp)
-            }
+            response = query_responses[0].toString()
+            // if (typeof callback === "function") {
+            //     callback(query_responses[0].toString(), resp)
+                
+            // }
             //Function could also return the result
             //return query_responses[0].toString();
         }
     } else {
         console.log("No payloads were returned from query");
+        response = "No payloads were returned from query"
     }
     }).catch((err) => {
     console.error('Failed to query successfully :: ' + err);
+    response = 'Failed to query successfully :: ' + err
     });
+
+    var waitForComplete = timeoutms => new Promise((r, j)=>{
+        var check = () => {
+          if(response != null){
+            r()
+          }else if((timeoutms -= 100) < 0)
+            j('ccGet timed out..')
+          else
+            setTimeout(check, 100)
+        }
+        setTimeout(check, 100)
+      })
+
+      await waitForComplete(timeout)
+      return response
 }
 
 //For benchmarking use a custom callbackfunction for each completed SET action
@@ -568,9 +615,9 @@ exports.StoreDataFS= function(file, key, callback, description="", dependecies="
 
     //Store data in blockchain
     var args = [key, checksum, file_store_path, pointer, description, dependecies]
-    ccPost('set', args, function (result, res) {
-        console.log("Record of file stored in ledger : " + result)
-    }, null, null)
+    ccPost('set', args).then((r) => {
+        console.log("Record of file stored in ledger: " + r)
+    })
 }
 
 function getchecksum(str, algorithm, encoding) {
@@ -588,13 +635,12 @@ exports.GetDataFS= function(file, key){
     if(key.length == 64){
         getfunction = "getfromid"
     }
-    
 
-    ccGet(getfunction, args, function (result, res) {   
+    ccGet(getfunction, args).then((result) => {
         console.log("Retrieved record from ledger: " + result)
         var resultobj = JSON.parse(result)
-        var path = resultobj.Location
-        var pointer = resultobj.Pointer
+        var path = resultobj.location
+        var pointer = resultobj.pointer
 
         //Remove file:// if present
         if (file_store_path.indexOf('file://') !== -1){
@@ -622,5 +668,5 @@ exports.GetDataFS= function(file, key){
         //Write file to specified local address
         console.log("File stored locally on address: " + file)
         fs.writeFileSync(file, fileobj)
-    }, null)
+    })
 }

@@ -10,10 +10,10 @@ var keypath = path.join(__dirname, 'hfc-key-store')
 hyperprovclient.ccInit('Peer2', keypath, 'mychannel', 'myccds', 'mc.ptunstad.no:7051', 'agc.ptunstad.no:7050');
 
 
-//hyperprovclient.InitFileStore("file:///mnt/hlfshared")
+hyperprovclient.InitFileStore("file:///mnt/hlfshared")
 //dataargs = hyperprovclient.StoreDataFS("car.jpg", "mycarimage")
 
-//dataargs = hyperprovclient.GetDataFS("retrievedimage.jpg", "mycarimage")
+dataargs = hyperprovclient.GetDataFS("retrievedimage.jpg", "mycarimage")
 
 return
 
