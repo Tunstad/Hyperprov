@@ -351,6 +351,7 @@ var ccGet = exports.ccGet =  async function(ccfunc, ccargs, timeout){
       return response
 }
 
+
 //For benchmarking use a custom callbackfunction for each completed SET action
 //For every completed action increment the counter, and once all operations have
 //been completed, print the time it took to perform all operations.
@@ -583,15 +584,13 @@ exports.InitFileStore= function(FSpath){
         throw new Error(error_message);
     }
 }
-
-exports.StoreDataFS= function(file, key, callback, description="", dependecies=""){
-    console.log("Reading file " + file + " from local storage...")
-    var fileobj = fs.readFileSync(file)
+var StoreDataFS = exports.StoreDataFS =  async function(fileobj, key, description="", dependecies=""){
+    var response = null
     
     //Generate random 20 length pointer name
     var pointer = crypto.randomBytes(20).toString('hex');
 
-    path = file_store_path
+    var path = file_store_path
     if (file_store_path.indexOf('file://') !== -1){
         path = file_store_path.replace("file://", "");
     }
@@ -616,8 +615,23 @@ exports.StoreDataFS= function(file, key, callback, description="", dependecies="
     //Store data in blockchain
     var args = [key, checksum, file_store_path, pointer, description, dependecies]
     ccPost('set', args).then((r) => {
-        console.log("Record of file stored in ledger: " + r)
+        response = "Record of file stored in ledger: " + r
     })
+
+    var waitForComplete = timeoutms => new Promise((r, j)=>{
+        var check = () => {
+          if(response != null){
+            r()
+          }else if((timeoutms -= 100) < 0)
+            j('ccGet timed out..')
+          else
+            setTimeout(check, 100)
+        }
+        setTimeout(check, 100)
+      })
+
+    await waitForComplete(120000)
+    return response
 }
 
 function getchecksum(str, algorithm, encoding) {
@@ -626,7 +640,7 @@ function getchecksum(str, algorithm, encoding) {
       .update(str, 'utf8')
       .digest(encoding || 'hex')
 }
-exports.GetDataFS= function(file, key){
+var GetDataFS = exports.GetDataFS =  async function(key){
 
     var args = key
     var getfunction = "get"
@@ -662,11 +676,12 @@ exports.GetDataFS= function(file, key){
             console.log("Checksum correct!")
         }else{
             console.log("Incorrect checksum!")
-            //return
+            return null
         }
 
         //Write file to specified local address
-        console.log("File stored locally on address: " + file)
-        fs.writeFileSync(file, fileobj)
+        
+
+        return fileobj
     })
 }
