@@ -270,7 +270,7 @@ func get(stub shim.ChaincodeStubInterface, arg string) (string, error) {
 	} else {
 		retval = string(value)
 	}*/
-	retobj := GetObject{valueJSON.Hash, valueJSON.Location, valueJSON.Pointer, valueJSON.txID}
+	retobj := GetObject{valueJSON.Hash, valueJSON.Location, valueJSON.Pointer, valueJSON.TxID}
 	jsonobj, err := json.Marshal(retobj)
 
 	return string(jsonobj), nil
