@@ -500,7 +500,7 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count
 		for _, element := range i { 
 			fmt.Printf("New elem recursive " + element)
 
-			buffer.WriteString("{\"TxID\":")
+			buffer.WriteString("\"TxID\":")
 			buffer.WriteString("\"")
 			buffer.WriteString(element)
 			buffer.WriteString("\", ")
@@ -517,7 +517,7 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count
 			}
 			buffer.WriteString("]")
 
-			buffer.WriteString("}")
+			//buffer.WriteString("}")
 		}
 	}
 
