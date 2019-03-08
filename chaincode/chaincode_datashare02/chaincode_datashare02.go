@@ -448,8 +448,13 @@ func getdependencies(stub shim.ChaincodeStubInterface, args []string) (string, e
 		errorResp := "{\"Error\":\"Failed to recursively get dependencies}: " + err.Error()
 		return "", fmt.Errorf(errorResp)
 	}
+	var buffer bytes.Buffer
+	buffer.WriteString("{")
+	buffer.WriteString("\"Dependencies\": ")
+	buffer.WriteString(retval)
+	buffer.WriteString("}")
 
-	return retval, nil
+	return string(buffer.Bytes()), nil
 }
 
 func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count int ) (string, error) {
@@ -489,7 +494,7 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count
 	fmt.Printf("After Unmarshal recursive")
 	// buffer is a JSON array containing historic values
 	var buffer bytes.Buffer
-	buffer.WriteString("{")
+	buffer.WriteString("[")
 
 	
 
@@ -497,8 +502,11 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count
 	if(valueJSON.Dependencies != ""){
 		fmt.Printf("txid")
 		i := strings.Split(valueJSON.Dependencies, ":")
-		for _, element := range i { 
+		for nr, element := range i { 
 			fmt.Printf("New elem recursive " + element)
+			if(nr != 0){
+				buffer.WriteString("\", ")
+			}
 
 			buffer.WriteString("\"TxID\":")
 			buffer.WriteString("\"")
@@ -506,7 +514,7 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count
 			buffer.WriteString("\", ")
 
 			buffer.WriteString(" \"Depending\": ")
-			buffer.WriteString("[")
+			//buffer.WriteString("")
 			fmt.Printf("Getting to before recursive call")
 			retstring, reterror := recursivedependencies(stub, element, count-1)
 			if reterror != nil{
@@ -515,9 +523,9 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count
 			}else{
 				buffer.WriteString(retstring)
 			}
-			buffer.WriteString("]")
+			//buffer.WriteString("]")
 
-			//buffer.WriteString("}")
+			buffer.WriteString("}")
 		}
 	}
 
@@ -538,7 +546,7 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count
 		buffer.WriteString("\"")
 */
 		
-	buffer.WriteString("}")
+	buffer.WriteString("]")
 
 	fmt.Printf("End of recursive")
 	return string(buffer.Bytes()), nil
