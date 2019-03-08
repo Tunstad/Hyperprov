@@ -433,7 +433,7 @@ func getFromID(stub shim.ChaincodeStubInterface, arg string) (string, error){
 func getdependencies(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	fmt.Printf("Start of getdependencies")
 
-	count := 3
+	count := 10
 	if(len(args) == 2){
 		count, err := strconv.Atoi(args[1])
 		if err != nil {
@@ -489,7 +489,7 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count
 	fmt.Printf("After Unmarshal recursive")
 	// buffer is a JSON array containing historic values
 	var buffer bytes.Buffer
-	buffer.WriteString("[")
+	buffer.WriteString("{")
 
 	
 
@@ -505,7 +505,7 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count
 			buffer.WriteString(element)
 			buffer.WriteString("\"")
 
-			buffer.WriteString(" \"Depending\":")
+			buffer.WriteString(" \"Depending\": [")
 			buffer.WriteString("\"")
 			fmt.Printf("Getting to before recursive call")
 			retstring, reterror := recursivedependencies(stub, element, count-1)
@@ -515,7 +515,7 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count
 			}else{
 				buffer.WriteString(retstring)
 			}
-			buffer.WriteString("\"")
+			buffer.WriteString("]\"")
 
 			buffer.WriteString("}")
 		}
@@ -538,7 +538,7 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count
 		buffer.WriteString("\"")
 */
 		
-	buffer.WriteString("]")
+	buffer.WriteString("}")
 
 	fmt.Printf("End of recursive")
 	return string(buffer.Bytes()), nil
