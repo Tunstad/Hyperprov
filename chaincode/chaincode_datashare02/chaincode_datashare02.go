@@ -506,7 +506,7 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count
 			buffer.WriteString("\", ")
 
 			buffer.WriteString(" \"Depending\": ")
-			buffer.WriteString("\"[")
+			buffer.WriteString("[")
 			fmt.Printf("Getting to before recursive call")
 			retstring, reterror := recursivedependencies(stub, element, count-1)
 			if reterror != nil{
@@ -515,7 +515,7 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count
 			}else{
 				buffer.WriteString(retstring)
 			}
-			buffer.WriteString("]\"")
+			buffer.WriteString("]")
 
 			buffer.WriteString("}")
 		}
