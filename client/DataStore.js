@@ -12,13 +12,19 @@ hyperprovclient.ccInit('Peer2', keypath, 'mychannel', 'myccds', 'mc.ptunstad.no:
 
 
 hyperprovclient.InitFileStore("file:///mnt/hlfshared")
-//var fileobj = fs.readFileSync("car.jpg")
-//dataargs = hyperprovclient.StoreDataFS(fileobj, "mycarimage")
 
-var fileobj = hyperprovclient.GetDataFS("mycarimage")
-fs.writeFileSync("retrievedimage.jpg", fileobj)
 
-return
+// var fileobj = fs.readFileSync("car.jpg")
+// hyperprovclient.StoreDataFS(fileobj, "mycarimage").then((res) => {
+//     console.log(res)
+// })
+
+hyperprovclient.GetDataFS("mycarimage").then((res) => {
+    console.log("TxID: "+ res[1])
+    fs.writeFileSync("retrievedimage.jpg", res[0])
+    console.log("Wrote image to file")
+
+})
 
 /*
 console.log("Starting in REST-api mode..")

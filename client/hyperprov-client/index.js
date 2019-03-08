@@ -616,7 +616,10 @@ var StoreDataFS = exports.StoreDataFS =  async function(fileobj, key, descriptio
     var args = [key, checksum, file_store_path, pointer, description, dependecies]
     ccPost('set', args).then((r) => {
         response = "Record of file stored in ledger: " + r
-    })
+    }).catch((err) => {
+        console.error('Failed to store successfully in ledger :: ' + err);
+        response = 'Failed to store successfully in ledger :: ' + err
+    });
 
     var waitForComplete = timeoutms => new Promise((r, j)=>{
         var check = () => {
@@ -644,6 +647,8 @@ var GetDataFS = exports.GetDataFS =  async function(key){
 
     var args = key
     var getfunction = "get"
+    var response = null
+    var txidresp = null
 
     //If length is 64(the length of a txid) then use getfromid, not a futureproof soluton, this just for testing :)
     if(key.length == 64){
@@ -651,6 +656,12 @@ var GetDataFS = exports.GetDataFS =  async function(key){
     }
 
     ccGet(getfunction, args).then((result) => {
+        if(result.indexOf('Error: Asset not found: ' + key) !== -1){
+            console.log("Asset not found..")
+            response = result
+            return
+        }
+
         console.log("Retrieved record from ledger: " + result)
         var resultobj = JSON.parse(result)
         var path = resultobj.location
@@ -663,7 +674,8 @@ var GetDataFS = exports.GetDataFS =  async function(key){
 
         //Check that file exists
         if (!fs.existsSync(path+ "/" +  pointer)){
-            console.log("File does not exist in off chain storage: " + path+ "/" +  pointer)
+            console.error("File does not exist in off chain storage: " + path+ "/" +  pointer)
+            response =  "File does not exist in off chain storage: " + path+ "/" +  pointer
             return
         }
 
@@ -675,13 +687,38 @@ var GetDataFS = exports.GetDataFS =  async function(key){
         if(checksum == resultobj.hash){
             console.log("Checksum correct!")
         }else{
-            console.log("Incorrect checksum!")
-            return null
+            console.error("Incorrect checksum!")
+            response =  "Incorrect checksum!"
         }
 
         //Write file to specified local address
         
+        txidresp = resultobj.txid
+        console.log(fileobj)
+        response = fileobj
+    }).catch((err) => {
+        console.error('Failed to retrieve successfully from ledger :: ' + err);
+        response = err
+        return
+    });
 
-        return fileobj
-    })
+    var waitForComplete = timeoutms => new Promise((r, j)=>{
+        var check = () => {
+          if(response != null){
+            console.log(response)
+            r()
+          }else if((timeoutms -= 100) < 0)
+            j('ccGet timed out..')
+          else
+            setTimeout(check, 100)
+        }
+        setTimeout(check, 100)
+      })
+
+    await waitForComplete(120000)
+    console.log("After wait getdatafs!!")
+    var retval = []
+    retval[0] = response
+    retval[1] = txidresp
+    return retval
 }

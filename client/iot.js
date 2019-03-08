@@ -11,6 +11,8 @@ sendData()
 
 
 async function sendData(){
+
+    var response = null
     var year;
     count = 0
     submitted = 0
@@ -36,12 +38,50 @@ async function sendData(){
             // Read a file for data
             var array = fs.readFileSync(file).toString().split("\n");
             for(i in array) {
+                if (i % 3 == 0 && i != 0){
+                    response = null
+                    console.log("\n\n\n")
+                    var currentdata= await hyperprovclient.GetDataFS(station)
+                    var fileobjcurrent = currentdata[0]
+                    var fctxid = currentdata[1]
+
+                    console.log(fileobjcurrent)
+                    console.log("Retrieved current data")
+
+                    if ( i != 3){
+                    var prevdata = await hyperprovclient.GetDataFS(station + "_analysed")
+                    var prevobj = prevdata[0]
+                    var prevtxid = prevdata[1]
+                    console.log(prevobj)
+                    }
+
+                    console.log("11")
+                    if(i != 3){
+                        fileobjcurrent = Buffer.concat([prevobj, fileobjcurrent]);
+                        var depend = fctxid + ":" + prevtxid
+
+                    }else{
+                        console.log("22")
+                        var depend = fctxid
+                    }
+                    console.log("Storing data..")
+                    console.log(fileobjcurrent)
+                    hyperprovclient.StoreDataFS(fileobjcurrent, station+"_analysed", "Modification on " + station, depend).then((r) => {
+                        response = r
+                        console.log("R:" + r)
+                    })
+
+                    await waitForComplete(120000)
+                    console.log("Analyse operation completed!")
+                    console.log("\n\n\n")
+
+                }
                 //Check that line is not empty, last line always empty
                 if(array[i] != "" && i != 0){
                 
                     
 
-                    var response = null
+                    response = null
                     //Get the year, month and day
                     var ymd = array[i].substr(14, 8)
                     //Get avg temperature
