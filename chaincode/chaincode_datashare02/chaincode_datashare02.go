@@ -36,7 +36,8 @@ type operation struct {
 type GetObject struct {
 	Hash string `json:"hash"`
 	Location string `json:"location"` 
-	Pointer string `json:"pointer"`  
+	Pointer string `json:"pointer"`
+	TxID string `json:"txid"`   
 }
 
 
@@ -269,7 +270,7 @@ func get(stub shim.ChaincodeStubInterface, arg string) (string, error) {
 	} else {
 		retval = string(value)
 	}*/
-	retobj := GetObject{valueJSON.Hash, valueJSON.Location, valueJSON.Pointer}
+	retobj := GetObject{valueJSON.Hash, valueJSON.Location, valueJSON.Pointer, valueJSON.txID}
 	jsonobj, err := json.Marshal(retobj)
 
 	return string(jsonobj), nil
