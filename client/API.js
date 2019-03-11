@@ -7,7 +7,7 @@ var RESTAPI = true;
 //Answer only local or external accesses to REST api
 var localONLY = true;
 var keypath = path.join(__dirname, 'hfc-key-store')
-hyperprovclient.ccInit('Peer2', keypath, 'mychannel', 'myccds', 'node2.ptunstad.no:7051', 'node1.ptunstad.no:7050');
+hyperprovclient.ccInit('Peer2', keypath, 'mychannel', 'myccds', 'mc.ptunstad.no:7051', 'agc.ptunstad.no:7050');
 //hyperprovclient.ccJoin();
 
 console.log("Starting in REST-api mode..")
@@ -76,7 +76,9 @@ app.post('/set', function (req, res) {
         }
     }
     
-    hyperprovclient.ccPost('set', requestarguments, restCallback, null, res)
+    hyperprovclient.ccPost('set', requestarguments).then((r) => {
+        res.end(r)
+    })
 })
 app.get('/get', function (req, res) {
     if(req.headers['key']){
@@ -84,7 +86,9 @@ app.get('/get', function (req, res) {
     }else{
         res.end("Too few arguments, requre header for key")
     }
-    hyperprovclient.ccGet('get', key, restCallback, res)
+    hyperprovclient.ccGet('get', key).then((r) => {
+        res.end(r)
+    })
 })
 app.get('/getwithid', function (req, res) {
     if(req.headers['key']){
@@ -92,7 +96,9 @@ app.get('/getwithid', function (req, res) {
     }else{
         res.end("Too few arguments, requre header for key")
     }
-    hyperprovclient.ccGet('getwithid', key, restCallback, res)
+    hyperprovclient.ccGet('getwithid', key).then((r) => {
+        res.end(r)
+    })
 })
 app.get('/getfromid', function (req, res) {
     if(req.headers['txid']){
@@ -100,7 +106,9 @@ app.get('/getfromid', function (req, res) {
     }else{
         res.end("Too few arguments, requre header for txid")
     }
-    hyperprovclient.ccGet('getfromid', txid, restCallback, res)
+    hyperprovclient.ccGet('getfromid', txid).then((r) => {
+        res.end(r)
+    })
 })
 app.get('/getkeyhistory', function (req, res) {
     if(req.headers['key']){
@@ -108,7 +116,13 @@ app.get('/getkeyhistory', function (req, res) {
     }else{
         res.end("Too few arguments, requre header for key")
     }
-    hyperprovclient.ccGet('getkeyhistory', key, restCallback, res)
+    hyperprovclient.ccGet('getkeyhistory', key).then((r) => {
+        res.end(r)
+    })
+    //console.log("After call")
+    //console.log("Response: " + response)
+    //res.end("asdf")
+
 })
 app.get('/getdependencies', function (req, res) {
     var requestarguments = []
@@ -124,7 +138,9 @@ app.get('/getdependencies', function (req, res) {
     }else{
         console.log("Count header not present, chaincode will use default depth")
     }
-    hyperprovclient.ccGet('getdependencies', requestarguments, restCallback, res)
+    hyperprovclient.ccGet('getdependencies', requestarguments).then((r) => {
+        res.end(r)
+    })
 })
 app.get('/getbyrange', function (req, res) {
     var requestarguments = []
@@ -141,7 +157,9 @@ app.get('/getbyrange', function (req, res) {
     }else{
         res.end("Too few arguments, requre header for endkey")
     }
-    hyperprovclient.ccGet('getbyrange', requestarguments, restCallback, res)
+    hyperprovclient.ccGet('getbyrange', requestarguments).then((r) => {
+        res.end(r)
+    })
 })
 app.post('/sendfile', function (req, res) {
     var requestarguments = req.get('arguments').toString()

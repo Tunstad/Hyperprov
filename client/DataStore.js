@@ -1,5 +1,6 @@
 var hyperprovclient = require("hyperprov-client")
 var path = require('path');
+var fs = require('fs');
 
 //Switch to enable REST-api access or disable for CLI
 var RESTAPI = true;
@@ -10,12 +11,20 @@ var keypath = path.join(__dirname, 'hfc-key-store')
 hyperprovclient.ccInit('Peer2', keypath, 'mychannel', 'myccds', 'mc.ptunstad.no:7051', 'agc.ptunstad.no:7050');
 
 
-//hyperprovclient.InitFileStore("file:///mnt/hlfshared")
-//dataargs = hyperprovclient.StoreDataFS("car.jpg", "mycarimage")
+hyperprovclient.InitFileStore("file:///mnt/hlfshared")
 
-//dataargs = hyperprovclient.GetDataFS("retrievedimage.jpg", "mycarimage")
 
-return
+// var fileobj = fs.readFileSync("car.jpg")
+// hyperprovclient.StoreDataFS(fileobj, "mycarimage").then((res) => {
+//     console.log(res)
+// })
+
+hyperprovclient.GetDataFS("mycarimage").then((res) => {
+    console.log("TxID: "+ res[1])
+    fs.writeFileSync("retrievedimage.jpg", res[0])
+    console.log("Wrote image to file")
+
+})
 
 /*
 console.log("Starting in REST-api mode..")

@@ -36,7 +36,8 @@ type operation struct {
 type GetObject struct {
 	Hash string `json:"hash"`
 	Location string `json:"location"` 
-	Pointer string `json:"pointer"`  
+	Pointer string `json:"pointer"`
+	TxID string `json:"txid"`   
 }
 
 
@@ -269,7 +270,7 @@ func get(stub shim.ChaincodeStubInterface, arg string) (string, error) {
 	} else {
 		retval = string(value)
 	}*/
-	retobj := GetObject{valueJSON.Hash, valueJSON.Location, valueJSON.Pointer}
+	retobj := GetObject{valueJSON.Hash, valueJSON.Location, valueJSON.Pointer, valueJSON.TxID}
 	jsonobj, err := json.Marshal(retobj)
 
 	return string(jsonobj), nil
@@ -432,7 +433,7 @@ func getFromID(stub shim.ChaincodeStubInterface, arg string) (string, error){
 func getdependencies(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	fmt.Printf("Start of getdependencies")
 
-	count := 3
+	count := 10
 	if(len(args) == 2){
 		count, err := strconv.Atoi(args[1])
 		if err != nil {
@@ -447,8 +448,13 @@ func getdependencies(stub shim.ChaincodeStubInterface, args []string) (string, e
 		errorResp := "{\"Error\":\"Failed to recursively get dependencies}: " + err.Error()
 		return "", fmt.Errorf(errorResp)
 	}
+	var buffer bytes.Buffer
+	buffer.WriteString("{")
+	buffer.WriteString("\"Dependencies\": ")
+	buffer.WriteString(retval)
+	buffer.WriteString("}")
 
-	return retval, nil
+	return string(buffer.Bytes()), nil
 }
 
 func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count int ) (string, error) {
@@ -496,16 +502,19 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count
 	if(valueJSON.Dependencies != ""){
 		fmt.Printf("txid")
 		i := strings.Split(valueJSON.Dependencies, ":")
-		for _, element := range i { 
+		for nr, element := range i { 
 			fmt.Printf("New elem recursive " + element)
+			if(nr != 0){
+				buffer.WriteString(", ")
+			}
 
 			buffer.WriteString("{\"TxID\":")
 			buffer.WriteString("\"")
 			buffer.WriteString(element)
-			buffer.WriteString("\"")
+			buffer.WriteString("\", ")
 
-			buffer.WriteString(" \"Depending\":")
-			buffer.WriteString("\"")
+			buffer.WriteString(" \"Depending\": ")
+			//buffer.WriteString("")
 			fmt.Printf("Getting to before recursive call")
 			retstring, reterror := recursivedependencies(stub, element, count-1)
 			if reterror != nil{
@@ -514,7 +523,7 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count
 			}else{
 				buffer.WriteString(retstring)
 			}
-			buffer.WriteString("\"")
+			//buffer.WriteString("]")
 
 			buffer.WriteString("}")
 		}
