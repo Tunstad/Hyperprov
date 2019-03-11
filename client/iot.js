@@ -18,8 +18,8 @@ async function sendData(){
     count = 0
     submitted = 0
     for (year = 1974; year <= 2017; year++) {
-        var path = "/data/gsod/scp/NOAA-GSOD-GET"
-        path = path + "/" + year.toString() 
+        var path = "/data/gsod6"
+        //path = path + "/" + year.toString() 
         
 
         
