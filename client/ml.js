@@ -6,19 +6,19 @@ var hyperprovclient = require("hyperprov-client")
 
 var keypath = path.join(__dirname, 'hfc-key-store')
 hyperprovclient.ccInit('Peer2', keypath, 'mychannel', 'myccds', 'mc.ptunstad.no:7051', 'agc.ptunstad.no:7050');
+hyperprovclient.InitFileStore("file:///mnt/hlfshared")
 var modelFolder = "./ML/idenprof/models"
 var Key = "imageML_node3"
+var logfile = "ml_model_log"
 StoreModels()
 
 async function StoreModels(){
-    hyperprovclient.InitFileStore("file:///mnt/hlfshared")
-
     var stored_files = []
-    if (!fs.existsSync("ML_model_log")){
-        console.log("File llist does not already exist, creating..")
-        fs.writeFile("ML_model_log", "")
+    if (!fs.existsSync(logfile)){
+        console.log("File list does not already exist, creating..")
+        fs.writeFile(logfile, "")
     }else{
-        model_log = fs.readFileSync("ML_model_log")
+        model_log = fs.readFileSync(logfile)
         var stored_files = JSON.parse(model_log)
     }
 
@@ -28,7 +28,7 @@ async function StoreModels(){
 
     for (let file of files){
         if(stored_files.indexOf(file) > -1){
-            console.log(file+" already stored in Hyperprov")
+            console.log("File: \"" + file+"\" already stored in Hyperprov")
         }else{
             var response = null
             var model = await fs.readFileSync(modelFolder + "/" + file);
@@ -57,5 +57,5 @@ async function StoreModels(){
             stored_files.push(file)
         }
     }
-    fs.writeFile("ML_model_log", JSON.stringify(stored_files))
+    fs.writeFile(logfile, JSON.stringify(stored_files))
 }
