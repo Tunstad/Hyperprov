@@ -11,10 +11,10 @@ hyperprovclient.InitFileStore("file:///mnt/hlfshared")
 var modelFolder = "./ML/idenprof/models"
 var ModelKey = "imageML_node3"
 
-var TestKey = "imageML_node3_test"
+var TestKey = "imageML_node3_test54"
 var TestFolder = "./ML/idenprof/test"
 
-var TrainKey = "imageML_node3_train"
+var TrainKey = "imageML_node3_train54"
 var TrainFolder = "./ML/idenprof/train"
 
 var logfile = "ml_model_log"
