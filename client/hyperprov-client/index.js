@@ -80,6 +80,7 @@ var ccPost = exports.ccPost = async function(ccfunc, ccargs, timeout){
     }
 
     var response = null
+    var transaction_id_string = null
     Fabric_Client.newDefaultKeyValueStore({ path: store_path
     }).then((state_store) => {
         // assign the store to the fabric client
@@ -153,7 +154,7 @@ var ccPost = exports.ccPost = async function(ccfunc, ccargs, timeout){
             // set the transaction listener and set a timeout of 30 sec
             // if the transaction did not get committed within the timeout period,
             // report a TIMEOUT status
-            var transaction_id_string = tx_id.getTransactionID(); //Get the transaction ID string to be used by the event processing
+            transaction_id_string = tx_id.getTransactionID(); //Get the transaction ID string to be used by the event processing
             var promises = [];
     
             var sendPromise = channel.sendTransaction(request);
@@ -218,7 +219,7 @@ var ccPost = exports.ccPost = async function(ccfunc, ccargs, timeout){
             //console.log('Successfully committed the change to the ledger by the peer');
             //Callback function used to measure time-to-commit.
             //This functionality is only used for measurements and can be disabled otherwise.
-            response = 'Successfully committed the change to the ledger by the peer'
+            response = transaction_id_string
             // if (typeof callback === "function") {
             //     if(resp){
             //         callback('Successfully committed the change to the ledger by the peer', resp)
@@ -615,10 +616,10 @@ var StoreDataFS = exports.StoreDataFS =  async function(fileobj, key, descriptio
     //Store data in blockchain
     var args = [key, checksum, file_store_path, pointer, description, dependecies]
     ccPost('set', args).then((r) => {
-        response = "Record of file stored in ledger: " + r
+        response = r
     }).catch((err) => {
         console.error('Failed to store successfully in ledger :: ' + err);
-        response = 'Failed to store successfully in ledger :: ' + err
+        throw new Error('Failed to store successfully in ledger :: ' + err);
     });
 
     var waitForComplete = timeoutms => new Promise((r, j)=>{
