@@ -81,6 +81,7 @@ var ccPost = exports.ccPost = async function(ccfunc, ccargs, timeout){
 
     var response = null
     var transaction_id_string = null
+    var proposed_txid = null
     Fabric_Client.newDefaultKeyValueStore({ path: store_path
     }).then((state_store) => {
         // assign the store to the fabric client
@@ -108,6 +109,7 @@ var ccPost = exports.ccPost = async function(ccfunc, ccargs, timeout){
     
         // get a transaction id object based on the current user assigned to fabric client
         tx_id = fabric_client.newTransactionID();
+        proposed_txid = tx_id._transaction_id
         console.log("Assigning transaction_id: ", tx_id._transaction_id);
 
         console.log(ccargs)
@@ -219,7 +221,7 @@ var ccPost = exports.ccPost = async function(ccfunc, ccargs, timeout){
             //console.log('Successfully committed the change to the ledger by the peer');
             //Callback function used to measure time-to-commit.
             //This functionality is only used for measurements and can be disabled otherwise.
-            response = transaction_id_string
+            response = proposed_txid
             // if (typeof callback === "function") {
             //     if(resp){
             //         callback('Successfully committed the change to the ledger by the peer', resp)
