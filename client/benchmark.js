@@ -1,7 +1,6 @@
 var hyperprovclient = require("hyperprov-client")
 var path = require('path');
 var fs = require('fs');
-const plt = require('matplotnode');
 
 var keypath = path.join(__dirname, 'hfc-key-store')
 hyperprovclient.ccInit('Peer2', keypath, 'mychannel', 'myccds', 'mc.ptunstad.no:7051', 'agc.ptunstad.no:7050');
@@ -60,6 +59,9 @@ async function multibenchmark(){
     }
     console.log(results)
     console.timeEnd('TotalTime')
+    
+
+    savejson(results)
 }
 
 async function benchmark(totalnumber, datalength){
@@ -102,6 +104,25 @@ async function benchmark(totalnumber, datalength){
     //console.timeEnd("totaltime")
     //console.log("Failed transactions: " + String(failed))
     return [(end-begin) +"ms", failed, totalnumber, datalength, avgresponsetime, stdresponetime]
+}
+
+function savejson(results){
+
+    var xaxis = []
+    var yaxis = []
+    var sd = []
+    for (let result of results){
+        console.log(result)
+        xaxis.push(result[2])
+        yaxis.push(result[7])
+        sd.push(result[0])
+    }
+    var o = {}
+    o["x"] = xaxis
+    o["y"] = yaxis
+    o["sd"]= sd
+    var json = JSON.stringify(o);
+    fs.writeFileSync("measurement.json", json)
 }
 
 
