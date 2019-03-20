@@ -22,6 +22,7 @@ if(store){
 
     //Retrieve data from the ledger and then off chain storage
 
+
     hyperprovclient.GetDataFS("mycarimage").then((res) => {
         fs.writeFileSync("output.jpg", res[0])
         console.log("Wrote image to file output.jpg")

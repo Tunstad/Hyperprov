@@ -53,11 +53,12 @@ var store_path = path.join(__dirname, 'hfc-key-store');
 var channel = fabric_client.newChannel('mychannel');
 
 //Set the peer to recieve operations and add it to the channel object
-var peer = fabric_client.newPeer('grpc://mc.ptunstad.no:7051');
+
+var peer = fabric_client.newPeer('grpc://node3.ptunstad.no:7051');
 channel.addPeer(peer);
 
 //Set the orderer to be used by the set-functionality in the blockchain.
-var order = fabric_client.newOrderer('grpc://agc.ptunstad.no:7050')
+var order = fabric_client.newOrderer('grpc://node1.ptunstad.no:7050')
 channel.addOrderer(order);
 
 //REST-api functionality to interact with client application from external device.
@@ -478,3 +479,4 @@ function filefromBase64(inputstring, outputfile){
     var decoded = new Buffer(inputstring, 'base64')
     fs.writeFileSync(outputfile, decoded)
 }
+
