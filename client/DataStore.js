@@ -2,11 +2,6 @@ var hyperprovclient = require("hyperprov-client")
 var path = require('path');
 var fs = require('fs');
 
-//Switch to enable REST-api access or disable for CLI
-var RESTAPI = true;
-
-//Answer only local or external accesses to REST api
-var localONLY = true;
 var keypath = path.join(__dirname, 'hfc-key-store')
 hyperprovclient.ccInit('Peer2', keypath, 'mychannel', 'myccds', 'mc.ptunstad.no:7051', 'agc.ptunstad.no:7050');
 
@@ -26,6 +21,7 @@ if(store){
 }else{
 
     //Retrieve data from the ledger and then off chain storage
+
 
     hyperprovclient.GetDataFS("mycarimage").then((res) => {
         fs.writeFileSync("output.jpg", res[0])

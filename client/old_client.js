@@ -53,6 +53,7 @@ var store_path = path.join(__dirname, 'hfc-key-store');
 var channel = fabric_client.newChannel('mychannel');
 
 //Set the peer to recieve operations and add it to the channel object
+
 var peer = fabric_client.newPeer('grpc://node3.ptunstad.no:7051');
 channel.addPeer(peer);
 
@@ -478,3 +479,4 @@ function filefromBase64(inputstring, outputfile){
     var decoded = new Buffer(inputstring, 'base64')
     fs.writeFileSync(outputfile, decoded)
 }
+

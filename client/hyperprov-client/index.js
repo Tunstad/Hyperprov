@@ -14,6 +14,7 @@ var fs = require("fs")
 var crypto = require("crypto");
 var helper = require('./lib/helper.js');
 var logger = helper.getLogger('Hyperprov');
+logger.level = "INFO"
 var enrollRegisterAdmin = require("./Enroll/enrollAdmin")
 var enrollRegisterUser = require("./Enroll/registerUser")
 
@@ -81,6 +82,8 @@ var ccPost = exports.ccPost = async function(ccfunc, ccargs, timeout){
 
     var response = null
     var transaction_id_string = null
+    var proposed_txid = null
+
     Fabric_Client.newDefaultKeyValueStore({ path: store_path
     }).then((state_store) => {
         // assign the store to the fabric client
@@ -100,7 +103,7 @@ var ccPost = exports.ccPost = async function(ccfunc, ccargs, timeout){
         return fabric_client.getUserContext(currentUser, true);
     }).then((user_from_store) => {
         if (user_from_store && user_from_store.isEnrolled()) {
-            console.log('Successfully loaded user from persistence');
+            logger.debug('Successfully loaded user from persistence');
             member_user = user_from_store;
         } else {
             throw new Error('Failed to get user.... run enrollAdmin.js (and maybe RegisterUser)');
@@ -108,9 +111,9 @@ var ccPost = exports.ccPost = async function(ccfunc, ccargs, timeout){
     
         // get a transaction id object based on the current user assigned to fabric client
         tx_id = fabric_client.newTransactionID();
-        console.log("Assigning transaction_id: ", tx_id._transaction_id);
+        proposed_txid = tx_id._transaction_id
+        logger.debug("Assigning transaction_id: ", tx_id._transaction_id);
 
-        console.log(ccargs)
     
         // must send the proposal to endorsing peers
         var request = {
@@ -131,12 +134,12 @@ var ccPost = exports.ccPost = async function(ccfunc, ccargs, timeout){
         if (proposalResponses && proposalResponses[0].response &&
             proposalResponses[0].response.status === 200) {
                 isProposalGood = true;
-                console.log('Transaction proposal was good');
+                logger.debug('Transaction proposal was good');
             } else {
                 console.error('Transaction proposal was bad');
             }
         if (isProposalGood) {
-            console.log(util.format(
+            logger.debug(util.format(
                 'Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s"',
                 proposalResponses[0].response.status, proposalResponses[0].response.message));
     
@@ -188,7 +191,7 @@ var ccPost = exports.ccPost = async function(ccfunc, ccargs, timeout){
                         console.error('The transaction was invalid, code = ' + code);
                         resolve(return_status); // we could use reject(new Error('Problem with the tranaction, event status ::'+code));
                     } else {
-                        console.log('The transaction has been committed on peer ' + event_hub.getPeerAddr());
+                        logger.debug('The transaction has been committed on peer ' + event_hub.getPeerAddr());
                         resolve(return_status);
                     }
                 }, (err) => {
@@ -207,10 +210,10 @@ var ccPost = exports.ccPost = async function(ccfunc, ccargs, timeout){
             throw new Error('Failed to send Proposal or receive valid response. Response null or status is not 200. exiting...');
         }
     }).then((results) => {
-        console.log('Send transaction promise and event listener promise have completed');
+        logger.debug('Send transaction promise and event listener promise have completed');
         // check the results in the order the promises were added to the promise all list
         if (results && results[0] && results[0].status === 'SUCCESS') {
-            console.log('Successfully sent transaction to the orderer.');
+            logger.debug('Successfully sent transaction to the orderer.');
         } else {
             console.error('Failed to order the transaction. Error code: ' + results[0].status);
         }
@@ -219,7 +222,8 @@ var ccPost = exports.ccPost = async function(ccfunc, ccargs, timeout){
             //console.log('Successfully committed the change to the ledger by the peer');
             //Callback function used to measure time-to-commit.
             //This functionality is only used for measurements and can be disabled otherwise.
-            response = transaction_id_string
+            response = proposed_txid
+
             // if (typeof callback === "function") {
             //     if(resp){
             //         callback('Successfully committed the change to the ledger by the peer', resp)
@@ -585,6 +589,11 @@ exports.InitFileStore= function(FSpath){
         throw new Error(error_message);
     }
 }
+exports.StoreDataFSBM =  async function(fileobj, key, description="", dependecies=""){
+var response = await StoreDataFS(fileobj, key)
+return [response, key]
+}
+
 var StoreDataFS = exports.StoreDataFS =  async function(fileobj, key, description="", dependecies=""){
     var response = null
     
@@ -598,19 +607,19 @@ var StoreDataFS = exports.StoreDataFS =  async function(fileobj, key, descriptio
 
     //Regenerate pointer if file exists
     while (fs.existsSync(path+ "/" +  pointer)){
-        console.log("Pointer " + pointer + " already exists, regenerating..")
+        logger.debug("Pointer " + pointer + " already exists, regenerating..")
         var pointer = crypto.randomBytes(20).toString('hex');
     }
 
     //Write file to off chain storage
     fs.writeFileSync(path+ "/" +  pointer, fileobj)
 
-    console.log("File written to off-chain storage at: " + path+ "/" +  pointer)
+    logger.debug("File written to off-chain storage at: " + path+ "/" +  pointer)
 
 
     //Calculate checksum of file
     var checksum = getchecksum(fileobj) // e53815e8c095e270c6560be1bb76a65d
-    console.log("File checksum is : " + checksum)
+    logger.debug("File checksum is : " + checksum)
 
 
     //Store data in blockchain
@@ -686,7 +695,7 @@ var GetDataFS = exports.GetDataFS =  async function(key){
         //Verify checksum
         var checksum = getchecksum(fileobj)
         if(checksum == resultobj.hash){
-            console.log("Checksum correct!")
+            logger.debug("Checksum correct!")
         }else{
             console.error("Incorrect checksum!")
             response =  "Incorrect checksum!"
@@ -695,7 +704,6 @@ var GetDataFS = exports.GetDataFS =  async function(key){
         //Write file to specified local address
         
         txidresp = resultobj.txid
-        console.log(fileobj)
         response = fileobj
     }).catch((err) => {
         console.error('Failed to retrieve successfully from ledger :: ' + err);
@@ -717,7 +725,6 @@ var GetDataFS = exports.GetDataFS =  async function(key){
       })
 
     await waitForComplete(120000)
-    console.log("After wait getdatafs!!")
     var retval = []
     retval[0] = response
     retval[1] = txidresp
