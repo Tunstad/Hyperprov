@@ -10,7 +10,7 @@ hyperprovclient.InitFileStore("file:///mnt/hlfshared")
 var bdatalength = 5
 var bdatalengths = [ 1000, 10000, 100000, 500000, 1000000, 5000000, 10000000, 25000000, 50000000, 100000000]
 
-var btotalnumber = 200
+var btotalnumber = 10
 //benchmark(50, 5000)
 multibenchmark()
 
@@ -23,7 +23,7 @@ async function multibenchmark(){
     for(var i = 0; i < benchmarks; i++){
         console.log("Starting round " + i + " of benchmarks..")
         for(var j = 0; j < samples; j++){
-        var r = await benchmark(Math.round(btotalnumber), bdatalengths[i]) // *(Math.pow(10, i))
+        var r = await benchmark(Math.round(btotalnumber + (i*10)), bdatalengths[i]) // *(Math.pow(10, i))
         measurements.push(r)
         console.log("Sample nr " + j + " completed.")
         //console.log("Measurement: " + String(r))
