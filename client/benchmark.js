@@ -11,19 +11,20 @@ var bdatalength = 5
 var bdatalengths = [ 1000, 10000, 100000, 500000, 1000000, 5000000, 10000000, 25000000, 50000000, 100000000]
 
 var btotalnumber = 10
-//benchmark(50, 5000)
+//benchmark(2, 5000, false)
 multibenchmark()
 
 
 async function multibenchmark(){
     console.time('TotalTime');
     var measurements = []
-    var benchmarks = 10
-    var samples = 5
+    var benchmarks = 5
+    var samples = 2
+
     for(var i = 0; i < benchmarks; i++){
         console.log("Starting round " + i + " of benchmarks..")
         for(var j = 0; j < samples; j++){
-        var r = await benchmark(Math.round(btotalnumber + (i*10)), bdatalengths[i]) // *(Math.pow(10, i))
+        var r = await benchmark(Math.round(btotalnumber + (i*10)), bdatalengths[3], true) // *(Math.pow(10, i))
         measurements.push(r)
         console.log("Sample nr " + j + " completed.")
         //console.log("Measurement: " + String(r))
@@ -62,12 +63,10 @@ async function multibenchmark(){
     }
     console.log(results)
     console.timeEnd('TotalTime')
-    
-
     savejson(results)
 }
 
-async function benchmark(totalnumber, datalength){
+async function benchmark(totalnumber, datalength, OCS=true){
     var count = 0
     var failed = 0
     
@@ -82,7 +81,16 @@ async function benchmark(totalnumber, datalength){
     //console.time("firstpropose")
     for (i = 0; i < totalnumber; i++){
         starttimes[i] = Date.now()
-        var HLargs = hyperprovclient.StoreDataFS(new Buffer(value), String(i))
+        if(OCS){
+            var HLargs = hyperprovclient.StoreDataFS(new Buffer(value), String(i))
+        }else{
+            var HLargs = [ String(i),
+            'eb2227ce2958d6dcc93f00b82c498b75',
+            'file:///mnt/hlfshared',
+            'c0f2f9ac997af0bd1db035e4445f50ba6e4ec24b',
+            '',
+            '' ]
+        }
 
         hyperprovclient.StoreDataHL(HLargs).then((res) => {
             //console.timeEnd("firstpropose")
