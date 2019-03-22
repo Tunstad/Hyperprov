@@ -1,14 +1,17 @@
 var hyperprovclient = require("hyperprov-client")
 var path = require('path');
 var fs = require('fs');
+const {exec} = require("child_process")
 
 var keypath = path.join(__dirname, 'hfc-key-store')
 hyperprovclient.ccInit('Peer2', keypath, 'mychannel', 'myccds', 'mc.ptunstad.no:7051', 'agc.ptunstad.no:7050');
 
 hyperprovclient.InitFileStore("file:///mnt/hlfshared")
 var bdatalength = 5
+var bdatalengths = [ 1000, 10000, 100000, 500000, 1000000, 5000000, 10000000, 25000000, 50000000, 100000000]
 
 var btotalnumber = 10
+//benchmark(2, 5000, false)
 multibenchmark()
 
 
@@ -17,10 +20,11 @@ async function multibenchmark(){
     var measurements = []
     var benchmarks = 5
     var samples = 2
+
     for(var i = 0; i < benchmarks; i++){
         console.log("Starting round " + i + " of benchmarks..")
         for(var j = 0; j < samples; j++){
-        var r = await benchmark(btotalnumber, bdatalength*(Math.pow(10, i))) // *(Math.pow(10, i))
+        var r = await benchmark(Math.round(btotalnumber + (i*10)), bdatalengths[3], true) // *(Math.pow(10, i))
         measurements.push(r)
         console.log("Sample nr " + j + " completed.")
         //console.log("Measurement: " + String(r))
@@ -59,12 +63,10 @@ async function multibenchmark(){
     }
     console.log(results)
     console.timeEnd('TotalTime')
-    
-
     savejson(results)
 }
 
-async function benchmark(totalnumber, datalength){
+async function benchmark(totalnumber, datalength, OCS=true){
     var count = 0
     var failed = 0
     
@@ -79,7 +81,18 @@ async function benchmark(totalnumber, datalength){
     //console.time("firstpropose")
     for (i = 0; i < totalnumber; i++){
         starttimes[i] = Date.now()
-        hyperprovclient.StoreDataFSBM(new Buffer(value), String(i)).then((res) => {
+        if(OCS){
+            var HLargs = hyperprovclient.StoreDataFS(new Buffer(value), String(i))
+        }else{
+            var HLargs = [ String(i),
+            'eb2227ce2958d6dcc93f00b82c498b75',
+            'file:///mnt/hlfshared',
+            'c0f2f9ac997af0bd1db035e4445f50ba6e4ec24b',
+            '',
+            '' ]
+        }
+
+        hyperprovclient.StoreDataHL(HLargs).then((res) => {
             //console.timeEnd("firstpropose")
             if(res[0] == "Transaction failed to be committed to the ledger due to ::TIMEOUT" || res == "Failed to invoke successfully :: Error: No identity has been assigned to this client"){
                 failed += 1
@@ -91,7 +104,7 @@ async function benchmark(totalnumber, datalength){
             //console.log("Count: " + String(count))
             //console.log(res)
         })
-        await sleep(randomIntFromInterval(20, 100))
+        await sleep(randomIntFromInterval(20, 200))
     }
 
     while (count != totalnumber){
@@ -107,22 +120,43 @@ async function benchmark(totalnumber, datalength){
 }
 
 function savejson(results){
+    var tavg = []
+    var tsd = []
+    var tmin = []
+    var respavg = []
+    var respsd = []
+    var fails = []
+    var tnum = []
+    var tsize = []
+    var samples = []
 
-    var xaxis = []
-    var yaxis = []
-    var sd = []
     for (let result of results){
         console.log(result)
-        xaxis.push(result[2])
-        yaxis.push(result[7])
-        sd.push(result[0])
+        tavg.push(result[0])
+        tsd.push(result[1])
+        tmin.push(result[2])
+        respavg.push(result[3])
+        respsd.push(result[4])
+        fails.push(result[5])
+        tnum.push(result[6])
+        tsize.push(result[7])
+        samples.push(result[8])
     }
     var o = {}
-    o["x"] = xaxis
-    o["y"] = yaxis
-    o["sd"]= sd
+    o["tavg"] = tavg
+    o["tsd"] = tsd
+    o["tmin"]= tmin
+    o["respavg"]= respavg
+    o["respsd"]= respsd
+    o["fails"]= fails
+    o["tnum"]= tnum
+    o["tsize"]= tsize
+    o["samples"]= samples
+
     var json = JSON.stringify(o);
     fs.writeFileSync("measurement.json", json)
+
+    exec('python plot.py').unref()
 }
 
 

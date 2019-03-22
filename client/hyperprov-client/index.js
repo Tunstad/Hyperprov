@@ -29,7 +29,7 @@ var currentbenchmarks = 0;
 
 //The user to interact with blockchain as, theese are found in hfc-key-store and generated 
 //by having enrollAdmin.js and registerUser.js interact with a fabric CA server
-var member_user = null
+
 var tx_id = null;
 var fabric_client = new Fabric_Client();
 var currentUser, store_path, channelname, chaincodeId, channel, peer, orderer, file_store_path
@@ -75,7 +75,8 @@ exports.registerUser = function (store_path, username, affiliation, role, caURL,
 //Function to post data via chaincode based on arguments, typically the set operation. 
 //For myccds it expects argument to be of type key, value. callback/resp used for returning result, 
 // callback 2 for benchamrking speed of first transaction.
-var ccPost = exports.ccPost = async function(ccfunc, ccargs, timeout){
+var ccPost = exports.ccPost = async function(ccfunc, ccargs, timeout){ 
+    var member_user
     if (timeout === undefined) {
         timeout = 120000;
     }
@@ -272,6 +273,7 @@ function getCallback(result, resp){
 //Takes in as aruments as a key string and callback-function only prints result to console.
 //Callback/resp used to return result back to caller.
 var ccGet = exports.ccGet =  async function(ccfunc, ccargs, timeout){
+    var member_user
     if (timeout === undefined) {
         timeout = 120000;
     }
@@ -589,13 +591,12 @@ exports.InitFileStore= function(FSpath){
         throw new Error(error_message);
     }
 }
-exports.StoreDataFSBM =  async function(fileobj, key, description="", dependecies=""){
-var response = await StoreDataFS(fileobj, key)
+exports.StoreDataFSBM =  function(fileobj, key, description="", dependecies=""){
+var response = StoreDataFS(fileobj, key)
 return [response, key]
 }
 
-var StoreDataFS = exports.StoreDataFS =  async function(fileobj, key, description="", dependecies=""){
-    var response = null
+var StoreDataFS = exports.StoreDataFS = function(fileobj, key, description="", dependecies=""){
     
     //Generate random 20 length pointer name
     var pointer = crypto.randomBytes(20).toString('hex');
@@ -620,10 +621,13 @@ var StoreDataFS = exports.StoreDataFS =  async function(fileobj, key, descriptio
     //Calculate checksum of file
     var checksum = getchecksum(fileobj) // e53815e8c095e270c6560be1bb76a65d
     logger.debug("File checksum is : " + checksum)
-
+    var args = [key, checksum, file_store_path, pointer, description, dependecies]
+    return args
+}
+var StoreDataHL = exports.StoreDataHL = async function(args){
+    var response = null
 
     //Store data in blockchain
-    var args = [key, checksum, file_store_path, pointer, description, dependecies]
     ccPost('set', args).then((r) => {
         response = r
     }).catch((err) => {
@@ -636,7 +640,7 @@ var StoreDataFS = exports.StoreDataFS =  async function(fileobj, key, descriptio
           if(response != null){
             r()
           }else if((timeoutms -= 100) < 0)
-            j('ccGet timed out..')
+            j('ccSet timed out..')
           else
             setTimeout(check, 100)
         }
