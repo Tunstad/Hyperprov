@@ -229,7 +229,7 @@ services:
     command: bash -c "peer node start > /home/logs/peer3org1log.txt 2>&1"
 
   cli:
-    image: ptunstad/fabric-tools:arm64-1.4.1
+    image: hyperledger/fabric-tools:amd64-1.4.0
     tty: true
     environment:
       - GOPATH=/opt/gopath
