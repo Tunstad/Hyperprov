@@ -14,7 +14,7 @@ volumes:
 
 services:
   orderer:
-    image: ptunstad/fabric-orderer:arm64-1.4.1
+    image: hyperledger/fabric-orderer:amd64-1.4.0
     environment:
       - ORDERER_GENERAL_LOGLEVEL=debug
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
@@ -27,10 +27,10 @@ services:
       - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
       - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
       - CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
-      - CORE_CHAINCODE_BUILDER=ptunstad/fabric-ccenv:arm64-1.4.1
-      - CORE_CHAINCODE_GOLANG_RUNTIME=ptunstad/fabric-baseos:arm64-0.4.15
-      - CORE_CHAINCODE_CAR_RUNTIME=ptunstad/fabric-baseos:arm64-0.4.15
-      - CORE_CHAINCODE_JAVA=pesicsasa/fabric-javaenv:aarch64-1.1.0
+      - CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv:amd64-1.4.0
+      - CORE_CHAINCODE_GOLANG_RUNTIME=hyperledger/fabric-baseos:amd64-0.4.14
+      - CORE_CHAINCODE_CAR_RUNTIME=hyperledger/fabric-baseos:amd64-0.4.14
+      - CORE_CHAINCODE_JAVA=hyperledger/fabric-javaenv:amd64-1.4.0
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric
     hostname: orderer.ptunstad.no
     networks:
@@ -46,11 +46,11 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == rpi3-node1
+          - node.hostname == agc-lab2
     command: orderer
     
   peer0_org1:
-    image: ptunstad/fabric-peer:arm64-1.4.1
+    image: hyperledger/fabric-peer:amd64-1.4.0
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=hyperledger-fabric
@@ -67,10 +67,10 @@ services:
       - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org1.ptunstad.no:7051
       - CORE_PEER_LOCALMSPID=Org1MSP
       - CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
-      - CORE_CHAINCODE_BUILDER=ptunstad/fabric-ccenv:arm64-1.4.1
-      - CORE_CHAINCODE_GOLANG_RUNTIME=ptunstad/fabric-baseos:arm64-0.4.15
-      - CORE_CHAINCODE_CAR_RUNTIME=ptunstad/fabric-baseos:arm64-0.4.15
-      - CORE_CHAINCODE_JAVA=pesicsasa/fabric-javaenv:aarch64-1.1.0
+      - CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv:amd64-1.4.0
+      - CORE_CHAINCODE_GOLANG_RUNTIME=hyperledger/fabric-baseos:amd64-0.4.14
+      - CORE_CHAINCODE_CAR_RUNTIME=hyperledger/fabric-baseos:amd64-0.4.14
+      - CORE_CHAINCODE_JAVA=hyperledger/fabric-javaenv:amd64-1.4.0
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     hostname: peer0.org1.ptunstad.no
     networks:
@@ -90,11 +90,11 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == rpi3-node1
+          - node.hostname == agc-lab2
     command: bash -c "peer node start > /home/logs/peer0org1log.txt 2>&1"
 
   peer1_org1:
-    image: ptunstad/fabric-peer:arm64-1.4.1
+    image: hyperledger/fabric-peer:amd64-1.4.0
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=hyperledger-fabric
@@ -112,10 +112,10 @@ services:
       - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org1.ptunstad.no:7051
       - CORE_PEER_LOCALMSPID=Org1MSP
       - CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
-      - CORE_CHAINCODE_BUILDER=ptunstad/fabric-ccenv:arm64-1.4.1
-      - CORE_CHAINCODE_GOLANG_RUNTIME=ptunstad/fabric-baseos:arm64-0.4.15
-      - CORE_CHAINCODE_CAR_RUNTIME=ptunstad/fabric-baseos:arm64-0.4.15
-      - CORE_CHAINCODE_JAVA=pesicsasa/fabric-javaenv:aarch64-1.1.0
+      - CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv:amd64-1.4.0
+      - CORE_CHAINCODE_GOLANG_RUNTIME=hyperledger/fabric-baseos:amd64-0.4.14
+      - CORE_CHAINCODE_CAR_RUNTIME=hyperledger/fabric-baseos:amd64-0.4.14
+      - CORE_CHAINCODE_JAVA=hyperledger/fabric-javaenv:amd64-1.4.0
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     hostname: peer1.org1.ptunstad.no
     networks:
@@ -135,11 +135,11 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == rpi3
+          - node.hostname == ptserv
     command: bash -c "peer node start > /home/logs/peer1org1log.txt 2>&1"
 
   peer2_org1:
-    image: ptunstad/fabric-peer:arm64-1.4.1
+    image: hyperledger/fabric-peer:amd64-1.4.0
     environment:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=hyperledger-fabric
@@ -157,10 +157,10 @@ services:
       - CORE_PEER_GOSSIP_BOOTSTRAP=peer2.org1.ptunstad.no:7051
       - CORE_PEER_LOCALMSPID=Org1MSP
       - CORE_VM_DOCKER_HOSTCONFIG_MEMORY=536870912
-      - CORE_CHAINCODE_BUILDER=ptunstad/fabric-ccenv:arm64-1.4.1
-      - CORE_CHAINCODE_GOLANG_RUNTIME=ptunstad/fabric-baseos:arm64-0.4.15
-      - CORE_CHAINCODE_CAR_RUNTIME=ptunstad/fabric-baseos:arm64-0.4.15
-      - CORE_CHAINCODE_JAVA=pesicsasa/fabric-javaenv:aarch64-1.1.0
+      - CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv:amd64-1.4.0
+      - CORE_CHAINCODE_GOLANG_RUNTIME=hyperledger/fabric-baseos:amd64-0.4.14
+      - CORE_CHAINCODE_CAR_RUNTIME=hyperledger/fabric-baseos:amd64-0.4.14
+      - CORE_CHAINCODE_JAVA=hyperledger/fabric-javaenv:amd64-1.4.0
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     hostname: peer2.org1.ptunstad.no
     networks:
