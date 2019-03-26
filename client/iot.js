@@ -68,7 +68,7 @@ async function sendData(){
                     }
                     console.log("Storing data..")
                     console.log(fileobjcurrent)
-                    hyperprovclient.StoreDataFS(fileobjcurrent, station+"_analysed", "Modification on " + station, depend).then((r) => {
+                    hyperprovclient.StoreData(fileobjcurrent, station+"_analysed", "Modification on " + station, depend).then((r) => {
                         response = r
                         console.log("R:" + r)
                     })
@@ -111,7 +111,7 @@ async function sendData(){
                         batchbuf.fill(array[i] + "\n", batchsize*(i%30), batchsize*(i%30) + batchsize)
                         console.log("\n\n\n\n BATCHBUF")                
                         console.log(batchbuf)
-                        hyperprovclient.StoreDataFS(batchbuf, station, measurement).then((r) => {
+                        hyperprovclient.StoreData(batchbuf, station, measurement).then((r) => {
                             response = r
                             console.log("R:" + r)
                         })
