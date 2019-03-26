@@ -595,6 +595,11 @@ exports.StoreDataFSBM =  function(fileobj, key, description="", dependecies=""){
 var response = StoreDataFS(fileobj, key)
 return [response, key]
 }
+exports.StoreData =  async function(fileobj, key, description="", dependecies=""){
+    var HLargs = await StoreDataFS(fileobj,key, description, dependecies)
+    var retval = await StoreDataHL(HLargs)
+    return retval
+}
 
 var StoreDataFS = exports.StoreDataFS = function(fileobj, key, description="", dependecies=""){
     

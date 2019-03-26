@@ -46,7 +46,7 @@ async function StoreModels(){
             console.log(ModelKey)
             console.log(file)
             console.log(model)
-            hyperprovclient.StoreDataFS(model, ModelKey, file, Traintxid+":"+Testtxid).then((r) => {
+            hyperprovclient.StoreData(model, ModelKey, file, Traintxid+":"+Testtxid).then((r) => {
                 response = r
                 console.log("R:" + r)
             })
@@ -81,7 +81,7 @@ async function CheckData(key, folder){
         console.log("Getting directories, test data not found..")
         getDirectories(folder, function (err, res) {
             //console.log(typeof res.toString())
-            hyperprovclient.StoreDataFS(res.toString(), key).then((r) => {
+            hyperprovclient.StoreData(res.toString(), key).then((r) => {
                 response = r
                 console.log("R:" + r)
                 hyperprovclient.GetDataFS(key).then((currentdata) =>{
@@ -105,7 +105,7 @@ async function CheckData(key, folder){
                 txid = currentdata[1]
             }else{
                 console.log("New data in testset, pushing update to Hyperprov..")
-                hyperprovclient.StoreDataFS(res.toString(), key, dependencies=currentdata[1]).then((r) => {
+                hyperprovclient.StoreData(res.toString(), key, dependencies=currentdata[1]).then((r) => {
                     response = r
                     console.log("R:" + r)
                     hyperprovclient.GetDataFS(key).then((currentdata) =>{

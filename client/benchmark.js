@@ -82,7 +82,7 @@ async function benchmark(totalnumber, datalength, OCS=true){
     for (i = 0; i < totalnumber; i++){
         starttimes[i] = Date.now()
         if(OCS){
-            var HLargs = hyperprovclient.StoreDataFS(new Buffer(value), String(i))
+            var HLargs = await hyperprovclient.StoreDataFS(new Buffer(value), String(i))
         }else{
             var HLargs = [ String(i),
             'eb2227ce2958d6dcc93f00b82c498b75',
