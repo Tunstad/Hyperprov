@@ -1,6 +1,9 @@
 #!/bin/bash
 
-#sudo apt-get install xvfb
+sudo pip install psrecord
+sudo apt-get install python-matplotlib python-tk
+
+sudo apt-get install xvfb
 
 disp=:8
 screen=0
