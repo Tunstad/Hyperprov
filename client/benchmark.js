@@ -4,7 +4,7 @@ var fs = require('fs');
 const {exec} = require("child_process")
 
 var keypath = path.join(__dirname, 'hfc-key-store')
-hyperprovclient.ccInit('Peer2', keypath, 'mychannel', 'myccds', 'node2.ptunstad.no:7051', 'node1.ptunstad.no:7050');
+hyperprovclient.ccInit('Peer2', keypath, 'mychannel', 'myccds', 'mc.ptunstad.no:7051', 'agc.ptunstad.no:7050');
 
 hyperprovclient.InitFileStore("file:///mnt/hlfshared")
 var bdatalength = 1000
@@ -12,9 +12,9 @@ var bdatalength = 1000
 var btotalnumber = 30
 
 
-loadTest(10, 10, 1000)
+//loadTest(10, 10, 1000)
 //benchmark(2, 5000, false)
-//multibenchmark()
+multibenchmark()
 
 
 
@@ -83,6 +83,11 @@ async function benchmark(totalnumber, datalength, OCS=true){
     //console.time("totaltime") 
     var starttimes = []
     var responsetimes = []
+    var sendDone = false
+
+    function checkIfSendDone(){
+        sendDone = true
+    }
 
     var begin=Date.now();
     //console.time("firstpropose")
@@ -99,7 +104,7 @@ async function benchmark(totalnumber, datalength, OCS=true){
             '' ]
         }
 
-        hyperprovclient.StoreDataHL(HLargs).then((res) => {
+        hyperprovclient.StoreDataHL(HLargs, checkIfSendDone).then((res) => {
             //console.timeEnd("firstpropose")
             if(res[0] == "Transaction failed to be committed to the ledger due to ::TIMEOUT" || res == "Failed to invoke successfully :: Error: No identity has been assigned to this client"){
                 failed += 1
@@ -111,7 +116,10 @@ async function benchmark(totalnumber, datalength, OCS=true){
             //console.log("Count: " + String(count))
             //console.log(res)
         })
-            await sleep(randomIntFromInterval(20, 200))
+        while (sendDone != true){
+            await sleep(10)
+        }
+        sendDone = false
     }
 
     while (count != totalnumber){
@@ -133,6 +141,14 @@ async function loadTest(totaltime_seconds, totalnumber, datalength, OCS=true){
     var starttimes = []
     var responsetimes = []
     var begin=Date.now();
+
+    var sendDone = false
+    function checkIfSendDone(){
+        sendDone = true
+    }
+
+
+
     for(var i=0; i < totalnumber; i++){
         starttimes[i] = Date.now()
         if(OCS){
@@ -146,7 +162,7 @@ async function loadTest(totaltime_seconds, totalnumber, datalength, OCS=true){
             '' ]
         }
 
-        hyperprovclient.StoreDataHL(HLargs).then((res) => {
+        hyperprovclient.StoreDataHL(HLargs, checkIfSendDone).then((res) => {
             if(res[0] == "Transaction failed to be committed to the ledger due to ::TIMEOUT" || res == "Failed to invoke successfully :: Error: No identity has been assigned to this client"){
                 failed += 1
             }
@@ -155,7 +171,11 @@ async function loadTest(totaltime_seconds, totalnumber, datalength, OCS=true){
 
             count += 1
         })
-        await sleep((totaltime_seconds/totalnumber)*1000)
+        while (sendDone != true){
+            await sleep(10)
+        }
+        sendDone = false
+        //await sleep((totaltime_seconds/totalnumber)*1000)
 
     }
     while (count != totalnumber){
