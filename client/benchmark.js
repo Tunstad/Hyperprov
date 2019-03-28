@@ -7,18 +7,15 @@ var keypath = path.join(__dirname, 'hfc-key-store')
 hyperprovclient.ccInit('Peer2', keypath, 'mychannel', 'myccds', 'node2.ptunstad.no:7051', 'node1.ptunstad.no:7050');
 
 hyperprovclient.InitFileStore("file:///mnt/hlfshared")
-var bdatalength = 5
-var bdatalengths = [ 1000, 10000, 100000, 500000, 1000000, 5000000, 10000000, 25000000, 50000000, 100000000]
-
+var bdatalength = 1000
+//var bdatalengths = [ 1000, 10000, 100000, 500000, 1000000, 5000000, 10000000, 25000000, 50000000, 100000000]
 var btotalnumber = 30
 
-var bmseconds = 600
 
-benchmark(2400, 10000, true, true).then((res) => {
-    console.log(res)
-})
+loadTest(10, 10, 1000)
 //benchmark(2, 5000, false)
 //multibenchmark()
+
 
 
 
@@ -76,7 +73,7 @@ async function multibenchmark(){
     savejson(results)
 }
 
-async function benchmark(totalnumber, datalength, OCS=true, SetTime=false){
+async function benchmark(totalnumber, datalength, OCS=true){
     var count = 0
     var failed = 0
     
@@ -114,11 +111,7 @@ async function benchmark(totalnumber, datalength, OCS=true, SetTime=false){
             //console.log("Count: " + String(count))
             //console.log(res)
         })
-        if(SetTime){
-            await sleep((bmseconds/totalnumber)*1000)
-        }else{
             await sleep(randomIntFromInterval(20, 200))
-        }
     }
 
     while (count != totalnumber){
@@ -132,6 +125,49 @@ async function benchmark(totalnumber, datalength, OCS=true, SetTime=false){
     //console.log("Failed transactions: " + String(failed))
     return [(end-begin) +"ms", failed, totalnumber, datalength, avgresponsetime, stdresponetime]
 }
+
+async function loadTest(totaltime_seconds, totalnumber, datalength, OCS=true){
+    var value = [...Array(datalength)].map(i=>(~~(Math.random()*36)).toString(36)).join('')
+    var count = 0
+    var failed = 0
+    var starttimes = []
+    var responsetimes = []
+    var begin=Date.now();
+    for(var i=0; i < totalnumber; i++){
+        starttimes[i] = Date.now()
+        if(OCS){
+            var HLargs = await hyperprovclient.StoreDataFS(new Buffer(value), String(i))
+        }else{
+            var HLargs = [ String(i),
+            'eb2227ce2958d6dcc93f00b82c498b75',
+            'file:///mnt/hlfshared',
+            'c0f2f9ac997af0bd1db035e4445f50ba6e4ec24b',
+            '',
+            '' ]
+        }
+
+        hyperprovclient.StoreDataHL(HLargs).then((res) => {
+            if(res[0] == "Transaction failed to be committed to the ledger due to ::TIMEOUT" || res == "Failed to invoke successfully :: Error: No identity has been assigned to this client"){
+                failed += 1
+            }
+                var key = res[1]
+                responsetimes[key] = Date.now()-starttimes[key]
+
+            count += 1
+        })
+        await sleep((totaltime_seconds/totalnumber)*1000)
+
+    }
+    while (count != totalnumber){
+        await sleep(100)
+    }
+    var end= Date.now();
+    var avgresponsetime = average(responsetimes)
+    var stdresponetime = standardDeviation(responsetimes)
+
+    console.log("Total time: " + (end-begin).toString() +"ms" + " Avg response time: " + avgresponsetime.toString() + "ms StdResponsetime: " + stdresponetime.toString() +"ms Failures: " + failed.toString())
+}
+
 
 function savejson(results){
     var tavg = []
