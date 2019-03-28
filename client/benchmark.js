@@ -4,15 +4,23 @@ var fs = require('fs');
 const {exec} = require("child_process")
 
 var keypath = path.join(__dirname, 'hfc-key-store')
-hyperprovclient.ccInit('Peer2', keypath, 'mychannel', 'myccds', 'mc.ptunstad.no:7051', 'agc.ptunstad.no:7050');
+hyperprovclient.ccInit('Peer2', keypath, 'mychannel', 'myccds', 'node2.ptunstad.no:7051', 'node1.ptunstad.no:7050');
 
 hyperprovclient.InitFileStore("file:///mnt/hlfshared")
 var bdatalength = 5
 var bdatalengths = [ 1000, 10000, 100000, 500000, 1000000, 5000000, 10000000, 25000000, 50000000, 100000000]
 
 var btotalnumber = 30
+
+var bmseconds = 600
+
+benchmark(2400, 10000, true, true).then((res) => {
+    console.log(res)
+})
 //benchmark(2, 5000, false)
-multibenchmark()
+//multibenchmark()
+
+
 
 
 async function multibenchmark(){
@@ -68,7 +76,7 @@ async function multibenchmark(){
     savejson(results)
 }
 
-async function benchmark(totalnumber, datalength, OCS=true){
+async function benchmark(totalnumber, datalength, OCS=true, SetTime=false){
     var count = 0
     var failed = 0
     
@@ -106,7 +114,11 @@ async function benchmark(totalnumber, datalength, OCS=true){
             //console.log("Count: " + String(count))
             //console.log(res)
         })
-        await sleep(randomIntFromInterval(20, 200))
+        if(SetTime){
+            await sleep((bmseconds/totalnumber)*1000)
+        }else{
+            await sleep(randomIntFromInterval(20, 200))
+        }
     }
 
     while (count != totalnumber){
