@@ -647,7 +647,7 @@ var StoreDataHL = exports.StoreDataHL = async function(args, donefunc){
     }
 
     //Store data in blockchain
-    ccPost('set', args, 12000, donefunc).then((r) => {
+    ccPost('set', args, 120000, donefunc).then((r) => {
         response = r
     }).catch((err) => {
         console.error('Failed to store successfully in ledger :: ' + err);
