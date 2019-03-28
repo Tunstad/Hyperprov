@@ -75,7 +75,9 @@ exports.registerUser = function (store_path, username, affiliation, role, caURL,
 //Function to post data via chaincode based on arguments, typically the set operation. 
 //For myccds it expects argument to be of type key, value. callback/resp used for returning result, 
 // callback 2 for benchamrking speed of first transaction.
-var ccPost = exports.ccPost = async function(ccfunc, ccargs, timeout){ 
+var ccPost = exports.ccPost = async function(ccfunc, ccargs, timeout, donefunc){ 
+    console.time('PostTime');
+    
     var member_user
     if (timeout === undefined) {
         timeout = 120000;
@@ -163,7 +165,7 @@ var ccPost = exports.ccPost = async function(ccfunc, ccargs, timeout){
     
             var sendPromise = channel.sendTransaction(request);
             promises.push(sendPromise); //we want the send transaction first, so that we know where to check status
-    
+            
             // get an eventhub once the fabric client has a user assigned. The user
             // is required bacause the event registration must be signed
             // let event_hub = fabric_client.newEventHub();
@@ -204,7 +206,11 @@ var ccPost = exports.ccPost = async function(ccfunc, ccargs, timeout){
                 event_hub.connect();
             });
             promises.push(txPromise);
-    
+            //console.timeEnd('PostTime')
+            if (donefunc){
+                donefunc()
+            }
+            
             return Promise.all(promises);
         } else {
             console.error('Failed to send Proposal or receive valid response. Response null or status is not 200. exiting...');
@@ -595,9 +601,13 @@ exports.StoreDataFSBM =  function(fileobj, key, description="", dependecies=""){
 var response = StoreDataFS(fileobj, key)
 return [response, key]
 }
-exports.StoreData =  async function(fileobj, key, description="", dependecies=""){
+exports.StoreData =  async function(fileobj, key, description="", dependecies="", donefunc){
     var HLargs = await StoreDataFS(fileobj,key, description, dependecies)
-    var retval = await StoreDataHL(HLargs)
+    var local_donefunc = null
+    if(donefunc){
+        local_donefunc = donefunc
+    }
+    var retval = await StoreDataHL(HLargs, local_donefunc)
     return retval
 }
 
@@ -629,11 +639,15 @@ var StoreDataFS = exports.StoreDataFS = function(fileobj, key, description="", d
     var args = [key, checksum, file_store_path, pointer, description, dependecies]
     return args
 }
-var StoreDataHL = exports.StoreDataHL = async function(args){
+var StoreDataHL = exports.StoreDataHL = async function(args, donefunc){
     var response = null
+    var local_donefunc = null
+    if(donefunc){
+        local_donefunc = donefunc
+    }
 
     //Store data in blockchain
-    ccPost('set', args).then((r) => {
+    ccPost('set', args, 12000, donefunc).then((r) => {
         response = r
     }).catch((err) => {
         console.error('Failed to store successfully in ledger :: ' + err);
