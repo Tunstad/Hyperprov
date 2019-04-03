@@ -12,9 +12,9 @@ var bdatalength = 1000
 var btotalnumber = 30
 
 
-//loadTest(10, 10, 1000)
+loadTest(600, 120, 500000)
 //benchmark(2, 5000, false)
-multibenchmark()
+//multibenchmark()
 
 
 
@@ -150,6 +150,8 @@ async function loadTest(totaltime_seconds, totalnumber, datalength, OCS=true){
 
 
     for(var i=0; i < totalnumber; i++){
+
+        var starttime = Date.now()
         starttimes[i] = Date.now()
         if(OCS){
             var HLargs = await hyperprovclient.StoreDataFS(new Buffer(value), String(i))
@@ -175,7 +177,14 @@ async function loadTest(totaltime_seconds, totalnumber, datalength, OCS=true){
             await sleep(10)
         }
         sendDone = false
-        //await sleep((totaltime_seconds/totalnumber)*1000)
+        var donetime = (Date.now() - starttime)
+        console.log(donetime)
+        var sleeptime = ((totaltime_seconds/totalnumber)*1000) - donetime
+        console.log(sleeptime)
+        if(sleeptime > 0){
+            await sleep(sleeptime)
+        }
+        
 
     }
     while (count != totalnumber){
