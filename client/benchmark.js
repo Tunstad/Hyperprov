@@ -7,14 +7,14 @@ var keypath = path.join(__dirname, 'hfc-key-store')
 hyperprovclient.ccInit('Peer2', keypath, 'mychannel', 'myccds', 'mc.ptunstad.no:7051', 'agc.ptunstad.no:7050');
 
 hyperprovclient.InitFileStore("file:///mnt/hlfshared")
-var bdatalength = 1000
+var bdatalength = 5000
 //var bdatalengths = [ 1000, 10000, 100000, 500000, 1000000, 5000000, 10000000, 25000000, 50000000, 100000000]
-var btotalnumber = 30
+var btotalnumber = 10
 
 
-loadTest(600, 120, 500000)
+//loadTest(600, 120, 500000)
 //benchmark(2, 5000, false)
-//multibenchmark()
+multibenchmark()
 
 
 
@@ -23,15 +23,17 @@ loadTest(600, 120, 500000)
 async function multibenchmark(){
     console.time('TotalTime');
     var measurements = []
-    var benchmarks = 100
+    var benchmarks = 20
     var samples = 3
     var length = bdatalength
+    var number = btotalnumber
 
     for(var i = 0; i < benchmarks; i++){
         console.log("Starting round " + i + " of benchmarks..")
-        length = Math.round(length + length/10)
+        //length = Math.round(length + length/10)
+        number = Math.round(number + number/2)
         for(var j = 0; j < samples; j++){
-        var r = await benchmark(btotalnumber, length , true) // *(Math.pow(10, i)) , Math.round(btotalnumber + (i*10))
+        var r = await benchmark(number, length , true) // *(Math.pow(10, i)) , Math.round(btotalnumber + (i*10))
         measurements.push(r)
         console.log("Sample nr " + j + " completed.")
         //console.log("Measurement: " + String(r))
