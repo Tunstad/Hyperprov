@@ -4,7 +4,7 @@ var fs = require('fs');
 const {exec} = require("child_process")
 
 var keypath = path.join(__dirname, 'hfc-key-store')
-hyperprovclient.ccInit('Peer2', keypath, 'mychannel', 'myccds', 'mc.ptunstad.no:7051', 'agc.ptunstad.no:7050');
+hyperprovclient.ccInit('Peer2', keypath, 'mychannel', 'myccds', 'node3.ptunstad.no:7051', 'node1.ptunstad.no:7050');
 
 hyperprovclient.InitFileStore("file:///mnt/hlfshared")
 var bdatalength = 5000
