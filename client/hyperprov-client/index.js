@@ -26,10 +26,10 @@ var totaltime_seconds = 1;        //3600 = 1h, 600 = 10m
 //set by the inquirer-prompt.
 var numbenchmarks = 0;
 var currentbenchmarks = 0;
+var default_timeout_ms = 120000
 
 //The user to interact with blockchain as, theese are found in hfc-key-store and generated 
 //by having enrollAdmin.js and registerUser.js interact with a fabric CA server
-
 var tx_id = null;
 var fabric_client = new Fabric_Client();
 var currentUser, store_path, channelname, chaincodeId, channel, peer, orderer, file_store_path
@@ -80,7 +80,7 @@ var ccPost = exports.ccPost = async function(ccfunc, ccargs, timeout, donefunc){
     
     var member_user
     if (timeout === undefined) {
-        timeout = 120000;
+        timeout = default_timeout_ms;
     }
 
     var response = null
@@ -281,7 +281,7 @@ function getCallback(result, resp){
 var ccGet = exports.ccGet =  async function(ccfunc, ccargs, timeout){
     var member_user
     if (timeout === undefined) {
-        timeout = 120000;
+        timeout = default_timeout_ms;
     }
     var response = null
     Fabric_Client.newDefaultKeyValueStore({ path: store_path
@@ -647,7 +647,7 @@ var StoreDataHL = exports.StoreDataHL = async function(args, donefunc){
     }
 
     //Store data in blockchain
-    ccPost('set', args, 120000, donefunc).then((r) => {
+    ccPost('set', args, default_timeout_ms, donefunc).then((r) => {
         response = r
     }).catch((err) => {
         console.error('Failed to store successfully in ledger :: ' + err);
@@ -666,7 +666,7 @@ var StoreDataHL = exports.StoreDataHL = async function(args, donefunc){
         setTimeout(check, 100)
       })
 
-    await waitForComplete(120000)
+    await waitForComplete(default_timeout_ms)
     return response
 }
 
@@ -747,7 +747,7 @@ var GetDataFS = exports.GetDataFS =  async function(key){
         setTimeout(check, 100)
       })
 
-    await waitForComplete(120000)
+    await waitForComplete(default_timeout_ms)
     var retval = []
     retval[0] = response
     retval[1] = txidresp
