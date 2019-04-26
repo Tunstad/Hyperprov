@@ -7,7 +7,7 @@ var RESTAPI = true;
 //Answer only local or external accesses to REST api
 var localONLY = true;
 var keypath = path.join(__dirname, 'hfc-key-store')
-hyperprovclient.ccInit('Peer2', keypath, 'mychannel', 'myccds', 'mc.ptunstad.no:7051', 'agc.ptunstad.no:7050');
+hyperprovclient.ccInit('Peer2', keypath, 'mychannel', 'myccds', 'node2.ptunstad.no:7051', 'node1.ptunstad.no:7050');
 //hyperprovclient.ccJoin();
 
 console.log("Starting in REST-api mode..")
@@ -86,7 +86,10 @@ app.get('/get', function (req, res) {
     }else{
         res.end("Too few arguments, requre header for key")
     }
+    var starttime = Date.now()
     hyperprovclient.ccGet('get', key).then((r) => {
+        var donetime = (Date.now() - starttime)
+        console.log("Operation completed in: " + donetime + " ms")
         res.end(r)
     })
 })
@@ -96,7 +99,10 @@ app.get('/getwithid', function (req, res) {
     }else{
         res.end("Too few arguments, requre header for key")
     }
+    var starttime = Date.now()
     hyperprovclient.ccGet('getwithid', key).then((r) => {
+        var donetime = (Date.now() - starttime)
+        console.log("Operation completed in: " + donetime + " ms")
         res.end(r)
     })
 })
@@ -106,7 +112,10 @@ app.get('/getfromid', function (req, res) {
     }else{
         res.end("Too few arguments, requre header for txid")
     }
+    var starttime = Date.now()
     hyperprovclient.ccGet('getfromid', txid).then((r) => {
+        var donetime = (Date.now() - starttime)
+        console.log("Operation completed in: " + donetime + " ms")
         res.end(r)
     })
 })
@@ -116,7 +125,10 @@ app.get('/getkeyhistory', function (req, res) {
     }else{
         res.end("Too few arguments, requre header for key")
     }
+    var starttime = Date.now()
     hyperprovclient.ccGet('getkeyhistory', key).then((r) => {
+        var donetime = (Date.now() - starttime)
+        console.log("Operation completed in: " + donetime + " ms")
         res.end(r)
     })
     //console.log("After call")
@@ -138,7 +150,10 @@ app.get('/getdependencies', function (req, res) {
     }else{
         console.log("Count header not present, chaincode will use default depth")
     }
+    var starttime = Date.now()
     hyperprovclient.ccGet('getdependencies', requestarguments).then((r) => {
+        var donetime = (Date.now() - starttime)
+        console.log("Operation completed in: " + donetime + " ms")
         res.end(r)
     })
 })
@@ -157,7 +172,10 @@ app.get('/getbyrange', function (req, res) {
     }else{
         res.end("Too few arguments, requre header for endkey")
     }
+    var starttime = Date.now()
     hyperprovclient.ccGet('getbyrange', requestarguments).then((r) => {
+        var donetime = (Date.now() - starttime)
+        console.log("Operation completed in: " + donetime + " ms")
         res.end(r)
     })
 })

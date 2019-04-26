@@ -303,7 +303,7 @@ var ccGet = exports.ccGet =  async function(ccfunc, ccargs, timeout){
         return fabric_client.getUserContext(currentUser, true);
     }).then((user_from_store) => {
         if (user_from_store && user_from_store.isEnrolled()) {
-            console.log('Successfully loaded user from persistence');
+            //console.log('Successfully loaded user from persistence');
             member_user = user_from_store;
         } else {
             throw new Error('Failed to get user.... run enrollAdmin.js (and maybe RegisterUser)');
@@ -319,7 +319,7 @@ var ccGet = exports.ccGet =  async function(ccfunc, ccargs, timeout){
         // send the query proposal to the peer
         return channel.queryByChaincode(request)})
     .then((query_responses) => {
-    console.log("Query has completed, checking results");
+    //console.log("Query has completed, checking results");
     // query_responses could have more than one  results if there multiple peers were used as targets
     if (query_responses && query_responses.length == 1) {
         if (query_responses[0] instanceof Error) {
@@ -695,7 +695,7 @@ var GetDataFS = exports.GetDataFS =  async function(key){
             return
         }
 
-        console.log("Retrieved record from ledger: " + result)
+        //console.log("Retrieved record from ledger: " + result)
         var resultobj = JSON.parse(result)
         var path = resultobj.location
         var pointer = resultobj.pointer
@@ -737,7 +737,7 @@ var GetDataFS = exports.GetDataFS =  async function(key){
     var waitForComplete = timeoutms => new Promise((r, j)=>{
         var check = () => {
           if(response != null){
-            console.log(response)
+            //console.log(response)
             r()
           }else if((timeoutms -= 100) < 0)
             j('ccGet timed out..')
