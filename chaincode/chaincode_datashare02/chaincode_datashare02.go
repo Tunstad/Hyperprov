@@ -1,46 +1,43 @@
 package main
 
 import (
-	"fmt"
-	"encoding/json"
 	"bytes"
-	"time"
-	"strings"
+	"encoding/json"
+	"fmt"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-	"github.com/hyperledger/fabric/core/chaincode/shim/ext/cid"
-	//"github.com/hyperledger/fabric/core/chaincode/vendor/github.com/hyperledger/fabric/core/chaincode/shim/ext/cid"
+	"github.com/hyperledger/fabric/core/chaincode/shim/ext/cid" //"github.com/hyperledger/fabric/core/chaincode/vendor/github.com/hyperledger/fabric/core/chaincode/shim/ext/cid"
 	pb "github.com/hyperledger/fabric/protos/peer"
-	
 )
+
 //"github.com/hyperledger/fabric/core/chaincode/shim/ext/cid"
- 
+
 type SimpleAsset struct {
 }
 
 type operation struct {
-	Hash string `json:"hash"`
-	Location string `json:"location"` 
-	Pointer string `json:"pointer"`  
-	TxID string `json:"txid"` 
-	Certificate       string `json:"cert"`    
-	Type      string `json:"type"`
+	Hash        string `json:"hash"`
+	Location    string `json:"location"`
+	Pointer     string `json:"pointer"`
+	TxID        string `json:"txid"`
+	Certificate string `json:"cert"`
+	Type        string `json:"type"`
 	//Numreads       int    `json:"reads"`
-	Description      string `json:"desc"`
+	Description  string `json:"desc"`
 	Dependencies string `json:"depends"`
-	//ID string `json:"id"` 
-	//MSPID string `json:"mspid"` 
-	//IDAttr string `json:"idattr"` 
+	//ID string `json:"id"`
+	//MSPID string `json:"mspid"`
+	//IDAttr string `json:"idattr"`
 }
 type GetObject struct {
-	Hash string `json:"hash"`
-	Location string `json:"location"` 
-	Pointer string `json:"pointer"`
-	TxID string `json:"txid"`   
+	Hash     string `json:"hash"`
+	Location string `json:"location"`
+	Pointer  string `json:"pointer"`
+	TxID     string `json:"txid"`
 }
-
-
 
 func (t *SimpleAsset) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	indexName := "txID~key"
@@ -57,7 +54,6 @@ func (t *SimpleAsset) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	if err != nil {
 		return shim.Error(fmt.Sprintf("Failed to marshal JSON: %s", string(operationJSONasBytes)))
 	}
-		
 
 	keyTxIDKey, err := stub.CreateCompositeKey(indexName, []string{stub.GetTxID(), args[0]})
 	if err != nil {
@@ -88,21 +84,21 @@ func (t *SimpleAsset) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	if fn == "set" {
 		result, err = set(stub, args)
 	} else if fn == "get" {
-		arg := strings.Join(args,"")
+		arg := strings.Join(args, "")
 		result, err = get(stub, arg)
-	}else if fn == "checkhash" {
-		arg := strings.Join(args,"")
+	} else if fn == "checkhash" {
+		arg := strings.Join(args, "")
 		result, err = checkhash(stub, arg)
-	}else if fn == "getwithid" {
-		arg := strings.Join(args,"")
+	} else if fn == "getwithid" {
+		arg := strings.Join(args, "")
 		result, err = getWithID(stub, arg)
-	}else if fn == "getfromid" {
-		arg := strings.Join(args,"")
+	} else if fn == "getfromid" {
+		arg := strings.Join(args, "")
 		result, err = getFromID(stub, arg)
-	}else if fn == "getdependencies" {
+	} else if fn == "getdependencies" {
 		result, err = getdependencies(stub, args)
-	}else if fn == "getkeyhistory" {
-		arg := strings.Join(args,"")
+	} else if fn == "getkeyhistory" {
+		arg := strings.Join(args, "")
 		result, err = getkeyhistory(stub, arg)
 	} else if fn == "getbyrange" {
 		result, err = getbyrange(stub, args)
@@ -127,10 +123,9 @@ func (t *SimpleAsset) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	indexName := "txID~key"
 
-	if ((len(args) != 4) && (len(args) != 5) && (len(args) != 6)){
+	if (len(args) != 4) && (len(args) != 5) && (len(args) != 6) {
 		return "", fmt.Errorf("Incorrect arguments. Expecting a key, value, pointer, location, and potentially description and dependencies. Args=  " + strconv.Itoa(len(args)))
 	}
-
 
 	//return string(len(args)), nil
 
@@ -162,38 +157,35 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	}
 	if !ok {
 		id = "null"
-	// The client identity does not possess the attribute
+		// The client identity does not possess the attribute
 	}
 	// Do something with the value of 'val'
-	
-	
+
 	/*
-	mspid, err := cid.GetMSPID(stub)
-	if err != nil {
-		return "", fmt.Errorf("Failed to get MSPID. %s", string(args[0]))
-	}
+		mspid, err := cid.GetMSPID(stub)
+		if err != nil {
+			return "", fmt.Errorf("Failed to get MSPID. %s", string(args[0]))
+		}
 
-	attr, ok, err := cid.GetAttributeValue(stub, "attr1")
-	if err != nil {
-		return "", fmt.Errorf("Failed to get attribute. %s", string(args[0]))
-	// There was an error trying to retrieve the attribute
-	}
-	if !ok {
-		fmt.Printf("The client does not posess an attribute")
-	// The client identity does not possess the attribute
-	}else{
+		attr, ok, err := cid.GetAttributeValue(stub, "attr1")
+		if err != nil {
+			return "", fmt.Errorf("Failed to get attribute. %s", string(args[0]))
+		// There was an error trying to retrieve the attribute
+		}
+		if !ok {
+			fmt.Printf("The client does not posess an attribute")
+		// The client identity does not possess the attribute
+		}else{
 
-	}
-	// Do something with the value of 'val'
+		}
+		// Do something with the value of 'val'
 	*/
-	
 
-
-/*
-	usercert, cerr := stub.GetCreator()
-	if cerr != nil {
-		return "", fmt.Errorf("Failed to get creator of asset: %s", args[0])
-	}*/
+	/*
+		usercert, cerr := stub.GetCreator()
+		if cerr != nil {
+			return "", fmt.Errorf("Failed to get creator of asset: %s", args[0])
+		}*/
 
 	desc := ""
 	if len(args) >= 5 {
@@ -207,7 +199,7 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 		dependecies = args[5]
 		optype = "Transformation"
 	}
-	
+
 	// Set up any variables or assets here by calling stub.PutState()
 	txid := stub.GetTxID()
 	operation := &operation{args[1], args[2], args[3], txid, id, optype, desc, dependecies}
@@ -215,13 +207,11 @@ func set(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Failed to marshal JSON. %s", string(args[0]))
 	}
-		
 
 	keyTxIDKey, err := stub.CreateCompositeKey(indexName, []string{stub.GetTxID(), args[0]})
 	if err != nil {
 		return "", fmt.Errorf(err.Error())
 	}
-
 
 	// Add key and value to the state
 	err = stub.PutState(args[0], operationJSONasBytes)
@@ -260,16 +250,16 @@ func get(stub shim.ChaincodeStubInterface, arg string) (string, error) {
 	}
 
 	/*
-	var retval string
-	if strings.Contains(string(value), "----BEGIN -----") {
-		valueSlice := strings.Split(string(value), "-----END -----")
-		retval = strings.TrimLeft(valueSlice[1], "\n")
-	} else if strings.Contains(string(value), "----BEGIN CERTIFICATE-----") {
-		valueSlice := strings.Split(string(value), "-----END CERTIFICATE-----")
-		retval = strings.TrimLeft(valueSlice[1], "\n")
-	} else {
-		retval = string(value)
-	}*/
+		var retval string
+		if strings.Contains(string(value), "----BEGIN -----") {
+			valueSlice := strings.Split(string(value), "-----END -----")
+			retval = strings.TrimLeft(valueSlice[1], "\n")
+		} else if strings.Contains(string(value), "----BEGIN CERTIFICATE-----") {
+			valueSlice := strings.Split(string(value), "-----END CERTIFICATE-----")
+			retval = strings.TrimLeft(valueSlice[1], "\n")
+		} else {
+			retval = string(value)
+		}*/
 	retobj := GetObject{valueJSON.Hash, valueJSON.Location, valueJSON.Pointer, valueJSON.TxID}
 	jsonobj, err := json.Marshal(retobj)
 
@@ -323,7 +313,7 @@ func getWithID(stub shim.ChaincodeStubInterface, arg string) (string, error) {
 
 	return string(valueJSON.TxID) + " |-|-| " + string(valueJSON.Hash), nil
 }
-func getFromID(stub shim.ChaincodeStubInterface, arg string) (string, error){
+func getFromID(stub shim.ChaincodeStubInterface, arg string) (string, error) {
 	indexName := "txID~key"
 	var valueJSON operation
 	if arg == "" {
@@ -336,80 +326,80 @@ func getFromID(stub shim.ChaincodeStubInterface, arg string) (string, error){
 	keyTxIDRange, err := it.Next()
 	if err != nil {
 		return "", fmt.Errorf(err.Error())
-	}	
+	}
 
 	_, keyParts, _ := stub.SplitCompositeKey(keyTxIDRange.Key)
 	key := keyParts[1]
 	fmt.Printf("key affected by txID %s is %s\n", txID, key)
 	txIDValue := keyTxIDRange.Value
 
-		err = json.Unmarshal(txIDValue, &valueJSON)
-		if err != nil {
-			jsonResp := "{\"Error\":\"Failed to decode JSON of: " + arg + "\"}"
-			return "", fmt.Errorf(jsonResp)
-		}
-		
-		// buffer is a JSON array containing historic values
-		var buffer bytes.Buffer
-		//buffer.WriteString("[")
-		bArrayMemberAlreadyWritten := false
-		if err != nil {
-			return "", fmt.Errorf(err.Error())
-		}
-		// Add a comma before array members, suppress it for the first array member
-		if bArrayMemberAlreadyWritten == true {
-			buffer.WriteString(",")
-		}
+	err = json.Unmarshal(txIDValue, &valueJSON)
+	if err != nil {
+		jsonResp := "{\"Error\":\"Failed to decode JSON of: " + arg + "\"}"
+		return "", fmt.Errorf(jsonResp)
+	}
 
-		buffer.WriteString("{\"Type\":")
-		buffer.WriteString("\"")
-		buffer.WriteString(valueJSON.Type)
-		buffer.WriteString("\"")
+	// buffer is a JSON array containing historic values
+	var buffer bytes.Buffer
+	//buffer.WriteString("[")
+	bArrayMemberAlreadyWritten := false
+	if err != nil {
+		return "", fmt.Errorf(err.Error())
+	}
+	// Add a comma before array members, suppress it for the first array member
+	if bArrayMemberAlreadyWritten == true {
+		buffer.WriteString(",")
+	}
 
-		buffer.WriteString(", \"Hash\":")
-		buffer.WriteString("\"")
-		buffer.WriteString(valueJSON.Hash)
-		buffer.WriteString("\"")
+	buffer.WriteString("{\"Type\":")
+	buffer.WriteString("\"")
+	buffer.WriteString(valueJSON.Type)
+	buffer.WriteString("\"")
 
-		buffer.WriteString(", \"Location\":")
-		buffer.WriteString("\"")
-		buffer.WriteString(valueJSON.Location)
-		buffer.WriteString("\"")
+	buffer.WriteString(", \"Hash\":")
+	buffer.WriteString("\"")
+	buffer.WriteString(valueJSON.Hash)
+	buffer.WriteString("\"")
 
-		buffer.WriteString(", \"Pointer\":")
-		buffer.WriteString("\"")
-		buffer.WriteString(valueJSON.Pointer)
-		buffer.WriteString("\"")
+	buffer.WriteString(", \"Location\":")
+	buffer.WriteString("\"")
+	buffer.WriteString(valueJSON.Location)
+	buffer.WriteString("\"")
 
-		buffer.WriteString(", \"Description\":")
-		buffer.WriteString("\"")
-		buffer.WriteString(valueJSON.Description)
-		buffer.WriteString("\"")
-/*
+	buffer.WriteString(", \"Pointer\":")
+	buffer.WriteString("\"")
+	buffer.WriteString(valueJSON.Pointer)
+	buffer.WriteString("\"")
+
+	buffer.WriteString(", \"Description\":")
+	buffer.WriteString("\"")
+	buffer.WriteString(valueJSON.Description)
+	buffer.WriteString("\"")
+	/*
 		buffer.WriteString(", \"Timestamp\":")
 		buffer.WriteString("\"")
 		buffer.WriteString(time.Unix(keyTxIDRange.Timestamp.Seconds, int64(keyTxIDRange.Timestamp.Nanos)).String())
 		buffer.WriteString("\"")*/
-		/*
+	/*
 		buffer.WriteString(", \"Certificate\":")
 		buffer.WriteString("\"")
 		buffer.WriteString(valueJSON.Certificate)
 		buffer.WriteString("\"")*/
 
-		buffer.WriteString(", \"Dependencies\":")
-		buffer.WriteString("\"")
-		buffer.WriteString(valueJSON.Dependencies)
-		buffer.WriteString("\"")
+	buffer.WriteString(", \"Dependencies\":")
+	buffer.WriteString("\"")
+	buffer.WriteString(valueJSON.Dependencies)
+	buffer.WriteString("\"")
 
-		buffer.WriteString(", \"Key\":")
-		buffer.WriteString("\"")
-		buffer.WriteString(key)
-		buffer.WriteString("\"")
+	buffer.WriteString(", \"Key\":")
+	buffer.WriteString("\"")
+	buffer.WriteString(key)
+	buffer.WriteString("\"")
 
-		buffer.WriteString("}")
-		bArrayMemberAlreadyWritten = true
+	buffer.WriteString("}")
+	bArrayMemberAlreadyWritten = true
 	//buffer.WriteString("]")
-/*
+	/*
 		sId := &msp.SerializedIdentity{}
 		err = proto.Unmarshal(txIDCreator, sId)
 		if err != nil {
@@ -427,21 +417,21 @@ func getFromID(stub shim.ChaincodeStubInterface, arg string) (string, error){
 
 		fmt.Printf("Certificate of txID %s creator is %s", txID, cert)*/
 	//}
-	return string(buffer.Bytes()) , nil
+	return string(buffer.Bytes()), nil
 }
 
 func getdependencies(stub shim.ChaincodeStubInterface, args []string) (string, error) {
 	fmt.Printf("Start of getdependencies")
 
-	count := 10
-	if(len(args) == 2){
-		count, err := strconv.Atoi(args[1])
-		if err != nil {
-			errorResp := "{\"Error\":\"Failed to retrieve recursive count}"
-			return "", fmt.Errorf(errorResp)
-		}
-		fmt.Printf("Set count from input to: " + string(count) )
+	//count := 10
+	//if(len(args) == 2){
+	count, err := strconv.Atoi(args[1])
+	if err != nil {
+		errorResp := "{\"Error\":\"Failed to retrieve recursive count}"
+		return "", fmt.Errorf(errorResp)
 	}
+	fmt.Printf("Set count from input to: " + string(count))
+	//}
 	fmt.Printf("Getdepend recursive call")
 	retval, err := recursivedependencies(stub, args[0], count)
 	if err != nil {
@@ -457,10 +447,10 @@ func getdependencies(stub shim.ChaincodeStubInterface, args []string) (string, e
 	return string(buffer.Bytes()), nil
 }
 
-func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count int ) (string, error) {
+func recursivedependencies(stub shim.ChaincodeStubInterface, txid string, count int) (string, error) {
 	fmt.Printf("Start of recursive")
 
-	if(count == 0){
+	if count == 0 {
 		return "count 0", nil
 	}
 	//return args[0] + string(len(args)), nil
@@ -469,7 +459,7 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count
 	txID := txid
 
 	fmt.Printf("Before Getstate")
-	it, err:= stub.GetStateByPartialCompositeKey(indexName, []string{txID})
+	it, err := stub.GetStateByPartialCompositeKey(indexName, []string{txID})
 	if err != nil {
 		return "", fmt.Errorf(err.Error())
 	}
@@ -479,8 +469,8 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count
 	if err != nil {
 		return "", fmt.Errorf(err.Error() + ":-:" + txid)
 	}
-	fmt.Printf("After next before split")	
-		
+	fmt.Printf("After next before split")
+
 	_, keyParts, _ := stub.SplitCompositeKey(keyTxIDRange.Key)
 	key := keyParts[1]
 	fmt.Printf("key affected by txID %s is %s\n", txID, key)
@@ -496,15 +486,12 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count
 	var buffer bytes.Buffer
 	buffer.WriteString("[")
 
-	
-
-
-	if(valueJSON.Dependencies != ""){
+	if valueJSON.Dependencies != "" {
 		fmt.Printf("txid")
 		i := strings.Split(valueJSON.Dependencies, ":")
-		for nr, element := range i { 
+		for nr, element := range i {
 			fmt.Printf("New elem recursive " + element)
-			if(nr != 0){
+			if nr != 0 {
 				buffer.WriteString(", ")
 			}
 
@@ -517,10 +504,10 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count
 			//buffer.WriteString("")
 			fmt.Printf("Getting to before recursive call")
 			retstring, reterror := recursivedependencies(stub, element, count-1)
-			if reterror != nil{
+			if reterror != nil {
 				buffer.WriteString(reterror.Error())
 				//return "", fmt.Errorf(reterror.Error())
-			}else{
+			} else {
 				buffer.WriteString(retstring)
 			}
 			//buffer.WriteString("]")
@@ -529,7 +516,7 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count
 		}
 	}
 
-/*
+	/*
 		buffer.WriteString(", \"ID\":")
 		buffer.WriteString("\"")
 		buffer.WriteString(valueJSON.ID)
@@ -544,14 +531,13 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, txid string , count
 		buffer.WriteString("\"")
 		buffer.WriteString(valueJSON.IDAttr)
 		buffer.WriteString("\"")
-*/
-		
+	*/
+
 	buffer.WriteString("]")
 
 	fmt.Printf("End of recursive")
 	return string(buffer.Bytes()), nil
 }
-
 
 // Gets the full history of a key, The historic values are coupled with the timestamp of change.
 // This function includes a timestamp, the new changed value and the certficiates used to perform the change.
@@ -633,22 +619,22 @@ func getkeyhistory(stub shim.ChaincodeStubInterface, arg string) (string, error)
 		buffer.WriteString("\"")
 		buffer.WriteString(valueJSON.Dependencies)
 		buffer.WriteString("\"")
-/*
-		buffer.WriteString(", \"ID\":")
-		buffer.WriteString("\"")
-		buffer.WriteString(valueJSON.ID)
-		buffer.WriteString("\"")
+		/*
+			buffer.WriteString(", \"ID\":")
+			buffer.WriteString("\"")
+			buffer.WriteString(valueJSON.ID)
+			buffer.WriteString("\"")
 
-		buffer.WriteString(", \"MSPID\":")
-		buffer.WriteString("\"")
-		buffer.WriteString(valueJSON.MSPID)
-		buffer.WriteString("\"")
+			buffer.WriteString(", \"MSPID\":")
+			buffer.WriteString("\"")
+			buffer.WriteString(valueJSON.MSPID)
+			buffer.WriteString("\"")
 
-		buffer.WriteString(", \"Attribute\":")
-		buffer.WriteString("\"")
-		buffer.WriteString(valueJSON.IDAttr)
-		buffer.WriteString("\"")
-*/
+			buffer.WriteString(", \"Attribute\":")
+			buffer.WriteString("\"")
+			buffer.WriteString(valueJSON.IDAttr)
+			buffer.WriteString("\"")
+		*/
 		buffer.WriteString("}")
 		bArrayMemberAlreadyWritten = true
 	}
@@ -659,33 +645,33 @@ func getkeyhistory(stub shim.ChaincodeStubInterface, arg string) (string, error)
 	return string(buffer.Bytes()), nil
 
 	/*
-	var retval string
-	var certificate string
-	result := "["
-	for value.HasNext() {
-		kvpair, _ := value.Next()
-		if strings.Contains(string(kvpair.Value), "----BEGIN -----") {
-			valueSlice := strings.Split(string(kvpair.Value), "-----END -----")
-			retval = strings.TrimLeft(valueSlice[1], "\n")
-			firstcertSlice := strings.Split(string(kvpair.Value), "----BEGIN -----")
-			finalCertSlice := strings.Split(string(firstcertSlice[1]), "-----END -----")
-			certificate = finalCertSlice[0]
-		} else if strings.Contains(string(kvpair.Value), "----BEGIN CERTIFICATE-----") {
-			valueSlice := strings.Split(string(kvpair.Value), "-----END CERTIFICATE-----")
-			retval = strings.TrimLeft(valueSlice[1], "\n")
-			firstcertSlice := strings.Split(string(kvpair.Value), "----BEGIN CERTIFICATE-----")
-			finalCertSlice := strings.Split(string(firstcertSlice[1]), "-----END CERTIFICATE-----")
-			certificate = finalCertSlice[0]
-		} else {
-			retval = string(kvpair.Value)
-			certificate = "null"
+		var retval string
+		var certificate string
+		result := "["
+		for value.HasNext() {
+			kvpair, _ := value.Next()
+			if strings.Contains(string(kvpair.Value), "----BEGIN -----") {
+				valueSlice := strings.Split(string(kvpair.Value), "-----END -----")
+				retval = strings.TrimLeft(valueSlice[1], "\n")
+				firstcertSlice := strings.Split(string(kvpair.Value), "----BEGIN -----")
+				finalCertSlice := strings.Split(string(firstcertSlice[1]), "-----END -----")
+				certificate = finalCertSlice[0]
+			} else if strings.Contains(string(kvpair.Value), "----BEGIN CERTIFICATE-----") {
+				valueSlice := strings.Split(string(kvpair.Value), "-----END CERTIFICATE-----")
+				retval = strings.TrimLeft(valueSlice[1], "\n")
+				firstcertSlice := strings.Split(string(kvpair.Value), "----BEGIN CERTIFICATE-----")
+				finalCertSlice := strings.Split(string(firstcertSlice[1]), "-----END CERTIFICATE-----")
+				certificate = finalCertSlice[0]
+			} else {
+				retval = string(kvpair.Value)
+				certificate = "null"
+			}
+			result = result + "timestamp: " + strconv.FormatInt(kvpair.Timestamp.GetSeconds(), 10) + " value: " + retval + " certificate: " + certificate
+			if value.HasNext() {
+				result = result + ", "
+			}
 		}
-		result = result + "timestamp: " + strconv.FormatInt(kvpair.Timestamp.GetSeconds(), 10) + " value: " + retval + " certificate: " + certificate
-		if value.HasNext() {
-			result = result + ", "
-		}
-	}
-	return result + "]", nil*/
+		return result + "]", nil*/
 	//return , nil
 }
 
@@ -775,26 +761,26 @@ func getbyrange(stub shim.ChaincodeStubInterface, args []string) (string, error)
 	fmt.Printf("- getKeysInRange returning:\n%s\n", buffer.String())
 
 	return string(buffer.Bytes()), nil
-/*
-	result := "["
-	var retval string
-	for value.HasNext() {
-		kvpair, _ := value.Next()
-		if strings.Contains(string(kvpair.Value), "----BEGIN -----") {
-			valueSlice := strings.Split(string(kvpair.Value), "-----END -----")
-			retval = strings.TrimLeft(valueSlice[1], "\n")
-		} else if strings.Contains(string(kvpair.Value), "----BEGIN CERTIFICATE-----") {
-			valueSlice := strings.Split(string(kvpair.Value), "-----END CERTIFICATE-----")
-			retval = strings.TrimLeft(valueSlice[1], "\n")
-		} else {
-			retval = string(kvpair.Value)
+	/*
+		result := "["
+		var retval string
+		for value.HasNext() {
+			kvpair, _ := value.Next()
+			if strings.Contains(string(kvpair.Value), "----BEGIN -----") {
+				valueSlice := strings.Split(string(kvpair.Value), "-----END -----")
+				retval = strings.TrimLeft(valueSlice[1], "\n")
+			} else if strings.Contains(string(kvpair.Value), "----BEGIN CERTIFICATE-----") {
+				valueSlice := strings.Split(string(kvpair.Value), "-----END CERTIFICATE-----")
+				retval = strings.TrimLeft(valueSlice[1], "\n")
+			} else {
+				retval = string(kvpair.Value)
+			}
+			result = result + string(kvpair.Key) + ": " + retval
+			if value.HasNext() {
+				result = result + ", "
+			}
 		}
-		result = result + string(kvpair.Key) + ": " + retval
-		if value.HasNext() {
-			result = result + ", "
-		}
-	}
-	return result + "]", nil*/
+		return result + "]", nil*/
 }
 
 func main() {
