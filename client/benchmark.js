@@ -12,9 +12,9 @@ var bdatalength = 1000
 var btotalnumber = 10
 
 
-//loadTest(600, 120, 500000)
+loadTest(600, 4000, 100)
 //benchmark(2, 5000, false)
-multibenchmark()
+//multibenchmark()
 
 
 

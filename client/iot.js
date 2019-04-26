@@ -32,7 +32,7 @@ async function sendData(){
         filename = station+'-99999-' + year.toString() +'.op'
         file = path + '/' + filename
 
-
+        var dependencydepth = 0
         //Check that file exists
         if (!fs.existsSync(file)){
             console.log("File does not exist in off chain storage: " + file)
@@ -40,43 +40,53 @@ async function sendData(){
             // Read a file for data
             var array = fs.readFileSync(file).toString().split("\n");
             for(i in array) {
-                if (i % 90 == 0 && i != 0){
+                if (i % 4 == 0 && i != 0){
                     response = null
-                    console.log("\n\n\n")
+                    //console.log("\n\n\n")
                     var currentdata= await hyperprovclient.GetDataFS(station)
                     var fileobjcurrent = currentdata[0]
                     var fctxid = currentdata[1]
 
-                    console.log(fileobjcurrent)
-                    console.log("Retrieved current data")
+                    //console.log(fileobjcurrent)
+                    //console.log("Retrieved current data")
 
                     if (!firstofstation){
                     var prevdata = await hyperprovclient.GetDataFS(station + "_analysed")
                     var prevobj = prevdata[0]
                     var prevtxid = prevdata[1]
-                    console.log(prevobj)
+                    //console.log(prevobj)
                     }
 
-                    console.log("11")
+                    //console.log("11")
                     if(!firstofstation){
                         fileobjcurrent = Buffer.concat([prevobj, fileobjcurrent]);
                         var depend = fctxid + ":" + prevtxid
 
                     }else{
-                        console.log("22")
+                        //console.log("22")
                         var depend = fctxid
                     }
-                    console.log("Storing data..")
-                    console.log(fileobjcurrent)
+                    //console.log("Storing data..")
+                    //console.log(fileobjcurrent)
+                    dependencydepth += 1
                     hyperprovclient.StoreData(fileobjcurrent, station+"_analysed", "Modification on " + station, depend).then((r) => {
                         response = r
-                        console.log("R:" + r)
+                        var requestarguments = []
+                        requestarguments[0] = r
+                        requestarguments[1] = "1000"
+                        var starttime = Date.now()
+                        hyperprovclient.ccGet('getdependencies', requestarguments).then((r) => {
+                            console.log(r)
+                            var donetime = (Date.now() - starttime)
+                            console.log("Time taken to fetch dependencies of depth " + String(dependencydepth) + " is " + String(donetime) + " ms")
+                        })
+                        //console.log("R:" + r)
                     })
 
                     await waitForComplete(120000)
                     firstofstation = false
-                    console.log("Analyse operation completed!")
-                    console.log("\n\n\n")
+                    //console.log("Analyse operation completed!")
+                    //console.log("\n\n\n")
 
                 }
                 //Check that line is not empty, last line always empty
@@ -101,7 +111,7 @@ async function sendData(){
 
                     var measurement = ("YMD: " + ymd + "  T: " + temp + "  MaxT: " + maxtemp + "  MinT: " + mintemp + "  Wind: " + wdsp + "  MaxWind: " + maxwdsp)
                     batchsize = array[i].length  + "\n".length
-                    if(i % 30 != 0){
+                    if(i % 2 != 0){
                         if(newbatch){
                             var batchbuf = Buffer.alloc(batchsize * 30);
                             newbatch = false
@@ -109,17 +119,17 @@ async function sendData(){
                         batchbuf.fill(array[i] + "\n", batchsize*(i%30), batchsize*(i%30) + batchsize)
                     }else {
                         batchbuf.fill(array[i] + "\n", batchsize*(i%30), batchsize*(i%30) + batchsize)
-                        console.log("\n\n\n\n BATCHBUF")                
-                        console.log(batchbuf)
+                        //console.log("\n\n\n\n BATCHBUF")                
+                        //console.log(batchbuf.length)
                         hyperprovclient.StoreData(batchbuf, station, measurement).then((r) => {
                             response = r
-                            console.log("R:" + r)
+                            //console.log("R:" + r)
                         })
 
                         var waitForComplete = timeoutms => new Promise((r, j)=>{
                             var check = () => {
                             if(response != null ){
-                                console.log("Response set!") 
+                                //console.log("Response set!") 
                                 r()
                             }else if((timeoutms -= 100) < 0)
                                 j('ccGet timed out..')
@@ -129,12 +139,12 @@ async function sendData(){
                             setTimeout(check, 100)
                         })
 
-                        console.log(count)
+                        //console.log(count)
                         await waitForComplete(120000)
                         /*if(response != 'Successfully committed the change to the ledger by the peer'){
                             console.log("Something went wrong..")
                         }*/
-                        console.log("After wait2\n\n\n\n")
+                        //console.log("After wait2\n\n\n\n")
                         newbatch = true
                         
                 }
