@@ -91,7 +91,7 @@ services:
       placement:
         constraints:
           - node.hostname == rpi3-node1
-    command: bash -c "peer node start > /home/logs/peer0org1log.txt 2>&1"
+    command: bash -c "peer node start"
 
   peer1_org1:
     image: ptunstad/fabric-peer:arm64-1.4.1
@@ -136,7 +136,7 @@ services:
       placement:
         constraints:
           - node.hostname == rpi3
-    command: bash -c "peer node start > /home/logs/peer1org1log.txt 2>&1"
+    command: bash -c "peer node start"
 
   peer2_org1:
     image: ptunstad/fabric-peer:arm64-1.4.1
@@ -181,7 +181,7 @@ services:
       placement:
         constraints:
           - node.hostname == rpi3-node2
-    command: bash -c "peer node start > /home/logs/peer2org1log.txt 2>&1"
+    command: bash -c "peer node start"
 
   peer3_org1:
     image: ptunstad/fabric-peer:arm64-1.4.1
@@ -226,7 +226,7 @@ services:
       placement:
         constraints:
           - node.hostname == rpi3-node0
-    command: bash -c "peer node start > /home/logs/peer3org1log.txt 2>&1"
+    command: bash -c "peer node start"
 
   cli:
     image: ptunstad/fabric-tools:arm64-1.4.1
