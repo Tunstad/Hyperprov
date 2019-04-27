@@ -17,22 +17,24 @@ async function sendData(){
     var year;
     count = 0
     submitted = 0
+    var dependencydepth = 0
+    var dependencylist = []
     for (year = 1974; year <= 2017; year++) {
         var path = "/data/gsod6"
         //path = path + "/" + year.toString() 
         
-
+        
         
         //Station list ftp://ftp.ncdc.noaa.gov/pub/data/noaa/isd-history.txt
         // 010250 TROMSO // 011510 MOIRANA // 010080 LONGYEARBYEN // 038650 SOUTHHAMPTON // EAST LONDON 688580 // 688160 CAPE TOWN
-        stations = ["010250", "011510", "010080", "038650", "688580", "688160"]
+        stations = ["010250"]//, "011510", "010080", "038650", "688580", "688160"]
         for (let station of stations) {
         var firstofstation = true
         //station = "010250" // 010250 TROMSO // 011510 MOIRANA // 012770 STEINKJER // 014920 OSLO - BLINDERN // EAST LONDON 688580 // 688160 CAPE TOWN
         filename = station+'-99999-' + year.toString() +'.op'
         file = path + '/' + filename
 
-        var dependencydepth = 0
+        
         //Check that file exists
         if (!fs.existsSync(file)){
             console.log("File does not exist in off chain storage: " + file)
@@ -40,7 +42,7 @@ async function sendData(){
             // Read a file for data
             var array = fs.readFileSync(file).toString().split("\n");
             for(i in array) {
-                if (i % 4 == 0 && i != 0){
+                if (i % 90 == 0 && i != 0){
                     response = null
                     //console.log("\n\n\n")
                     var currentdata= await hyperprovclient.GetDataFS(station)
@@ -76,8 +78,9 @@ async function sendData(){
                         requestarguments[1] = "1000"
                         var starttime = Date.now()
                         hyperprovclient.ccGet('getdependencies', requestarguments).then((r) => {
-                            console.log(r)
+                            //console.log(r)
                             var donetime = (Date.now() - starttime)
+                            dependencylist.push(donetime)
                             console.log("Time taken to fetch dependencies of depth " + String(dependencydepth) + " is " + String(donetime) + " ms")
                         })
                         //console.log("R:" + r)
@@ -111,7 +114,7 @@ async function sendData(){
 
                     var measurement = ("YMD: " + ymd + "  T: " + temp + "  MaxT: " + maxtemp + "  MinT: " + mintemp + "  Wind: " + wdsp + "  MaxWind: " + maxwdsp)
                     batchsize = array[i].length  + "\n".length
-                    if(i % 2 != 0){
+                    if(i % 30 != 0){
                         if(newbatch){
                             var batchbuf = Buffer.alloc(batchsize * 30);
                             newbatch = false
@@ -154,9 +157,19 @@ async function sendData(){
             
             }
         }
+
     }
     }
     console.log(count)
+    fs.writeFile(
+        "010250"+".json",
+        JSON.stringify(dependencylist),
+        function (err) {
+            if (err) {
+                console.error('Something went wrong');
+            }
+        }
+    );
 }
 
 
