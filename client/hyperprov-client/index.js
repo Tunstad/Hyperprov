@@ -1,11 +1,11 @@
 'use strict';
-
 /*
-* Includes code from the Hyperledger Project with 
+* Hyperprov Client Library v0.6, Petter Tunstad
+*
+* Some functions derived from code in the Hyperledger Project with 
 * Copyright IBM Corp All Rights Reserved
 * SPDX-License-Identifier: Apache-2.0
 */
-
 
 var Fabric_Client = require('fabric-client');
 var path = require('path');
@@ -14,9 +14,11 @@ var fs = require("fs")
 var crypto = require("crypto");
 var helper = require('./lib/helper.js');
 var logger = helper.getLogger('Hyperprov');
-logger.level = "INFO"
 var enrollRegisterAdmin = require("./Enroll/enrollAdmin")
 var enrollRegisterUser = require("./Enroll/registerUser")
+
+//Debugging level
+logger.level = "INFO"
 
 //The time a benchmark is set to run
 var totaltime_seconds = 1;        //3600 = 1h, 600 = 10m
@@ -28,12 +30,13 @@ var numbenchmarks = 0;
 var currentbenchmarks = 0;
 var default_timeout_ms = 120000
 
-//The user to interact with blockchain as, theese are found in hfc-key-store and generated 
-//by having enrollAdmin.js and registerUser.js interact with a fabric CA server
 var tx_id = null;
 var fabric_client = new Fabric_Client();
 var currentUser, store_path, channelname, chaincodeId, channel, peer, orderer, file_store_path
 
+//Set the user to interact with blockchain as, theese are found in hfc-key-store and generated 
+//by having enrollAdmin and registerUser interact with a fabric CA server
+//Also set the keystore path, channel to interact with, chaincode as well as address for peer and orderer nodes.
 exports.ccInit = function (setcurrentUser, setpath, setchannel, setchaincodeID, setpeer, setorderer){
     store_path = setpath;
     currentUser = setcurrentUser
@@ -46,11 +49,10 @@ exports.ccInit = function (setcurrentUser, setpath, setchannel, setchaincodeID, 
     channel.addOrderer(orderer);
 }
 
+// Deprecated: Functionlaity for joining a network.
 exports.ccJoin = function (){
 
     var addedpeer = "peer0.org1.ptunstad.no:7051"
-
-    //peer = fabric_client.newPeer('grpc://'+'peer4.ptunstad.no:7051')
     peer = fabric_client.newPeer('grpc://'+addedpeer);
     channel.addPeer(peer);
     joinChannel('mychannel', [addedpeer], "admin", "org1", fabric_client).then((result) =>{
@@ -59,26 +61,30 @@ exports.ccJoin = function (){
     })
 
 }
-exports.registerAdmin = function (store_path, caURL, caName, enrollmentID, enrollmentSecret, MSPid){
 
+// Regsiter an admin user with the CA server, used to register other users
+exports.registerAdmin = function (store_path, caURL, caName, enrollmentID, enrollmentSecret, MSPid){
     //enrollRegisterAdmin.enrollAdmin("./hfc-key-store3", 'http://agc-lab2.cs.uit.no:7054','ca.ptunstad.no', 'admin', 'adminpw', 'Org1MSP')
     enrollRegisterAdmin.enrollAdmin(store_path, caURL, caName, enrollmentID, enrollmentSecret, MSPid)
 }
-
+//Register an user with the CA server, used to interact with the ledger. Users must have an unique username.
 exports.registerUser = function (store_path, username, affiliation, role, caURL, caName, MSPid){
-
     //enrollRegisterUser.enrollUser("./hfc-key-store3", "peer1", "org1.department1", "client", 'http://agc-lab2.cs.uit.no:7054','ca.ptunstad.no', 'Org1MSP')
     enrollRegisterUser.enrollUser(store_path, username, affiliation, role, caURL, caName, MSPid)
 }
 
-
 //Function to post data via chaincode based on arguments, typically the set operation. 
 //For myccds it expects argument to be of type key, value. callback/resp used for returning result, 
-// callback 2 for benchamrking speed of first transaction.
+//timeout is the time used set before a transaction fails from no response.
+//donefunc used to signal to benchmarking applications when time to proposal(ttp) is done, and a new 
+//additional transaction can be issued, instead of waiting for time to commit.
 var ccPost = exports.ccPost = async function(ccfunc, ccargs, timeout, donefunc){ 
-    console.time('PostTime');
     
+    //Track time to post, printed in console
+    console.time('PostTime');
     var member_user
+
+    //If no timeout is specified set to default
     if (timeout === undefined) {
         timeout = default_timeout_ms;
     }
@@ -87,11 +93,14 @@ var ccPost = exports.ccPost = async function(ccfunc, ccargs, timeout, donefunc){
     var transaction_id_string = null
     var proposed_txid = null
 
+    //Set up context using fabric-client SDK
     Fabric_Client.newDefaultKeyValueStore({ path: store_path
     }).then((state_store) => {
+
         // assign the store to the fabric client
         fabric_client.setStateStore(state_store);
         var crypto_suite = Fabric_Client.newCryptoSuite();
+
         // use the same location for the state store (where the users' certificate are kept)
         // and the crypto store (where the users' keys are kept)
         var crypto_store = Fabric_Client.newCryptoKeyStore({path: store_path});
@@ -102,7 +111,7 @@ var ccPost = exports.ccPost = async function(ccfunc, ccargs, timeout, donefunc){
             verify: false
         };
     
-        // first check to see if the admin is already enrolled
+        // first check to see if the user is already enrolled
         return fabric_client.getUserContext(currentUser, true);
     }).then((user_from_store) => {
         if (user_from_store && user_from_store.isEnrolled()) {
@@ -131,6 +140,7 @@ var ccPost = exports.ccPost = async function(ccfunc, ccargs, timeout, donefunc){
         // send the transaction proposal to the peers
         return channel.sendTransactionProposal(request);
     }).then((results) => {
+        //Transaction proposal have completed.
         var proposalResponses = results[0];
         var proposal = results[1];
         let isProposalGood = false;
@@ -206,7 +216,7 @@ var ccPost = exports.ccPost = async function(ccfunc, ccargs, timeout, donefunc){
                 event_hub.connect();
             });
             promises.push(txPromise);
-            //console.timeEnd('PostTime')
+            ///Call donefunct to allow additional transactions in benchmarks, all that remains is to wait for commit response.
             if (donefunc){
                 donefunc()
             }
@@ -226,19 +236,11 @@ var ccPost = exports.ccPost = async function(ccfunc, ccargs, timeout, donefunc){
         }
     
         if(results && results[1] && results[1].event_status === 'VALID') {
-            //console.log('Successfully committed the change to the ledger by the peer');
-            //Callback function used to measure time-to-commit.
+            //Deprecated: Callback function used to measure time-to-commit here.
             //This functionality is only used for measurements and can be disabled otherwise.
+            
             response = proposed_txid
 
-            // if (typeof callback === "function") {
-            //     if(resp){
-            //         callback('Successfully committed the change to the ledger by the peer', resp)
-            //     }else{
-            //         callback('Successfully committed the change to the ledger by the peer')
-            //     }
-                
-            //}
         } else {
             console.log('Transaction failed to be committed to the ledger due to ::'+results[1].event_status);
             response = 'Transaction failed to be committed to the ledger due to ::'+results[1].event_status
@@ -260,6 +262,7 @@ var waitForComplete = timeoutms => new Promise((r, j)=>{
     setTimeout(check, 100)
     })
 
+    //Wait for completed call to HLF SDK to complete before returning response.
     await waitForComplete(timeout)
     return response
 }
@@ -299,7 +302,7 @@ var ccGet = exports.ccGet =  async function(ccfunc, ccargs, timeout){
             verify: false
         };
     
-        // first check to see if the admin is already enrolled
+        // first check to see if the user is already enrolled
         return fabric_client.getUserContext(currentUser, true);
     }).then((user_from_store) => {
         if (user_from_store && user_from_store.isEnrolled()) {
@@ -325,19 +328,9 @@ var ccGet = exports.ccGet =  async function(ccfunc, ccargs, timeout){
         if (query_responses[0] instanceof Error) {
             console.error("error from query = ", query_responses[0]);
             response = query_responses[0].toString()
-            // if (typeof callback === "function") {
-            //     callback(query_responses[0].toString(), resp)
-            // }
         } else {
-            //Use callback function provided to send result of query to.
             //Currently prints the string to console.
             response = query_responses[0].toString()
-            // if (typeof callback === "function") {
-            //     callback(query_responses[0].toString(), resp)
-                
-            // }
-            //Function could also return the result
-            //return query_responses[0].toString();
         }
     } else {
         console.log("No payloads were returned from query");
@@ -360,53 +353,9 @@ var ccGet = exports.ccGet =  async function(ccfunc, ccargs, timeout){
         setTimeout(check, 100)
       })
 
+      //Helper function to wait for response variable to be set before returning.
       await waitForComplete(timeout)
       return response
-}
-
-
-//For benchmarking use a custom callbackfunction for each completed SET action
-//For every completed action increment the counter, and once all operations have
-//been completed, print the time it took to perform all operations.
-function SetCallback(result, res){
-    if(res){
-        res.end(result)
-    }else{
-    currentbenchmarks += 1;
-    console.log(result)
-    console.log("Finished set number " + currentbenchmarks.toString())
-        if(currentbenchmarks >= numbenchmarks){
-            console.log("Finished, printing time...")
-            console.timeEnd('benchmarkset')
-        }      
-    }
-}
-//Custom callback used to measure the time required for a transaction to reach
-//the point where a proposal is accepted.
-function proposalOkCallback(){
-        console.timeEnd('proposalok')
-}
-
-
-//Function used to benchmark by storing a specified number of data items of a
-//certain datalength. Based on the totaltime_seconds variable set sleep for some 
-//amount of time between transactions. The key is just incremented on count and 
-//the value stored is a randomly generated string of the specified lenght.
-exports.benchmarkSet = function(numitems, datalength){
-    console.time('benchmarkset');
-    console.time("proposalok")
-    for(var i=0; i < numitems; i++){    
-        var key = i.toString();
-        var value = [...Array(datalength)].map(i=>(~~(Math.random()*36)).toString(36)).join('')
-        console.log(value.length)
-        console.log(Buffer.byteLength(value))
-        var args = [key, value]
-        
-        console.log("Sending transaction " + String(i))
-        ccPost('set', args, SetCallback, proposalOkCallback)
-        //await sleep((totaltime_seconds/numbenchmarks)*1000)
-    }
-    console.log("Done sending operations!")
 }
 
 //Subfunction used to await sleep in benchmarking function
@@ -416,7 +365,7 @@ function sleep(ms){
     })
 }
 
-//Functionality for storing a file as a key,value entry in the blockchain.
+//Deprecated but working: Functionality for storing a file as a key,value entry in the blockchain.
 exports.storeFile= function(arglist, resp, body){
     if(resp){
         var key = arglist[0]
@@ -434,7 +383,7 @@ exports.storeFile= function(arglist, resp, body){
     }
 }
 
-//Functionality for storing a file as a base64 encoded key,value entry in the blockchain.
+//Deprecated but working: Functionality for storing a file as a base64 encoded key,value entry in the blockchain.
 exports.retrieveFile = function(arglist, resp){
     if(resp){
         var key = arglist[0]
@@ -463,123 +412,9 @@ function filefromBase64(inputstring, outputfile){
     fs.writeFileSync(outputfile, decoded)
 }
 
-/*
- * Have an organization join a channel
- */
-var joinChannel = async function(channel_name, peers, username, org_name) {
-	logger.debug('\n\n============ Join Channel start ============\n')
-	var error_message = null;
-	var all_eventhubs = [];
-	try {
-		logger.info('Calling peers in organization "%s" to join the channel', org_name);
-
-		// first setup the client for this org
-		//var client = await helper.getClientForOrg(org_name, username);
-		//logger.debug('Successfully got the fabric client for the organization "%s"', org_name);
-		//var channel = client.getChannel(channel_name);
-		if(!channel) {
-			let message = util.format('Channel %s was not defined in the connection profile', channel_name);
-			logger.error(message);
-			throw new Error(message);
-		}
-
-	let state_store = await Fabric_Client.newDefaultKeyValueStore({path: store_path})
-        // assign the store to the fabric client
-        fabric_client.setStateStore(state_store);
-        var crypto_suite = Fabric_Client.newCryptoSuite();
-        // use the same location for the state store (where the users' certificate are kept)
-        // and the crypto store (where the users' keys are kept)
-        var crypto_store = Fabric_Client.newCryptoKeyStore({path: store_path});
-        crypto_suite.setCryptoKeyStore(crypto_store);
-        fabric_client.setCryptoSuite(crypto_suite);
-        var	tlsOptions = {
-            trustedRoots: [],
-            verify: false
-        };
-    
-        // first check to see if the admin is already enrolled
-        let user_from_store = await fabric_client.getUserContext(currentUser, true);
-        if (user_from_store && user_from_store.isEnrolled()) {
-            console.log('Successfully loaded user from persistence');
-            member_user = user_from_store;
-        } else {
-            throw new Error('Failed to get user.... run enrollAdmin.js (and maybe RegisterUser)');
-        }
-    		// next step is to get the genesis_block from the orderer,
-		// the starting point for the channel that we want to join
-		let request = {
-			txId : 	fabric_client.newTransactionID(true) //get an admin based transactionID
-		};
-
-		let genesis_block = await channel.getGenesisBlock(request);
-
-		// tell each peer to join and wait 10 seconds
-		// for the channel to be created on each peer
-		var promises = [];
-		promises.push(new Promise(resolve => setTimeout(resolve, 10000)));
-
-		let join_request = {
-			targets: peers, //using the peer names which only is allowed when a connection profile is loaded
-			txId: fabric_client.newTransactionID(true), //get an admin based transactionID
-			block: genesis_block
-		};
-		let join_promise = channel.joinChannel(join_request);
-		promises.push(join_promise);
-		let results = await Promise.all(promises);
-		logger.debug(util.format('Join Channel R E S P O N S E : %j', results));
-
-		// lets check the results of sending to the peers which is
-		// last in the results array
-		let peers_results = results.pop();
-		// then each peer results
-		for(let i in peers_results) {
-			let peer_result = peers_results[i];
-			if (peer_result instanceof Error) {
-				error_message = util.format('Failed to join peer to the channel with error :: %s', peer_result.toString());
-				logger.error(error_message);
-			} else if(peer_result.response && peer_result.response.status == 200) {
-				logger.info('Successfully joined peer to the channel %s',channel_name);
-			} else {
-				error_message = util.format('Failed to join peer to the channel %s',channel_name);
-				logger.error(error_message);
-			}
-		}
-	} catch(error) {
-		logger.error('Failed to join channel due to error: ' + error.stack ? error.stack : error);
-		error_message = error.toString();
-	}
-
-	// need to shutdown open event streams
-	all_eventhubs.forEach((eh) => {
-		eh.disconnect();
-	});
-
-	if (!error_message) {
-		let message = util.format(
-			'Successfully joined peers in organization %s to the channel:%s',
-			org_name, channel_name);
-		logger.info(message);
-		// build a response to send back to the REST caller
-		const response = {
-			success: true,
-			message: message
-		};
-		return response;
-	} else {
-		let message = util.format('Failed to join all peers to channel. cause:%s',error_message);
-		logger.error(message);
-		// build a response to send back to the REST caller
-		const response = {
-			success: false,
-			message: message
-		};
-		return response;
-	}
-};
-exports.joinChannel = joinChannel;
-
-
-
+// Initialize the path to where files are stored off chain.
+//This could be path to local storage, distributedFS or modified for cloud like an S3 bucket.
+//The current version only uses local storage, for evaluations shared with SSHFS between nodes.
 exports.InitFileStore= function(FSpath){
     file_store_path = FSpath
     var path
@@ -597,10 +432,14 @@ exports.InitFileStore= function(FSpath){
         throw new Error(error_message);
     }
 }
+
+//StoreData version used for benchmarking to return both response and key used.
 exports.StoreDataFSBM =  function(fileobj, key, description="", dependecies=""){
 var response = StoreDataFS(fileobj, key)
 return [response, key]
 }
+
+//Storedata responsible for both storing the file object in off chain storage and also taking output to store in HLF ledger.
 exports.StoreData =  async function(fileobj, key, description="", dependecies="", donefunc){
     var HLargs = await StoreDataFS(fileobj,key, description, dependecies)
     var local_donefunc = null
@@ -611,6 +450,7 @@ exports.StoreData =  async function(fileobj, key, description="", dependecies=""
     return retval
 }
 
+//Split up version of StoreData that only stores files to filestore and computes checksum.
 var StoreDataFS = exports.StoreDataFS = function(fileobj, key, description="", dependecies=""){
     
     //Generate random 20 length pointer name
@@ -639,6 +479,7 @@ var StoreDataFS = exports.StoreDataFS = function(fileobj, key, description="", d
     var args = [key, checksum, file_store_path, pointer, description, dependecies]
     return args
 }
+//Split up version of StoreData which only stores data in Hyperledger blockchain
 var StoreDataHL = exports.StoreDataHL = async function(args, donefunc){
     var response = null
     var local_donefunc = null
@@ -670,12 +511,16 @@ var StoreDataHL = exports.StoreDataHL = async function(args, donefunc){
     return response
 }
 
+//Calculate checksum, by default md5 for efficieny over sha1
 function getchecksum(str, algorithm, encoding) {
     return crypto
       .createHash(algorithm || 'md5')
       .update(str, 'utf8')
       .digest(encoding || 'hex')
 }
+
+//Get data from blockchain based on key, and retrieve from filestore based on location.
+//Also checks the validity of data by matchin checksum with that stored in the ledger.
 var GetDataFS = exports.GetDataFS =  async function(key){
 
     var args = key
@@ -688,6 +533,7 @@ var GetDataFS = exports.GetDataFS =  async function(key){
         getfunction = "getfromid"
     }
 
+    //Get data from blockchain.
     ccGet(getfunction, args).then((result) => {
         if(result.indexOf('Error: Asset not found: ' + key) !== -1){
             console.log("Asset not found..")
@@ -695,7 +541,7 @@ var GetDataFS = exports.GetDataFS =  async function(key){
             return
         }
 
-        //console.log("Retrieved record from ledger: " + result)
+        //Parse JSON response
         var resultobj = JSON.parse(result)
         var path = resultobj.location
         var pointer = resultobj.pointer
@@ -724,7 +570,7 @@ var GetDataFS = exports.GetDataFS =  async function(key){
             response =  "Incorrect checksum!"
         }
 
-        //Write file to specified local address
+        //Set file object to be the response.
         
         txidresp = resultobj.txid
         response = fileobj
@@ -746,8 +592,11 @@ var GetDataFS = exports.GetDataFS =  async function(key){
         }
         setTimeout(check, 100)
       })
-
+    
+    //Wait for response to be set
     await waitForComplete(default_timeout_ms)
+
+    //Return both file object and txID of the current version.
     var retval = []
     retval[0] = response
     retval[1] = txidresp

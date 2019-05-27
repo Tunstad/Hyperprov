@@ -1,8 +1,8 @@
 {
-    "name": "fabcar",
+    "name": "Hyperprov Sample Applications",
     "version": "1.0.0",
-    "description": "Hyperledger Fabric Car Sample Application",
-    "main": "fabcar.js",
+    "description": "Provenance Example Applications",
+    "main": "benchmark.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
     },
@@ -16,13 +16,10 @@
         "hyperprov-client": "file:hyperprov-client",
         "inquirer": "^6.2.2"
     },
-    "author": "Anthony O'Dowd",
-    "license": "Apache-2.0",
+    "author": "Petter Tunstad",
     "keywords": [
         "Hyperledger",
         "Fabric",
-        "Car",
-        "Sample",
-        "Application"
+        "Hyperprov"
     ]
 }

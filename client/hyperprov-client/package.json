@@ -1,6 +1,6 @@
 {
   "name": "hyperprov-client",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Client library for interacting with Hyperprov.",
   "main": "index.js",
   "scripts": {

@@ -51,7 +51,7 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == rpi3-node1
+          - node.hostname == agc-rpi4
     command: orderer
     
   peer0_org1:
@@ -95,7 +95,7 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == rpi3-node1
+          - node.hostname == agc-rpi4
     command: bash -c "peer node start"
 
   peer1_org1:
@@ -140,7 +140,7 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == rpi3
+          - node.hostname == agc-rpi5
     command: bash -c "peer node start"
 
   peer2_org1:
@@ -185,7 +185,7 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == rpi3-node2
+          - node.hostname == agc-rpi6
     command: bash -c "peer node start"
 
   peer3_org1:
@@ -230,7 +230,7 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == rpi3-node0
+          - node.hostname == agc-rpi7
     command: bash -c "peer node start"
 
   cli:
@@ -271,7 +271,7 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == rpi3-node1
+          - node.hostname == agc-rpi4
     networks:
       hyperledger-fabric:
         aliases:
