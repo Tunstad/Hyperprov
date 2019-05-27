@@ -6,9 +6,10 @@ var RESTAPI = true;
 
 //Answer only local or external accesses to REST api
 var localONLY = true;
+
+//Setup for Hyperprov, specify where to find keys, what key to use, channel, chaincode and peer/orderer addresses.
 var keypath = path.join(__dirname, 'hfc-key-store')
-hyperprovclient.ccInit('Peer2', keypath, 'mychannel', 'myccds', 'node2.ptunstad.no:7051', 'node1.ptunstad.no:7050');
-//hyperprovclient.ccJoin();
+hyperprovclient.ccInit('Peer2', keypath, 'mychannel', 'myccds', 'agc-rpi6.cs.uit.no:7051', 'agc-rpi4.cs.uit.no:7050');
 
 console.log("Starting in REST-api mode..")
 var express = require('express');
@@ -19,9 +20,11 @@ var listenaddress = '0.0.0.0'
 if (localONLY == true){
     listenaddress = '127.0.0.1'
 }
-
 app.use(bodyParser.urlencoded({ extended: true }));
 
+
+//Declare operations for all http-endpoints
+// /set /get /getwithid /getfromid /getkeyhistory /getdependencies /getbyrange /sendfile /getfile
 app.post('/set', function (req, res) {
     var requestarguments = []
     if(req.headers['key']){
@@ -131,10 +134,6 @@ app.get('/getkeyhistory', function (req, res) {
         console.log("Operation completed in: " + donetime + " ms")
         res.end(r)
     })
-    //console.log("After call")
-    //console.log("Response: " + response)
-    //res.end("asdf")
-
 })
 app.get('/getdependencies', function (req, res) {
     var requestarguments = []
@@ -188,6 +187,8 @@ app.get('/getfile', function (req, res) {
     hyperprovclient.retrieveFile(requestarguments, res)
 })
 
+
+//Start REST service once all operations have been declared.
 var server = app.listen(8080, listenaddress, function () {
 var host = server.address().address
 var port = server.address().port

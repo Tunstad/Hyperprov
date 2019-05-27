@@ -1,5 +1,8 @@
 version: '3'
 
+#Disclaimer: This compose file uses the complete path /data/Hyperprov
+#For any other location, this must be replaced in this compose file.
+
 services:
   peer4_org1:
     image: hyperledger/fabric-peer:amd64-1.4.0
