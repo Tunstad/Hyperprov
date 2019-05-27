@@ -1,7 +1,130 @@
-# Technical guidelines
-The original HLFv1.0 docker compose setup for Raspberry Pi is based on the [repository](https://github.com/Cleanshooter/hyperledger-pi-composer) and [guide](https://www.joemotacek.com/hyperledger-fabric-v1-0-on-a-raspberry-pi-docker-swarm-part-1/) by Joe Motacek. The chaincode, client and CA-server implementation is built on top of examples from the official hyperledger [fabric samples](https://github.com/hyperledger/fabric-samples). The guidelines assumes you have access to multiple devices, in our case we used four Raspberry Pi 3 B+ and also four desktop devices running ubuntu 16.04.
+# Hyperprov - Blockchain based data provenance using Hyperledger Fabric
+Hyperprov is a general purpose provenance framework for data provenance based on the permissioned blockchain Hyperledger Fabric. The system have been run for experiments and evaluation on both commodity desktop hardware and Raspberry Pi devices. 
 
-## Quick install
+## Getting started
+Before getting started make sure you have the required depdencies. We recommend Go version 1.11.1, Docker 18.09.1, Docker-compose 1.22.0, and NodeJS v8.15.0. For installation help see the install section below. 
+### Set up Docker Compose
+To start off we need to configure the docker-compose file `docker-compose-cli.yaml` to orchestrate the devices and paths. The most important are to change paths to this directory, as all devices need to have the `Hyperprov` directory cloned and available. By default it is `/data/Hyperprov` but if you have it elsewere, simply do a find and replace for the path in `docker-compose-cli.yaml`. 
+
+The devices used need to be specified in the docker-compose file to match the containers running on them. There are six containers for this here four node setup, whereas your head-node should run both peer, orderer and fabric-tools. To specify device hostnames change the six `node.hostname == ` entries to match your device(s). 
+
+Lastly the docker image pointers of each service must be set to match the devices architecture eg. `ptunstad/fabric-ccenv:arm64-1.4.1` or `hyperledger/fabric-ccenv:amd64-1.4.0`.
+
+#### Docker Swarm
+The solution uses Docker Swarm to manage multiple nodes from a single device for easy management. To start a swarm run `docker swarm init` on your "main" node. This will be the same node you use to start and shut down the network. This will return a command along the lines of `docker swarm join --token SWMTKN-1-xxxxxxxx 192.168.1.xxx:2377` which you need to call on all your other nodes to join the network. You can verify that all nodes have been joined by running `docker node ls` on the initial node. The initial node should also initialize an overlay network by running `docker network create -d overlay --attachable hyperledger-fabric`.
+
+### Start the network
+Before you actually run a network you should regenerate your certificates and genesis block, but for a quick up and running test you can use the block and certificates provided in this repository. See the section below on how to regenerate this.
+
+Assuming all prerequisites are installed and docker images are downloaded, run:
+`docker node ls` to check that all nodes in swarm is up and running.  
+
+To start the network run the command `docker stack deploy --compose-file docker-compose-cli.yaml Hyperprov && docker ps` on your "main" swarm node. 
+
+This will start all containers and run a setup script `script_ds.sh` and `utils.sh` to create channel, join peers, install chaincode and do some tests on query and invoke.To follow the output of this script, get the id of CLI-container from `docker ps` that uses fabric-tools and run `docker logs -f 6e4c43c974e7` where `6e4c43c974e7` is the id of CLI-container.
+
+If you encounter any problems run `docker stack ps Hyperprov --no-trunc` on main swarm node to see useful error messages.  
+
+Shutting down can be done with `docker stack rm Hyperprov ` on main swarm node, this will shut down all nodes in the network and cause it to lose its state.
+
+### The Hyperprov Client Library
+
+| Function      | Required Input                                                | Expected output       |
+|---------------|---------------------------------------------------------------|-----------------------|
+| registerAdmin | Keystore, CA-url, CA-name, Adminuname, Adminpw, MSPID         | eCert in Keystore     |
+| registerUser  | Keystore, Username, Affiliation, Role, CA-url, CA-name, MSPID | eCert in Keystore     |
+| ccInit        | Certificate, Channel+ChaincodeID, Peer+Orderer URL            | Success               |
+| ccPost        | Key, Checksum, Path, Dependency List, Custom Provenance Data  | txID                  |
+| ccGet         | Getfunction, Key/txID/Startkey-Endkey                         | Query Result          |
+| storeFile     | File, Key, Dependency List, Custom Provenance Data            |                       |
+| retrieveFile  | Key, File-path                                                |                       |
+| InitFileStore | FileStorePath                                                 | Success               |
+| StoreData     | File, Key, Dependency List, Custom Provenance Data            | txID                  |
+| StoreDataFS   | File, Key, Dependency List, Custom Provenance Data            | Input for StoreDataHL |
+| StoreDataHL   | Key, Checksum, Path, Dependency List, Custom Provenance Data  | txID                  |
+| GetDataFS     | Key                                                           | File, txID            |
+
+
+## Chaincode and Certificates
+### Hyperprov Chaincode
+ The chaincode supports multiple operations related to data provenance. The operations are: storing provenance data of an item, retrieving the last provenance information on an item, requesting the checksum of an item, getting an item with its corresponding transaction ID, getting a specific version of an item from transaction ID, recursively getting all items listed as lineage of a certain item, getting the history of a single item and retrieving a list of items with a key-range query.
+The current chaincode can be found in `/chaincode/chaincode_hyperprov/chaincode_hyperprov.go`.
+For the chaincode to implement the desired data provenance functionality it has the following type of data on a stored data item:
+
+| Field        | Description                                        |
+|--------------|----------------------------------------------------|
+| txID         | Unique transaction id for each operation           |
+| Hash         | Checksum of the stored data                        |
+| Location     | First part of data path                            |
+| Pointer      | Second part of data path                           |
+| Certificate  | CA issued unique ID linked to certificate (CID-CC) |
+| Type         | Type of operation                                  |
+| Description  | Additional metadata, eg. on the process            |
+| Dependencies | All txID that form the lineage of this item        |
+
+The operations used to implement proveneance for storage and retrieval of data items is the following:
+
+| CC operation    | Input            | Expected output                                     |
+|-----------------|------------------|-----------------------------------------------------|
+| set             | item data        | txID                                                |
+| get             | key              | JSON with item data of current version of key       |
+| checkhash       | key              | Only checksum of current version of key             |
+| getfromid       | txID             | JSON with specific item data for txID               |
+| getdependencies | txID, depth      | JSON of txID lineage of item, specified by depth    |
+| getkeyhistory   | key              | JSON with item data for all updates on key          |
+| getbyrange      | start, end       | JSON with item data for all keys in range start-end |
+
+
+### Issue chaincode changes
+Updates to the chaincode is not issued if it detects already running chaincode with the same version number. To change the version number you need to specify it when it is instantiated in `utils.sh`. Instead you can delete and overwrite the current chaincode. To delete current chaincode this need to be performed on all nodes after a shutdown: `docker stop $(docker ps -aq) && docker rm -f $(docker ps -aq)` Then do `docker images` to find the chaincode container ID, usually the image is named something like `dev-peer0.org1.ptunstad.no-myccds-1.2-97ed6ab7c0e9eda2b3d967ab471b3691e7eb90fd2b84c0fc33f5c2588b170e4f`. Then do `docker rmi xxxxxxxxxxx` replacing the x's with the container ID of running chaincode images to delete them. Now you can start the network with your updated chaincode, just make sure to have it updated on all nodes.
+
+### Genesis block and certificates regeneration
+Before running a new network you should always regenerate the genesis block and following certificates. Aslo if you need to make any changes to either `crypto-config.yaml` or `configtx.yaml` you may need to regenerate the certificates for your network anyway. To do this first delete the folder `/crypto-config` and `/channel-artifacts`. Then run `export PATH=<replace this with your path>/bin:$PATH` with the full path to your bin folder.  
+To generate network entities such as peers, organizations and genesisblock run the following: 
+
+```
+bin/cryptogen generate --config=./crypto-config.yaml
+export FABRIC_CFG_PATH=$PWD
+bin/configtxgen -profile TwoOrgsOrdererGenesis -outputBlock ./channel-artifacts/genesis.block
+```
+Then to generate a channel for our peers to interact on run: 
+
+```
+export CHANNEL_NAME=mychannel  && bin/configtxgen -profile TwoOrgsChannel -outputCreateChannelTx ./channel-artifacts/channel.tx -channelID $CHANNEL_NAME
+bin/configtxgen -profile TwoOrgsChannel -outputAnchorPeersUpdate ./channel-artifacts/Org1MSPanchors.tx -channelID $CHANNEL_NAME -asOrg Org1MSP
+```
+This should have generated new crypto material and your new network should be able to deploy. The previous eCerts will no longer work for accessing the network so you will also have to generate new 
+### eCerts and the CA server
+To access the network you need eCerts issued by a certificate authority. For this we use Hyperledger Farbrics own fabric CA image which can be retrieved with `docker pull hyperledger/fabric-ca`.
+
+The CA server requires to have Golang installed and to have `sudo apt install libtool libltdl-dev` installed.
+Then to start it move to `/fabric-ca` and run `docker-compose up -d`. This will start the CA server by default on port 7054 and allow it to respond to requests. You create certificates by first generating an admin certificate using the Hyperprov-client function registerAdmin with the username and password set in the `fabric-ca/docker-compose.yml` file. Once this admin certificate is generated, you can use it to register multiple certificates using the registerUser functionality of the Hyperprov-client. After all certificates are generates the CA server docker container can be shut down again with `docker-compose down`.
+
+##Example applications
+
+### Benchmark
+
+### IoT
+
+### ML
+
+### REST
+
+### Datastore
+
+###Latency
+
+
+## Measurements
+
+### Psrecord
+
+### Speedtest
+
+### V8-Profiler
+
+
+## Dependencies Raspberry Pi
 Start by running `apt-get update && apt-get install curl wget sudo` if not already present.
 ### Operating System
 The experiments were run on Raspberry Pi 3 using the Raspbian 3 Debian Buster 64-bit OS which you can download from [here](https://wiki.debian.org/RaspberryPi3). 64-bit OS will only run on Raspberry Pi 3.
@@ -60,7 +183,7 @@ This will take a while to complete as the images are quite large.
 ### Clone repository to /data folder
 ```
 sudo mkdir /data && sudo chmod -R ugo+rw /data
-git clone -b "rpi" https://github.com/Tunstad/Hyperprov.git
+git clone -b "master" https://github.com/Tunstad/Hyperprov.git
 ```
 
 ### Swap Partition
@@ -74,174 +197,4 @@ sudo chmod 600 /swapfile
 sudo mkswap /swapfile
 sudo swapon /swapfile
 sudo echo '/swapfile swap swap defaults 0 0' >> /etc/fstab
-```
-
-
-## Quick start
-### Setup Docker Swarm
-The solution uses Docker Swarm for easy management and communication between nodes. To start a swarm run `docker swarm init` on one of your nodes. This will be the same node you use to start and shut down the network. This will return a command along the lines of `docker swarm join --token SWMTKN-1-xxxxxxxx 192.168.1.xxx:2377` which you need to call on all your other nodes to join the network. You can verify that all nodes have been joined by running `docker node ls` on the initial node. The initial node should also initialize an overlay network by running `docker network create -d overlay --attachable hyperledger-fabric`.
-### Start network
-With all prerequisites installed and docker images in place run:
-`docker node ls` to see that all nodes in swarm is up and running.
-`docker network create -d overlay --attachable hyperledger-fabric ` to create overlay network if not already present.
-
-Check that hostnames and volume paths to git directory is correct in `docker-compose-cli.yaml`. Volume paths to git directory is currently set to `/home/pi/hlf_multihost/hyperledger-pi-composer/`.  
-
-To run do `docker stack deploy --compose-file docker-compose-cli.yaml HLFv1_RPiDS && docker ps` on master to start up the nodes. 
-
-Then to follow BYFN-print output, get the id of CLI-container from `docker ps` that uses fabric-tools and run `docker logs -f 6e4c43c974e7` where `6e4c43c974e7` is the Container ID. You can also follow on peer nodes with `tail ./hyperledger-pi-composer/logs/peer1org2log.txt -f` and so on.
-tail ./logs/peer3org1log.txt -f
-
-If you encounter any problems run `docker stack ps HLFv1_RPiDS --no-trunc` on master to see useful error messages.  
-
-Shutting down can be done with `docker stack rm HLFv1_RPiDS`.
-
-## Querying from CLI after instantiation
-### Default value transferring chaincode
-Go to master node and write `docker ps` to show active containers. Find the CLI that uses the fabric-tools image and copy the Container ID. Then start the CLI by running `docker exec -it 6e4c43c974e7 bash` where `6e4c43c974e7` is the Container ID.  
-
-In the CLI run the following commands to prepare for querying:
-`export CHANNEL_NAME=mychannel` to export channel name
-`peer chaincode install -n mycc -v 1.0 -p github.com/hyperledger/fabric/examples/chaincode/go/chaincode_example02 >&log.txt` to instantiate chaincode.
-
-Set some required global variables required since we have TLS enabled: `CORE_PEER_TLS_ENABLED="true"`, `CHANNEL_NAME="mychannel"` and `ORDERER_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/ptunstad.no/orderers/orderer.ptunstad.no/msp/tlscacerts/tlsca.ptunstad.no-cert.pem`
-
-Now to get the value of a, run: `peer chaincode query -C $CHANNEL_NAME -n mycc -c '{"Args":["query","a"]}'`.
-To transfer 20 credits from a to b, run: `peer chaincode invoke -o orderer.ptunstad.no:7050  --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA -C $CHANNEL_NAME -n mycc -c '{"Args":["invoke","a","b","20"]}'`
-You can now run `peer chaincode query -C $CHANNEL_NAME -n mycc -c '{"Args":["query","a"]}'` again to see that it changed. Keep in mind that this could take some seconds depending on the batch settings configuration of orderer set in `configtx.yaml` and the time it uses to complete a block. 
-
-### Querying the datashare chaincode from Docker CLI
-To use the modified chaincode for data sharing you similarly need to run `docker ps` to find the CLI, and launch it with `docker exec -it 6e4c43c974e7 bash` where `6e4c43c974e7` is the Container ID. Then define variables `CHANNEL_NAME=mychannel`, `ORDERER_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/ptunstad.no/orderers/orderer.ptunstad.no/msp/tlscacerts/tlsca.ptunstad.no-cert.pem` and `CORE_PEER_TLS_ENABLED="true"`.
-To install the chaincode if not already performed by `docker-compose-cli.yaml` referencing `script_ds.sh`, you need to run `peer chaincode install -n myccds -v 1.0 -p github.com/hyperledger/fabric/examples/chaincode/go/chaincode_datashare >&log.txt`.  
-To instantiate chaincode run something along the lines of `peer chaincode instantiate -o orderer.ptunstad.no:7050 --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA -C $CHANNEL_NAME -n myccds -v 1.0 -c '{"Args":["c","asdf"]}' -P "OR('Org1MSP.member','Org2MSP.member')" >&log.txt`.  
-To then query that the value c was stored as asdf run `peer chaincode query -C $CHANNEL_NAME -n myccds -c '{"Args":["get","c"]}' >&log.txt`.  
-And to further change the value of c run `peer chaincode invoke -o orderer.ptunstad.no:7050 --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA -C $CHANNEL_NAME -n myccds -c '{"Args":["set","c","wasda"]}'`.   
-
-### Using the CLI Client to interact with the chaincode.
-To use the CLI Client to interact with the chaincode move to the folder `\client` and run `npm install`, this will install the required node dependencies. Then run the client with `node cli_client.js` and you will be prompted with the question of what function you want to invoke. The options available at this point is `get`, `set`, `getkeyhistory`, `getbyrange`, `sendfile` and `getfile`. Get takes in a single argument: `key`. Set takes two arguments: `key, value`. Getkeyhistory also takes in just a single argument: `key`, and returns the change history of the key with matching timestamps of the changes. Getbyrange takes in two arguments: `startkey, endkey` and returns all kv-pairs within that specified range, based on key values not strings. Sendfile takes in two arguments: `key, path/to/file.jpg`and stores the file in the blockchain. Currently there is a limit of 1,39MB from the grpc protocol in node. Getfile similarly takes two arguments: `key, path/to/file.jpg` and retrieves the file from the blockchain before storing it at the specified path.
-
-#### Client with REST-api
-To enable the client to use REST-api instead of command-line input change to `var RESTAPI = true` in `client/cli-client.js` and run the program.
-The API will accept all requests on port 8080. Below is documentation for the current version of the API:
-
-
-| URL            | HTTP METHOD | 'arguments'-header | POST BODY           | RESULT                                                                                                                         |
-|----------------|-------------|--------------------|---------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| /set           | POST        | key, value         |                     | Successfully committed the change to the ledger by the peer or error message                                                   |
-| /get           | GET         | key                |                     | value                                                                                                                          |
-| /getkeyhistory | GET         | key                |                     | [timestamp: timestamp1 value: value2 certificate: certificate1, timestamp: timestamp2 value: value2 certificate: certificate2] |
-| /getbyrange    | GET         | startkey, endkey   |                     | [key1: value1, key2: value2]                                                                                                   |
-| /sendfile      | POST        | key                | BASE64-encoded file | Successfully committed the change to the ledger by the peer or error message                                                   |
-| /getfile       | GET         | key                |                     | BASE64-encoded file string                                                                                                     |
-
-#### Get certificates from CA server with client
-The client comes with two scripts `enrollAdmin.js` and `registerUser.js` that have functionality for first retrieving an admin certificate from the CA server and then using it to generate user certificates for each device. For the current version of certificates, four user certificates for each node is already stored in `hfc-key-store`. The used certificate is specified in the client application by the line `var currentUser = 'Node3'`. 
-
-## Certificates and Chaincode changes
-
-### Updaing the Chaincode
-Updates to the chaincode is not issued if it detects already running chaincode with the same version number. To delete current chaincode this need to be performed on all nodes: `docker stop $(docker ps -aq) && docker rm -f $(docker ps -aq) && docker images` then do `docker rmi xxxxxxxxxxx` replacing the x's with the image id of running chaincode images.
-
-### Regenerating Certificates
-If you need to make any changes to either `crypto-config.yaml` or `configtx.yaml` you may need to regenerate the certificates for your network. To do this first delete the folder `/crypto-config` and `/channel-artifacts`. Then run `export PATH=<replace this with your path>/bin:$PATH` with the full path to your bin folder.  
-To generate network entities such as peers, organizations and genesisblock run the following 
-
-```
-bin/cryptogen generate --config=./crypto-config.yaml
-export FABRIC_CFG_PATH=$PWD
-bin/configtxgen -profile TwoOrgsOrdererGenesis -outputBlock ./channel-artifacts/genesis.block
-```
-Then to generate a channel for our peers to interact on run 
-
-```
-export CHANNEL_NAME=mychannel  && bin/configtxgen -profile TwoOrgsChannel -outputCreateChannelTx ./channel-artifacts/channel.tx -channelID $CHANNEL_NAME
-bin/configtxgen -profile TwoOrgsChannel -outputAnchorPeersUpdate ./channel-artifacts/Org1MSPanchors.tx -channelID $CHANNEL_NAME -asOrg Org1MSP
-```
-### Starting the CA server
-To run the CA server you need Go 1.9 installed, GOPATH set correctly and have `sudo apt install libtool libltdl-dev` installed.
-Then run the command `go get -u github.com/hyperledger/fabric-ca/cmd/...` to install fabric-ca server to GOPATH/bin.
-Then to start it move to `/fabric-ca` and run `docker-compose up -d`. This will start the CA server by default on port 7054 and allow it to respond to requests. The scripts responsible for interacting with the CA-server is `client/enrollAdmin.js` and `client/registerUser.js`, where the latter can have the variable username modified to represent the user you wish to register and retrieve certificates for. After the certificates have been retrieved the CA-server is not required to be up and can be shut down with `docker-compose down` in the `/fabric-ca` folder.
-
-## Measurements
-Measurements on throughput was performed with the benchmarking functionality added to the client application. To test, run client in CLI mode(`var RESTAPI  ̄ false`) and set `var totaltime_seconds  = 600` for 10 minute benchmarks. Then to run the benchmarkingsolution do `node cli_client.js` with function `bms` and parameters e.g `100000, 60` to run 60 transactions of 100KB over 10 minutes. The result time ttc is printed as `benchmarkset` and ttp for the first transaction can be seen as `proposalok`. Energy was measured simultaneously with a manual power meter, specifically an ODROID Power Meter V3.
-CPU and Memory measurements were performed using the python tool psrecord. you can instal it using:
-
-```
-sudo pip install psrecord
-sudo apt-get install python-matplotlib python-tk
-```
-For a single 1 minute measurement you can run:
-`psrecord $(pgrep peer) --interval 1 --duration 60 --plot peer1m.png`
-and for measuring both peer and client simultaneously for 10 minutes run the shell script:
-
-```
-#!/bin/bash
-psrecord $(pgrep peer) --interval 1 --duration 600 --plot peer10m.png &
-P1=$!
-psrecord $(pgrep node) --interval 1 --duration 600 --plot node10m.png &
-P2=$!
-wait $P1 $P2
-echo 'Done'
-```
-
-
-## Quick install for Ubuntu 16.04
-
-### Installing Go
-The version of Go used for this version was Go 1.10.4, installing it on Ubuntu can be done by
-
-```
-sudo curl -O https://storage.googleapis.com/golang/go1.10.4.linux-amd64.tar.gz &&
-sudo tar -xvf go1.10.4.linux-amd64.tar.gz &&
-sudo rm -rf /usr/local/go &&
-sudo mv go /usr/local
-sudo nano ~/.profile  -> put ´export PATH=$PATH:/usr/local/go/bin
- export GOPATH=$HOME/go´ at end of file.
-source ~/.profile 	and/or put it in .bashrc .zshrc
-```
-To verify run `go version ` to see if its go version 1.10.4
-
-### Install Docker and Docker Compose
-```
-curl -sSL https://get.docker.com | sh
-curl -s https://packagecloud.io/install/repositories/Hypriot/Schatzkiste/script.deb.sh | sudo bash
-```
-#### If you get a problem with docker compose
-Run next step first then run `sudo pip install --trusted-host pypi.org docker-compose`
-
-### Other/python libraries
-```
-sudo apt-get install git python-pip python-dev docker-compose build-essential libtool libltdl-dev libssl-dev libevent-dev libffi-dev
-sudo pip install --upgrade pip
-sudo pip install --upgrade setuptools
-sudo pip install behave nose docker-compose
-sudo pip install -I flask==0.10.1 python-dateutil==2.2 pytz==2014.3 pyyaml==3.10 couchdb==1.0 flask-cors==2.0.1 requests==2.4.3 pyOpenSSL==16.2.0 pysha3==1.0b1 grpcio==1.0.4
-```
-After installing dependencies it may be neccesary to do a reboot for changes to take into effect.
-### Install NodeJS
-```
-curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
-sudo apt-get install -y nodejs
-```
-### Pull Pre-Built docker images
-Download images for Hyperledger Fabric v.1.1.0
-
-```
-docker pull hyperledger/fabric-baseos:amd64-0.4.13 &&
-docker pull hyperledger/fabric-basejvm:amd64-0.4.13 &&
-docker pull hyperledger/fabric-baseimage:amd64-0.4.13 &&
-docker pull hyperledger/fabric-ccenv:amd64-1.3.0 &&
-docker pull hyperledger/fabric-javaenv:amd64-1.3.0 &&
-docker pull hyperledger/fabric-peer:amd64-1.3.0 &&
-docker pull hyperledger/fabric-orderer:amd64-1.3.0 &&
-docker pull hyperledger/fabric-tools:amd64-1.3.0
-```
-This will take a while to complete as the images are quite large.
-
-
-
-### Clone repository to /data folder
-```
-sudo mkdir /data && sudo chmod -R ugo+rw /data
-git clone -b "desktop" https://github.com/Tunstad/Hyperprov.git
 ```
