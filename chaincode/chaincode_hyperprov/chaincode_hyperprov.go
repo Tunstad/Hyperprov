@@ -17,10 +17,10 @@ type SimpleAsset struct {
 }
 
 type operation struct {
-	TxID         string `json:"txid"`     // The transactionID used to uniquely identify this exact operation
 	Hash         string `json:"hash"`     // The checksum of the data stored by the operation
 	Location     string `json:"location"` // Location 1 of the data stored in off chain storage, typically something like "/data/storage/" or "sshfs1://"
 	Pointer      string `json:"pointer"`  // Location 2 of the data stored in off chain storage, could be the full file path or file name
+	TxID         string `json:"txid"`     // The transactionID used to uniquely identify this exact operation
 	Certificate  string `json:"cert"`     // ID from certificate can safely idenitfy the userID uniquely registered to this certificate by the CA
 	Type         string `json:"type"`     // Type of operation made, used to indicate if it is just recorded data or data transformed as a result of other data.
 	Description  string `json:"desc"`     // A "anything goes" metadata field to describe the data, could e.g hold a json struct of additional metadata
