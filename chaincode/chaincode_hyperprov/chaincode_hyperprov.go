@@ -416,8 +416,8 @@ func recursivedependencies(stub shim.ChaincodeStubInterface, txid string, count 
 	}
 
 	//Parse composite to get key and value.
-	_, keyParts, _ := stub.SplitCompositeKey(keyTxIDRange.Key)
-	key := keyParts[1]
+	//_, keyParts, _ := stub.SplitCompositeKey(keyTxIDRange.Key)
+	//key := keyParts[1]
 	txIDValue := keyTxIDRange.Value
 
 	//Unpack value stored to JSON
