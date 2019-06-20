@@ -22,7 +22,7 @@ git clone https://github.com/hyperledger/fabric-chaincode-java
 ```
 
 ## Building Baseimages
-Before you can build baseimages you need to add the line ```DOCKER_BASE_aarch64=aarch64/ubuntu:xenial``` to the Makefile. Then you can make with ```make -f Makefile``` or `make docker` to build baseimage, basejvm and baseos images. To build third party images like kafka, zookeeper and couchdb you can run ```make dependent-images```.
+Before you can build baseimages you need to add the line ```DOCKER_BASE_arm64=aarch64/ubuntu:xenial``` to the Makefile. Then you can make with ```make -f Makefile``` or `make docker` to build baseimage, basejvm and baseos images. To build third party images like kafka, zookeeper and couchdb you can run ```make dependent-images```.
 ##### CouchDB error
 CouchDB may return an error when built, the solution is to edit the file fabric-baseimage/images/couchdb/Dockerfile.in to find the line `&& ./configure --disable-docs \` and add the following lines after it 
 
