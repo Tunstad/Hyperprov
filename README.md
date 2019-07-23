@@ -1,5 +1,7 @@
 # Hyperprov - Blockchain based data provenance using Hyperledger Fabric
-Hyperprov is a general purpose provenance framework for data provenance based on the permissioned blockchain Hyperledger Fabric. The system have been run for experiments and evaluation on both commodity desktop hardware and Raspberry Pi devices. 
+Hyperprov is a general purpose provenance framework for data provenance based on the permissioned blockchain Hyperledger Fabric. The system have been run for experiments and evaluation on both commodity desktop hardware and Raspberry Pi devices.
+
+A thesis related to this project can be found [here](https://munin.uit.no/handle/10037/15780).
 
 ## Getting started
 Before getting started make sure you have the required depdencies. We recommend Go version 1.11.1, Docker 18.09.1, Docker-compose 1.22.0, and NodeJS v8.15.0. For installation help see the install section below. 
